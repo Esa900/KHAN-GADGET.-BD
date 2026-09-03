@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Products collection: public read, anyone can read; admin updates/writes permitted
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    // Orders collection: public create, read, update for customer order tracking & admin management
+    match /orders/{orderId} {
+      allow read, write: if true;
+    }
+    // Vouchers collection: public read, write for discounts and vouchers
+    match /vouchers/{voucherId} {
+      allow read, write: if true;
+    }
+    // Settings or metadata
+    match /settings/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

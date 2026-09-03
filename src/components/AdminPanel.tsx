@@ -21,6 +21,7 @@ interface AdminPanelProps {
   onUpdateOrderStatus: (orderId: string, status: OrderStatus, carrier?: string, note?: string) => void;
   onAddVoucher: (voucher: Voucher) => void;
   onDeleteVoucher: (code: string) => void;
+  onResetToDemo?: () => void;
 }
 
 const CATEGORIES: ProductCategory[] = [
@@ -45,7 +46,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onDeleteProduct,
   onUpdateOrderStatus,
   onAddVoucher,
-  onDeleteVoucher
+  onDeleteVoucher,
+  onResetToDemo
 }) => {
   // App Login & Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
