@@ -41,6 +41,7 @@ import {
   subscribeToProducts, 
   subscribeToOrders, 
   subscribeToVouchers,
+  fetchRemoteProducts,
   syncSaveProduct,
   syncDeleteProduct,
   syncUpdateOrderStatus,
@@ -89,12 +90,31 @@ export default function App() {
 
   // Temporary Notification Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage((curr) => (curr === msg ? null : curr));
     }, 2800);
+  };
+
+  // Manual Cloud Sync Trigger (Allows any device to force-refresh directly from Firestore)
+  const handleManualCloudSync = async () => {
+    setIsSyncing(true);
+    try {
+      const freshProducts = await fetchRemoteProducts();
+      if (freshProducts && freshProducts.length > 0) {
+        setProducts(freshProducts);
+        showToast(`Cloud Sync Complete: ${freshProducts.length} items loaded!`);
+      } else {
+        showToast('Cloud Sync Complete: Store is up to date.');
+      }
+    } catch (err) {
+      showToast('Cloud Sync error: Check internet connection.');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // Real-time Cloud Sync across all devices (Mobile & Laptop)
@@ -117,10 +137,23 @@ export default function App() {
       setVouchers(liveVouchers);
     });
 
+    // Re-sync when switching back to tab or device screen unlocks
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        fetchRemoteProducts().then(prods => {
+          if (prods && prods.length > 0) setProducts(prods);
+        }).catch(console.error);
+      }
+    };
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+
     return () => {
       unsubProducts();
       unsubOrders();
       unsubVouchers();
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
     };
   }, []);
 
@@ -322,26 +355,44 @@ export default function App() {
   };
 
   // Admin Actions with Live Multi-Device Sync
-  const handleAdminAddProduct = (newProd: Product) => {
+  const handleAdminAddProduct = async (newProd: Product): Promise<boolean> => {
     const updated = [newProd, ...products];
     setProducts(updated);
     saveStoredProducts(updated);
-    syncSaveProduct(newProd).catch(console.error);
-    showToast(`Accessory "${newProd.title}" added to store!`);
+    const res = await syncSaveProduct(newProd);
+    if (res.success) {
+      showToast(`Product "${newProd.title}" synced to Cloud & Store!`);
+      const remote = await fetchRemoteProducts();
+      if (remote && remote.length > 0) setProducts(remote);
+      return true;
+    } else {
+      showToast(`Saved locally. Cloud sync pending (${res.error}).`);
+      return false;
+    }
   };
 
-  const handleAdminUpdateProduct = (updatedProd: Product) => {
+  const handleAdminUpdateProduct = async (updatedProd: Product): Promise<boolean> => {
     const updated = products.map(p => p.id === updatedProd.id ? updatedProd : p);
     setProducts(updated);
     saveStoredProducts(updated);
-    syncSaveProduct(updatedProd).catch(console.error);
-    showToast(`Product "${updatedProd.title}" updated.`);
+    const res = await syncSaveProduct(updatedProd);
+    if (res.success) {
+      showToast(`Product "${updatedProd.title}" updated in Cloud & Store!`);
+      const remote = await fetchRemoteProducts();
+      if (remote && remote.length > 0) setProducts(remote);
+      return true;
+    } else {
+      showToast(`Updated locally. Cloud sync pending (${res.error}).`);
+      return false;
+    }
   };
 
-  const handleAdminDeleteProduct = (productId: string) => {
+  const handleAdminDeleteProduct = async (productId: string) => {
     deleteStoredProduct(productId);
-    syncDeleteProduct(productId).catch(console.error);
     setProducts(prev => prev.filter(p => p.id !== productId));
+    await syncDeleteProduct(productId);
+    const remote = await fetchRemoteProducts();
+    if (remote && remote.length > 0) setProducts(remote);
     // Also remove deleted product from active cart and wishlist
     setCart(prev => {
       const nextCart = prev.filter(item => item.product.id !== productId);
@@ -353,7 +404,7 @@ export default function App() {
       saveStoredWishlist(nextWishlist);
       return nextWishlist;
     });
-    showToast('Product permanently deleted from store.');
+    showToast('Product permanently deleted from store & cloud.');
   };
 
   const handleAdminUpdateOrderStatus = (orderId: string, status: OrderStatus, carrier?: string, note?: string) => {
@@ -419,6 +470,8 @@ export default function App() {
         }}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenWishlist={() => setIsWishlistOpen(true)}
+        onRefreshCloud={handleManualCloudSync}
+        isSyncing={isSyncing}
       />
 
       {/* High-Density Layout Container */}
@@ -790,6 +843,8 @@ export default function App() {
         onAddVoucher={handleAdminAddVoucher}
         onDeleteVoucher={handleAdminDeleteVoucher}
         onResetToDemo={handleResetToDemo}
+        onRefreshCloud={handleManualCloudSync}
+        isSyncing={isSyncing}
       />
 
       {/* MODAL / DRAWER: Wishlist */}

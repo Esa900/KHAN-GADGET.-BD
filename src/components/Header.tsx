@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Search, ShoppingCart, Truck, ShieldCheck, Heart, Shield, 
   Smartphone, Zap, ChevronDown, PhoneCall, Gift, Sparkles, X, Menu,
-  MessageCircle, Lock
+  MessageCircle, Lock, RefreshCw
 } from 'lucide-react';
 import { ProductCategory, CATEGORIES } from '../types';
 import { formatPrice } from '../utils/storage';
@@ -19,6 +19,8 @@ interface HeaderProps {
   onOpenTracking: () => void;
   onOpenAdmin: () => void;
   onOpenWishlist: () => void;
+  onRefreshCloud?: () => void;
+  isSyncing?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -32,7 +34,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCart,
   onOpenTracking,
   onOpenAdmin,
-  onOpenWishlist
+  onOpenWishlist,
+  onRefreshCloud,
+  isSyncing = false
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
@@ -68,6 +72,17 @@ export const Header: React.FC<HeaderProps> = ({
               <MessageCircle className="w-3 h-3 fill-emerald-400 text-emerald-400" />
               <span>WhatsApp: 01854774406</span>
             </a>
+            {onRefreshCloud && (
+              <button
+                onClick={onRefreshCloud}
+                disabled={isSyncing}
+                className="bg-emerald-950/60 hover:bg-emerald-900/80 px-2 py-0.5 rounded text-[10px] font-bold text-emerald-300 flex items-center gap-1 transition cursor-pointer border border-emerald-500/40 disabled:opacity-50"
+                title="Live Cloud Database Sync (অন্যান্য ডিভাইসের ডেটা আপডেট করুন)"
+              >
+                <RefreshCw className={`w-2.5 h-2.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span className="hidden xs:inline">{isSyncing ? 'Syncing...' : 'Sync'}</span>
+              </button>
+            )}
             <button
               onClick={onOpenAdmin}
               className="bg-slate-900/40 hover:bg-slate-900/60 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1 transition cursor-pointer border border-white/10"

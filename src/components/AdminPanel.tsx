@@ -17,13 +17,15 @@ interface AdminPanelProps {
   products: Product[];
   orders: Order[];
   vouchers: Voucher[];
-  onAddProduct: (product: Product) => void;
-  onUpdateProduct: (product: Product) => void;
+  onAddProduct: (product: Product) => Promise<boolean> | void;
+  onUpdateProduct: (product: Product) => Promise<boolean> | void;
   onDeleteProduct: (productId: string) => void;
   onUpdateOrderStatus: (orderId: string, status: OrderStatus, carrier?: string, note?: string) => void;
   onAddVoucher: (voucher: Voucher) => void;
   onDeleteVoucher: (code: string) => void;
   onResetToDemo?: () => void;
+  onRefreshCloud?: () => void;
+  isSyncing?: boolean;
 }
 
 const CATEGORIES: ProductCategory[] = [
@@ -49,7 +51,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onUpdateOrderStatus,
   onAddVoucher,
   onDeleteVoucher,
-  onResetToDemo
+  onResetToDemo,
+  onRefreshCloud,
+  isSyncing = false
 }) => {
   // App Login & Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -74,6 +78,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Product Management States
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isSubmittingProduct, setIsSubmittingProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState<Partial<Product>>({
     title: '',
@@ -210,40 +215,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setIsProductModalOpen(true);
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productForm.title || !productForm.price) return;
+    setIsSubmittingProduct(true);
 
     const finalImage = productForm.image?.trim() || 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80';
 
-    if (editingProduct) {
-      const updated: Product = {
-        ...editingProduct,
-        ...productForm as Product,
-        image: finalImage
-      };
-      onUpdateProduct(updated);
-    } else {
-      const newProd: Product = {
-        id: 'kg-prod-' + Date.now(),
-        title: productForm.title || 'New Accessory',
-        category: (productForm.category || 'Chargers & Cables') as ProductCategory,
-        brand: productForm.brand || 'Khan Prime',
-        price: Number(productForm.price) || 999,
-        originalPrice: Number(productForm.originalPrice) || 1499,
-        stock: Number(productForm.stock) || 10,
-        rating: 4.9,
-        reviewCount: 1,
-        image: finalImage,
-        description: productForm.description || 'Premium mobile accessory.',
-        specs: productForm.specs || { 'Warranty': '12 Months' },
-        isFlashSale: !!productForm.isFlashSale,
-        isDarazMall: !!productForm.isDarazMall,
-        freeDelivery: !!productForm.freeDelivery
-      };
-      onAddProduct(newProd);
+    try {
+      if (editingProduct) {
+        const updated: Product = {
+          ...editingProduct,
+          ...productForm as Product,
+          image: finalImage
+        };
+        await onUpdateProduct(updated);
+      } else {
+        const newProd: Product = {
+          id: 'kg-prod-' + Date.now(),
+          title: productForm.title || 'New Accessory',
+          category: (productForm.category || 'Chargers & Cables') as ProductCategory,
+          brand: productForm.brand || 'Khan Prime',
+          price: Number(productForm.price) || 999,
+          originalPrice: Number(productForm.originalPrice) || 1499,
+          stock: Number(productForm.stock) || 10,
+          rating: 4.9,
+          reviewCount: 1,
+          image: finalImage,
+          description: productForm.description || 'Premium mobile accessory.',
+          specs: productForm.specs || { 'Warranty': '12 Months' },
+          isFlashSale: !!productForm.isFlashSale,
+          isDarazMall: !!productForm.isDarazMall,
+          freeDelivery: !!productForm.freeDelivery
+        };
+        await onAddProduct(newProd);
+      }
+      setIsProductModalOpen(false);
+    } catch (err) {
+      console.error('Failed saving product:', err);
+    } finally {
+      setIsSubmittingProduct(false);
     }
-    setIsProductModalOpen(false);
   };
 
   const handleSaveOrderStatus = (e: React.FormEvent) => {
@@ -383,6 +395,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5">
+            {onRefreshCloud && (
+              <button
+                onClick={onRefreshCloud}
+                disabled={isSyncing}
+                className="text-xs bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer font-semibold disabled:opacity-50"
+                title="Live Cloud Database Sync (অন্যান্য ডিভাইসের ডেটা আনুন)"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Cloud Sync'}</span>
+              </button>
+            )}
+
             <button
               onClick={() => setIsResetConfirmOpen(true)}
               className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
@@ -1173,9 +1197,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-[#f85606] text-white rounded-lg font-bold hover:bg-[#e04a00]"
+                    disabled={isSubmittingProduct}
+                    className="px-5 py-2 bg-[#f85606] text-white rounded-lg font-bold hover:bg-[#e04a00] disabled:opacity-60 flex items-center gap-2 cursor-pointer"
                   >
-                    Save Accessory
+                    {isSubmittingProduct ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        <span>Saving to Cloud...</span>
+                      </>
+                    ) : (
+                      <span>Save Accessory</span>
+                    )}
                   </button>
                 </div>
               </form>

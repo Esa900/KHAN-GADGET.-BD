@@ -5,15 +5,15 @@ import firebaseConfig from '../../firebase-applet-config.json';
 // Initialize Firebase App
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Firestore with long-polling fallback to maintain reliable connection in preview/proxy environments
+// Initialize Firestore with auto-detect long-polling to maintain reliable connection in all devices (mobile & desktop)
 let firestoreDb: Firestore;
 try {
   firestoreDb = firebaseConfig.firestoreDatabaseId
     ? initializeFirestore(app, {
-        experimentalForceLongPolling: true,
+        experimentalAutoDetectLongPolling: true,
       }, firebaseConfig.firestoreDatabaseId)
     : initializeFirestore(app, {
-        experimentalForceLongPolling: true,
+        experimentalAutoDetectLongPolling: true,
       });
 } catch {
   firestoreDb = firebaseConfig.firestoreDatabaseId

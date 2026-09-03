@@ -24,6 +24,21 @@ const PRODUCTS_COLLECTION = 'products';
 const ORDERS_COLLECTION = 'orders';
 const VOUCHERS_COLLECTION = 'vouchers';
 
+// Helper to sanitize data by replacing undefined with null so Firestore doesn't throw unsupported field errors
+export const cleanFirestoreData = (obj: any): any => {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(cleanFirestoreData);
+  const result: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    const val = obj[key];
+    if (val !== undefined) {
+      result[key] = cleanFirestoreData(val);
+    }
+  }
+  return result;
+};
+
 // Check if products collection is empty and seed initial data to Firestore
 export const seedInitialFirestoreData = async () => {
   try {
@@ -33,7 +48,7 @@ export const seedInitialFirestoreData = async () => {
       const batch = writeBatch(db);
       INITIAL_PRODUCTS.forEach(prod => {
         const ref = doc(db, PRODUCTS_COLLECTION, prod.id);
-        batch.set(ref, prod);
+        batch.set(ref, cleanFirestoreData(prod));
       });
       await batch.commit();
       console.log('Seeded initial products successfully');
@@ -45,7 +60,7 @@ export const seedInitialFirestoreData = async () => {
       const batch = writeBatch(db);
       INITIAL_ORDERS.forEach(order => {
         const ref = doc(db, ORDERS_COLLECTION, order.id);
-        batch.set(ref, order);
+        batch.set(ref, cleanFirestoreData(order));
       });
       await batch.commit();
     }
@@ -56,12 +71,39 @@ export const seedInitialFirestoreData = async () => {
       const batch = writeBatch(db);
       INITIAL_VOUCHERS.forEach(v => {
         const ref = doc(db, VOUCHERS_COLLECTION, v.code);
-        batch.set(ref, v);
+        batch.set(ref, cleanFirestoreData(v));
       });
       await batch.commit();
     }
   } catch (err) {
     console.error('Error seeding Firestore collections:', err);
+  }
+};
+
+// Direct one-time fetch of all products from Firestore (works reliably across mobile & desktop)
+export const fetchRemoteProducts = async (): Promise<Product[]> => {
+  try {
+    const snapshot = await getDocs(collection(db, PRODUCTS_COLLECTION));
+    if (snapshot.empty) {
+      await seedInitialFirestoreData();
+      const retrySnap = await getDocs(collection(db, PRODUCTS_COLLECTION));
+      const prods: Product[] = [];
+      retrySnap.forEach(d => prods.push(d.data() as Product));
+      if (prods.length > 0) {
+        saveStoredProducts(prods);
+        return prods;
+      }
+      return getStoredProducts();
+    }
+    const remoteProducts: Product[] = [];
+    snapshot.forEach(docSnap => {
+      remoteProducts.push(docSnap.data() as Product);
+    });
+    saveStoredProducts(remoteProducts);
+    return remoteProducts;
+  } catch (err) {
+    console.error('Error fetching live products from cloud:', err);
+    return getStoredProducts();
   }
 };
 
@@ -73,11 +115,17 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
     onUpdate(local);
   }
 
+  // Parallel direct fetch ensures other devices get fresh items immediately
+  fetchRemoteProducts().then(prods => {
+    if (prods && prods.length > 0) {
+      onUpdate(prods);
+    }
+  }).catch(console.error);
+
   const unsubscribe = onSnapshot(
     collection(db, PRODUCTS_COLLECTION),
     async (snapshot) => {
       if (snapshot.empty) {
-        // If collection was completely empty on first launch, seed it
         await seedInitialFirestoreData();
         return;
       }
@@ -86,17 +134,13 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
         remoteProducts.push(docSnap.data() as Product);
       });
 
-      // Filter out any locally tombstoned items just in case
-      const deletedIds = getDeletedProductIds();
-      const filtered = remoteProducts.filter(p => !deletedIds.includes(p.id));
-
       // Update local storage backup & notify UI
-      saveStoredProducts(filtered);
-      onUpdate(filtered);
+      saveStoredProducts(remoteProducts);
+      onUpdate(remoteProducts);
     },
     (error) => {
       console.warn('Firestore live products listener fallback to local cache:', error);
-      onUpdate(getStoredProducts());
+      fetchRemoteProducts().then(onUpdate).catch(() => onUpdate(getStoredProducts()));
     }
   );
 
@@ -104,22 +148,29 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
 };
 
 // 2. Add or Update a product in Firestore (Live Sync)
-export const syncSaveProduct = async (product: Product): Promise<void> => {
+export const syncSaveProduct = async (product: Product): Promise<{ success: boolean; error?: string }> => {
   try {
+    const sanitized = cleanFirestoreData(product);
     const ref = doc(db, PRODUCTS_COLLECTION, product.id);
-    await setDoc(ref, product);
-  } catch (err) {
+    await setDoc(ref, sanitized);
+    console.log(`Successfully synced product ${product.id} to Firestore.`);
+    return { success: true };
+  } catch (err: any) {
     console.error('Failed to sync save product to Firestore:', err);
+    return { success: false, error: err?.message || 'Failed to save to cloud' };
   }
 };
 
 // 3. Delete product from Firestore (Live across all mobile & laptop devices)
-export const syncDeleteProduct = async (productId: string): Promise<void> => {
+export const syncDeleteProduct = async (productId: string): Promise<{ success: boolean; error?: string }> => {
   try {
     const ref = doc(db, PRODUCTS_COLLECTION, productId);
     await deleteDoc(ref);
-  } catch (err) {
+    console.log(`Successfully deleted product ${productId} from Firestore.`);
+    return { success: true };
+  } catch (err: any) {
     console.error('Failed to delete product from Firestore:', err);
+    return { success: false, error: err?.message || 'Failed to delete from cloud' };
   }
 };
 
