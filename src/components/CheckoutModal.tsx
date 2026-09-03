@@ -16,21 +16,19 @@ interface CheckoutModalProps {
 }
 
 const COMMON_CITIES = [
-  'Karachi',
-  'Lahore',
-  'Islamabad',
-  'Rawalpindi',
-  'Faisalabad',
-  'Multan',
-  'Peshawar',
-  'Quetta',
-  'Sialkot',
-  'Hyderabad',
   'Dhaka',
   'Chittagong',
   'Sylhet',
   'Rajshahi',
-  'Khulna'
+  'Khulna',
+  'Barishal',
+  'Rangpur',
+  'Comilla',
+  'Gazipur',
+  'Narayanganj',
+  'Bogra',
+  'Mymensingh',
+  'Cox\'s Bazar'
 ];
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({
@@ -45,8 +43,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   // Fields explicitly requested: Name, Phone, City, Address, Customer Note
   const [fullName, setFullName] = useState('Mohammad Esa Khan');
   const [phone, setPhone] = useState('01854774406');
-  const [city, setCity] = useState('Karachi');
-  const [address, setAddress] = useState('Trade Center, I.I. Chundrigar Road');
+  const [city, setCity] = useState('Dhaka');
+  const [address, setAddress] = useState('House #12, Road #5, Dhanmondi, Dhaka');
   const [customerNote, setCustomerNote] = useState('');
   
   // Payment method: Cash on Delivery pre-selected
@@ -86,8 +84,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setIsSubmitting(true);
 
     const randomId = Math.floor(100000 + Math.random() * 900000);
-    const orderId = `KG-${randomId}-PK`;
-    const trackingNo = `DEX-PK-${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const orderId = `KG-${randomId}-BD`;
+    const trackingNo = `STD-BD-${Math.floor(10000000 + Math.random() * 90000000)}`;
     const dateStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 
     const shippingInfo: ShippingAddress = {
@@ -95,7 +93,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       phone: phone.trim(),
       email: 'esakhan5477@gmail.com',
       city: city.trim(),
-      province: 'Sindh',
+      province: 'Dhaka Division',
       address: address.trim(),
       customerNote: customerNote.trim(),
       addressType: 'Home'
@@ -120,7 +118,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       shippingFee,
       total: grandTotal,
       appliedVoucher: appliedVoucher?.code,
-      carrierName: 'Daraz Express (DEX)',
+      carrierName: 'Steadfast Courier',
       estimatedDelivery: '2-3 Business Days',
       customerNote: customerNote.trim(),
       checkpoints: [
@@ -134,14 +132,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         },
         {
           title: 'Quality Check & Packing',
-          location: 'Khan Gadget Fulfillment Center',
+          location: 'Khan Gadget Fulfillment Center, Dhaka',
           time: 'Upcoming in 2-4 hours',
           description: 'Accessory inspection, barcode tagging & bubble packaging.',
           completed: false
         },
         {
-          title: 'Handed to Courier (Daraz Express)',
-          location: 'Central Logistics Sorting Center',
+          title: 'Handed to Courier (Steadfast Courier)',
+          location: 'Central Logistics Sorting Center, Dhaka',
           time: 'Pending Dispatch',
           description: 'Courier AWB generated. Package scheduled for pickup.',
           completed: false

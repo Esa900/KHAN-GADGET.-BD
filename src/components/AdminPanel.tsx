@@ -783,10 +783,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="p-4 bg-orange-50/60 rounded-xl border border-orange-100 text-xs space-y-2">
                 <span className="font-bold text-gray-900 block">Warehouse Location</span>
                 <p className="text-gray-600">
-                  Khan Gadget Central Hub: Plot #14, Korangi Industrial Area, Karachi, Pakistan.
+                  Khan Gadget Central Hub: Motijheel Commercial Area, Dhaka, Bangladesh.
                 </p>
                 <p className="text-gray-600">
-                  Couriers Integrated: Daraz Express (DEX), TCS Logistics, Leopard Courier.
+                  Couriers Integrated: Steadfast Courier, RedX Logistics, Pathao Express, Paperfly, Sundarban Courier.
                 </p>
               </div>
 
@@ -865,7 +865,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="font-semibold text-gray-700 block mb-1">Price (Rs.) *</label>
+                    <label className="font-semibold text-gray-700 block mb-1">Price (BDT / ৳) *</label>
                     <input
                       type="number"
                       required
@@ -875,7 +875,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-gray-700 block mb-1">Original Price (Rs.)</label>
+                    <label className="font-semibold text-gray-700 block mb-1">Original Price (BDT / ৳)</label>
                     <input
                       type="number"
                       value={productForm.originalPrice}
@@ -1193,12 +1193,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         onChange={(e) => setCourierName(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 font-medium"
                       >
-                        <option value="Daraz Express (DEX)">Daraz Express (DEX)</option>
-                        <option value="TCS Express Courier">TCS Express Courier</option>
-                        <option value="Leopard Courier Services">Leopard Courier Services</option>
-                        <option value="M&P Express Logistics">M&P Express Logistics</option>
                         <option value="Steadfast Courier">Steadfast Courier</option>
                         <option value="RedX Logistics">RedX Logistics</option>
+                        <option value="Pathao Express">Pathao Express</option>
+                        <option value="Paperfly">Paperfly</option>
+                        <option value="Sundarban Courier">Sundarban Courier</option>
+                        <option value="Daraz Express (DEX)">Daraz Express (DEX)</option>
                       </select>
                     </div>
                   </div>
@@ -1277,7 +1277,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
                     >
                       <option value="percentage">Percentage (%)</option>
-                      <option value="fixed">Fixed Amount (Rs.)</option>
+                      <option value="fixed">Fixed Amount (৳)</option>
                     </select>
                   </div>
                   <div>
@@ -1293,7 +1293,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
 
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">Minimum Spend (Rs.)</label>
+                  <label className="font-semibold text-gray-700 block mb-1">Minimum Spend (৳)</label>
                   <input
                     type="number"
                     value={voucherForm.minSpend}

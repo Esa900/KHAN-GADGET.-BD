@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Flash Deals: Use code <strong className="bg-white/20 px-1 py-0.5 rounded font-mono text-white">KHAN10</strong> for 10% OFF</span>
             </span>
             <span className="hidden md:inline text-orange-300">|</span>
-            <span className="hidden md:inline text-orange-100">Free delivery on orders over Rs. 2,000</span>
+            <span className="hidden md:inline text-orange-100">Free delivery on orders over ৳ 2,000</span>
           </div>
 
           <div className="flex items-center space-x-3 text-[11px]">
@@ -183,7 +183,7 @@ export const Header: React.FC<HeaderProps> = ({
               <ShoppingCart className="w-4 h-4" />
               <span className="font-bold text-sm">{cartCount}</span>
               <span className="text-xs text-orange-200 hidden sm:inline font-mono">
-                ({cartTotal > 0 ? formatPrice(cartTotal) : 'Rs. 0'})
+                ({cartTotal > 0 ? formatPrice(cartTotal) : '৳ 0'})
               </span>
             </div>
           </div>

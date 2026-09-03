@@ -114,7 +114,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="Enter Order ID (e.g. KG-849201-PK) or Tracking Number (DEX-PK-...)"
+                placeholder="Enter Order ID (e.g. KG-849201-BD) or Tracking Number (STD-BD-...)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full text-xs sm:text-sm pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 font-mono"

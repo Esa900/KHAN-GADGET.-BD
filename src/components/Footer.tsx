@@ -75,11 +75,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
               </span>
             </div>
             <p className="text-slate-400 leading-relaxed text-[11px]">
-              Pakistan's premium mobile accessories mall for fast chargers, MagSafe cases, earbuds, and gaming gear.
+              Bangladesh's premium mobile accessories mall for fast chargers, MagSafe cases, earbuds, and gaming gear.
             </p>
             <div className="flex items-center gap-1 text-[11px] text-orange-400 font-medium">
               <MapPin className="w-3 h-3" />
-              <span>Karachi • Lahore • Islamabad</span>
+              <span>Dhaka • Chittagong • Sylhet • Nationwide Delivery</span>
             </div>
             <div className="pt-1">
               <a 

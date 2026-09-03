@@ -40,7 +40,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   });
 
   // Delivery check state
-  const [destinationCity, setDestinationCity] = useState('Karachi');
+  const [destinationCity, setDestinationCity] = useState('Dhaka');
   const [deliveryChecked, setDeliveryChecked] = useState(false);
 
   // Review form state
@@ -286,19 +286,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       }}
                       className="flex-1 border border-gray-200 rounded-lg px-2.5 py-1 text-xs bg-white focus:outline-none"
                     >
-                      <option value="Karachi">Karachi (Same Day / Next Day)</option>
-                      <option value="Lahore">Lahore (1-2 Days Express)</option>
-                      <option value="Islamabad">Islamabad / Rawalpindi (1-2 Days)</option>
-                      <option value="Faisalabad">Faisalabad (2 Days)</option>
-                      <option value="Peshawar">Peshawar (2-3 Days)</option>
-                      <option value="Quetta">Quetta (2-3 Days)</option>
-                      <option value="Multan">Multan (2 Days)</option>
+                      <option value="Dhaka">Dhaka (Same Day / Next Day)</option>
+                      <option value="Chittagong">Chittagong (1-2 Days Express)</option>
+                      <option value="Sylhet">Sylhet (1-2 Days)</option>
+                      <option value="Rajshahi">Rajshahi (2 Days)</option>
+                      <option value="Khulna">Khulna (2 Days)</option>
+                      <option value="Barishal">Barishal (2-3 Days)</option>
+                      <option value="Rangpur">Rangpur (2-3 Days)</option>
+                      <option value="Comilla">Comilla (1-2 Days)</option>
                     </select>
                   </div>
                   <p className="text-[11px] text-gray-500 mt-1">
                     {product.freeDelivery 
                       ? '🎉 Free Express Delivery eligible for this item!' 
-                      : `Standard Courier delivery to ${destinationCity}: Rs. 149 (Free over Rs. 2,000)`}
+                      : `Standard Courier delivery to ${destinationCity}: ৳ 149 (Free over ৳ 2,000)`}
                   </p>
                 </div>
               </div>
@@ -373,7 +374,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <MessageSquare className="w-4 h-4 text-[#f85606]" />
                   <span>Ratings & Verified Reviews</span>
                 </h3>
-                <p className="text-xs text-gray-500">Genuine feedback from Pakistani mobile tech users</p>
+                <p className="text-xs text-gray-500">Genuine feedback from verified gadget users in Bangladesh</p>
               </div>
 
               <button

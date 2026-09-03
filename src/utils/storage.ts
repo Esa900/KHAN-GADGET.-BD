@@ -1,11 +1,11 @@
 import { Product, Order, Voucher, CartItem, OrderStatus, TrackingCheckpoint } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_VOUCHERS } from '../data/mockData';
 
-const PRODUCTS_KEY = 'khan_gadget_products_v1';
-const ORDERS_KEY = 'khan_gadget_orders_v1';
-const VOUCHERS_KEY = 'khan_gadget_vouchers_v1';
-const CART_KEY = 'khan_gadget_cart_v1';
-const WISHLIST_KEY = 'khan_gadget_wishlist_v1';
+const PRODUCTS_KEY = 'khan_gadget_products_v2';
+const ORDERS_KEY = 'khan_gadget_orders_v2';
+const VOUCHERS_KEY = 'khan_gadget_vouchers_v2';
+const CART_KEY = 'khan_gadget_cart_v2';
+const WISHLIST_KEY = 'khan_gadget_wishlist_v2';
 
 export const getStoredProducts = (): Product[] => {
   try {
@@ -158,7 +158,7 @@ export const saveStoredWishlist = (wishlist: string[]): void => {
 };
 
 export const formatPrice = (amount: number): string => {
-  return 'Rs. ' + amount.toLocaleString('en-PK');
+  return '৳ ' + (amount || 0).toLocaleString('en-BD');
 };
 
 export const resetToDemoDefaults = () => {

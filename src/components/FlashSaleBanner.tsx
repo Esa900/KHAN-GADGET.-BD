@@ -81,7 +81,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({ onSelectVouche
                 </>
               )}
             </button>
-            <span className="text-[11px] text-slate-400">Valid on orders over Rs. 1,000</span>
+            <span className="text-[11px] text-slate-400">Valid on orders over ৳ 1,000</span>
           </div>
         </div>
 

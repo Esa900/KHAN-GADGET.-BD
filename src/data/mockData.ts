@@ -41,10 +41,10 @@ export const INITIAL_PRODUCTS: Product[] = [
       },
       {
         id: 'r2',
-        author: 'Ayesha Noor',
+        author: 'Nusrat Jahan',
         rating: 5,
         date: '2025-02-10',
-        comment: 'Original product with warranty card. Delivered in 2 days in Lahore. Extremely satisfied.',
+        comment: 'Original product with warranty card. Delivered in 2 days in Dhaka. Extremely satisfied.',
         verified: true
       }
     ]
@@ -368,7 +368,7 @@ export const INITIAL_VOUCHERS: Voucher[] = [
     discountType: 'percentage',
     discountValue: 10,
     minSpend: 1500,
-    description: '10% OFF on all orders above Rs. 1,500',
+    description: '10% OFF on all orders above ৳ 1,500',
     isActive: true
   },
   {
@@ -376,15 +376,15 @@ export const INITIAL_VOUCHERS: Voucher[] = [
     discountType: 'fixed',
     discountValue: 500,
     minSpend: 3000,
-    description: 'Flat Rs. 500 OFF on orders above Rs. 3,000',
+    description: 'Flat ৳ 500 OFF on orders above ৳ 3,000',
     isActive: true
   },
   {
     code: 'FREESHIP',
     discountType: 'fixed',
-    discountValue: 199,
+    discountValue: 149,
     minSpend: 1000,
-    description: 'Free Courier Delivery (Rs. 199 OFF)',
+    description: 'Free Courier Delivery (৳ 149 OFF)',
     isActive: true
   },
   {
@@ -392,15 +392,15 @@ export const INITIAL_VOUCHERS: Voucher[] = [
     discountType: 'percentage',
     discountValue: 20,
     minSpend: 8000,
-    description: '20% OFF Mega VIP Discount on orders above Rs. 8,000',
+    description: '20% OFF Mega VIP Discount on orders above ৳ 8,000',
     isActive: true
   }
 ];
 
 export const INITIAL_ORDERS: Order[] = [
   {
-    id: 'KG-849201-PK',
-    trackingNumber: 'DEX-PK-98241029',
+    id: 'KG-849201-BD',
+    trackingNumber: 'STD-BD-98241029',
     createdAt: '2025-02-28T14:32:00Z',
     status: 'In Transit' as any,
     items: [
@@ -418,49 +418,49 @@ export const INITIAL_ORDERS: Order[] = [
       }
     ],
     shippingAddress: {
-      fullName: 'Muhammad Ali Raza',
-      phone: '0302-8877665',
-      email: 'aliraza.tech@gmail.com',
-      city: 'Lahore',
-      province: 'Punjab',
-      address: 'House #42, Block C, Model Town',
-      landmark: 'Near Central Park',
+      fullName: 'Muhammad Tanvir Hasan',
+      phone: '01854-774406',
+      email: 'tanvir.hasan@gmail.com',
+      city: 'Dhaka',
+      province: 'Dhaka Division',
+      address: 'House #42, Road #7, Dhanmondi',
+      landmark: 'Near Dhanmondi Lake',
       addressType: 'Home'
     },
-    paymentMethod: 'card',
-    paymentStatus: 'Paid',
+    paymentMethod: 'cod',
+    paymentStatus: 'Unpaid (COD)',
     subtotal: 6699,
     discount: 669,
     shippingFee: 0,
     total: 6030,
     appliedVoucher: 'KHAN10',
-    carrierName: 'Daraz Express (DEX)',
+    carrierName: 'Steadfast Courier',
     estimatedDelivery: 'Tomorrow, by 5:00 PM',
     checkpoints: [
       {
         title: 'Order Placed & Verified',
         location: 'Khan Gadget Portal',
         time: '28 Feb, 02:32 PM',
-        description: 'Payment successfully processed via 3D Secure Card Gateway.',
+        description: 'Order confirmed with Cash on Delivery (COD).',
         completed: true
       },
       {
         title: 'Packed & Quality Verified',
-        location: 'Khan Gadget Central Warehouse, Karachi',
+        location: 'Khan Gadget Central Warehouse, Dhaka',
         time: '28 Feb, 06:15 PM',
         description: 'Quality inspected, barcode verified, bubble wrap packing done.',
         completed: true
       },
       {
         title: 'Handed Over to Courier',
-        location: 'Daraz Express Logistics Center, Karachi',
+        location: 'Steadfast Courier Logistics Center, Dhaka',
         time: '01 Mar, 09:30 AM',
-        description: 'Consignment booked under tracking # DEX-PK-98241029.',
+        description: 'Consignment booked under tracking # STD-BD-98241029.',
         completed: true
       },
       {
         title: 'In Transit to Destination Hub',
-        location: 'Lahore Sorting Distribution Facility',
+        location: 'Dhanmondi Delivery Facility, Dhaka',
         time: '02 Mar, 04:20 AM',
         description: 'Package arrived at regional sorting center. Sorting for route delivery.',
         completed: true,
@@ -468,7 +468,7 @@ export const INITIAL_ORDERS: Order[] = [
       },
       {
         title: 'Out for Delivery',
-        location: 'Model Town Hub, Lahore',
+        location: 'Dhanmondi Hub, Dhaka',
         time: 'Estimated 03 Mar, 09:00 AM',
         description: 'Rider assigned with dispatch run.',
         completed: false
@@ -483,8 +483,8 @@ export const INITIAL_ORDERS: Order[] = [
     ]
   },
   {
-    id: 'KG-719302-PK',
-    trackingNumber: 'TCS-EXP-7729104',
+    id: 'KG-719302-BD',
+    trackingNumber: 'REDX-BD-7729104',
     createdAt: '2025-02-25T11:15:00Z',
     status: 'Delivered',
     items: [
@@ -496,51 +496,51 @@ export const INITIAL_ORDERS: Order[] = [
       }
     ],
     shippingAddress: {
-      fullName: 'Kamran Siddiqui',
-      phone: '0313-5544332',
-      email: 'kamran.sid@yahoo.com',
-      city: 'Islamabad',
-      province: 'Federal Capital',
-      address: 'Apartment 4B, Silver Oaks, F-10/4',
-      landmark: 'Opposite Margalla View',
-      addressType: 'Home'
+      fullName: 'Shafiqul Islam',
+      phone: '01712-334455',
+      email: 'shafiq.bd@gmail.com',
+      city: 'Chittagong',
+      province: 'Chittagong Division',
+      address: 'Flat 4B, Agrabad Commercial Area',
+      landmark: 'Near GEC Circle',
+      addressType: 'Office'
     },
-    paymentMethod: 'easypaisa',
+    paymentMethod: 'cod',
     paymentStatus: 'Paid',
     subtotal: 9800,
     discount: 500,
     shippingFee: 0,
     total: 9300,
     appliedVoucher: 'DARAZSUPER',
-    carrierName: 'TCS Express Courier',
+    carrierName: 'RedX Logistics',
     estimatedDelivery: 'Delivered on 27 Feb',
     checkpoints: [
       {
         title: 'Order Placed',
         location: 'Khan Gadget Portal',
         time: '25 Feb, 11:15 AM',
-        description: 'Paid via EasyPaisa Wallet OTP.',
+        description: 'Order placed with Cash on Delivery.',
         completed: true
       },
       {
         title: 'Dispatched from Warehouse',
-        location: 'Rawalpindi Hub',
+        location: 'Dhaka Central Hub',
         time: '25 Feb, 03:40 PM',
         description: 'Passed automated weight & seal check.',
         completed: true
       },
       {
         title: 'Out for Delivery',
-        location: 'F-10 Islamabad Delivery Van',
+        location: 'Chittagong Agrabad Delivery Van',
         time: '27 Feb, 10:10 AM',
-        description: 'Rider Farhan (0300-9876543) out for delivery.',
+        description: 'Rider Farhan (01811-987654) out for delivery.',
         completed: true
       },
       {
         title: 'Delivered & Completed',
-        location: 'Islamabad F-10/4',
+        location: 'Chittagong Agrabad',
         time: '27 Feb, 02:45 PM',
-        description: 'Received & signed by Kamran Siddiqui.',
+        description: 'Received & signed by Shafiqul Islam. Cash collected.',
         completed: true,
         current: true
       }
