@@ -460,31 +460,6 @@ export default function App() {
               )}
             </div>
           </div>
-
-          {/* Store Portal Card */}
-          <div className="bg-slate-800 text-white p-3 shadow-sm rounded border border-slate-900 mt-auto">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Store Portal</h3>
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              <div className="bg-slate-700 p-2 rounded">
-                <div className="opacity-70">Catalog Items</div>
-                <div className="text-sm font-bold">{products.length}</div>
-              </div>
-              <div className="bg-slate-700 p-2 rounded">
-                <div className="opacity-70">Total Orders</div>
-                <div className="text-sm font-bold">{orders.length}</div>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsAdminOpen(true)}
-              className="w-full mt-2.5 py-1.5 bg-orange-600 hover:bg-orange-500 text-[11px] font-bold rounded transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <Lock className="w-3 h-3" />
-              <span>APP LOGIN</span>
-            </button>
-          </div>
         </aside>
 
         {/* Center Section: Banner, Header bar & Product Grid */}

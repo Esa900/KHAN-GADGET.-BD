@@ -159,9 +159,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
               <button
                 onClick={onOpenAdmin}
                 className="text-[11px] font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5 cursor-pointer bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded border border-slate-700"
+                title="AP"
               >
                 <Lock className="w-3.5 h-3.5 text-amber-400" />
-                <span>App Login</span>
+                <span>AP</span>
               </button>
             </div>
           </div>

@@ -83,12 +83,13 @@ export type PaymentMethod = 'card' | 'easypaisa' | 'jazzcash' | 'cod' | 'bank';
 export interface ShippingAddress {
   fullName: string;
   phone: string;
-  email: string;
+  email?: string;
   city: string;
-  province: string;
+  province?: string;
   address: string;
   landmark?: string;
-  addressType: 'Home' | 'Office';
+  customerNote?: string;
+  addressType?: 'Home' | 'Office';
 }
 
 export interface TrackingCheckpoint {
@@ -121,5 +122,6 @@ export interface Order {
   appliedVoucher?: string;
   carrierName: string;
   estimatedDelivery: string;
+  customerNote?: string;
   checkpoints: TrackingCheckpoint[];
 }

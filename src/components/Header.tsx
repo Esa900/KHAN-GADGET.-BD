@@ -70,11 +70,11 @@ export const Header: React.FC<HeaderProps> = ({
             </a>
             <button
               onClick={onOpenAdmin}
-              className="bg-slate-900/40 hover:bg-slate-900/60 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1 transition cursor-pointer border border-white/10"
-              title="App Login"
+              className="bg-slate-900/40 hover:bg-slate-900/60 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1 transition cursor-pointer border border-white/10"
+              title="AP"
             >
               <Lock className="w-3 h-3" />
-              <span>App Login</span>
+              <span>AP</span>
             </button>
           </div>
         </div>
@@ -280,7 +280,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-orange-50 rounded-lg"
                 >
                   <Lock className="w-4 h-4 text-amber-500" />
-                  <span>App Login</span>
+                  <span>AP</span>
                 </button>
               </div>
             </div>

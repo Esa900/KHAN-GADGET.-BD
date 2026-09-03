@@ -3,7 +3,8 @@ import {
   X, LayoutDashboard, Package, ShoppingBag, Tag, 
   Settings, Plus, Edit2, Trash2, Check, AlertCircle, 
   TrendingUp, Truck, ShieldAlert, ArrowUpRight, DollarSign, 
-  Search, Eye, EyeOff, RefreshCw, KeyRound, Lock, Unlock 
+  Search, Eye, EyeOff, RefreshCw, KeyRound, Lock, Unlock,
+  Phone, MessageCircle, FileText, User, MapPin, Banknote
 } from 'lucide-react';
 import { Product, Order, Voucher, OrderStatus, ProductCategory } from '../types';
 import { formatPrice, resetToDemoDefaults } from '../utils/storage';
@@ -220,8 +221,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <Lock className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-black text-sm text-white tracking-tight">App Login</h3>
-                <p className="text-[10px] text-slate-400">Store Verification Portal</p>
+                <h3 className="font-black text-sm text-white tracking-tight">AP</h3>
+                <p className="text-[10px] text-slate-400">KHAN GADGET Security System</p>
               </div>
             </div>
             <button
@@ -273,7 +274,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               className="w-full py-2.5 px-4 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>LOGIN</span>
+              <span>AP LOGIN</span>
             </button>
 
             <div className="text-center pt-1">
@@ -301,12 +302,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-black text-white text-base sm:text-lg">KHAN GADGET Store Portal</h2>
+                <h2 className="font-black text-white text-base sm:text-lg">KHAN GADGET - AP</h2>
                 <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30">
                   VERIFIED SESSION
                 </span>
               </div>
-              <p className="text-xs text-gray-400">Inventory & Order Dispatch Management</p>
+              <p className="text-xs text-gray-400">Inventory & Order Dispatch Console</p>
             </div>
           </div>
 
@@ -462,11 +463,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-gray-700">
-                      {orders.slice(0, 5).map((order) => (
+                      {orders.slice(0, 6).map((order) => (
                         <tr key={order.id} className="hover:bg-gray-50/80">
-                          <td className="py-3 font-mono font-bold text-gray-900">{order.id}</td>
-                          <td className="py-3 font-medium">{order.shippingAddress.fullName}</td>
-                          <td className="py-3 text-gray-500">{order.shippingAddress.city}</td>
+                          <td className="py-3 font-mono">
+                            <span className="font-bold text-gray-900 block">{order.id}</span>
+                            <span className="text-[10px] text-[#f85606] font-mono">{order.trackingNumber}</span>
+                          </td>
+                          <td className="py-3">
+                            <div className="font-bold text-gray-900">{order.shippingAddress.fullName}</div>
+                            <div className="text-[11px] text-gray-500 font-mono">{order.shippingAddress.phone}</div>
+                            {(order.customerNote || order.shippingAddress.customerNote) && (
+                              <span className="inline-flex items-center gap-1 text-[9px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded mt-0.5">
+                                <FileText className="w-2.5 h-2.5" /> Note
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 text-gray-600">
+                            <div>{order.shippingAddress.city}</div>
+                            <div className="text-[10px] text-gray-400 max-w-[130px] truncate">{order.shippingAddress.address}</div>
+                          </td>
                           <td className="py-3 text-gray-500">{order.items.length} item(s)</td>
                           <td className="py-3 font-bold text-[#f85606]">{formatPrice(order.total)}</td>
                           <td className="py-3">
@@ -479,11 +494,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               onClick={() => {
                                 setSelectedOrderForEdit(order);
                                 setNewStatus(order.status);
-                                setActiveTab('orders');
+                                setCourierName(order.carrierName || 'Daraz Express (DEX)');
                               }}
-                              className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer"
+                              className="px-2.5 py-1 bg-slate-900 hover:bg-black text-white text-[11px] font-bold rounded shadow-xs transition cursor-pointer"
                             >
-                              Manage
+                              Full Details
                             </button>
                           </td>
                         </tr>
@@ -655,19 +670,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             <span className="text-[11px] text-[#f85606]">{order.trackingNumber}</span>
                           </td>
                           <td className="p-3">
-                            <div className="font-bold text-gray-800">{order.shippingAddress.fullName}</div>
-                            <div className="text-[11px] text-gray-500">{order.shippingAddress.phone} • {order.shippingAddress.city}</div>
+                            <div className="font-bold text-gray-900">{order.shippingAddress.fullName}</div>
+                            <div className="text-[11px] text-gray-500 font-mono">{order.shippingAddress.phone} • {order.shippingAddress.city}</div>
+                            <div className="text-[10px] text-gray-400 max-w-xs truncate">{order.shippingAddress.address}</div>
+                            {(order.customerNote || order.shippingAddress.customerNote) && (
+                              <div className="mt-1">
+                                <span className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded border border-amber-200">
+                                  <FileText className="w-3 h-3 text-amber-600" />
+                                  <span className="truncate max-w-[200px]">Note: {order.customerNote || order.shippingAddress.customerNote}</span>
+                                </span>
+                              </div>
+                            )}
                           </td>
                           <td className="p-3">
-                            <span className="font-semibold text-gray-700 uppercase">{order.paymentMethod}</span>
-                            <span className="text-[10px] text-emerald-600 block">{order.paymentStatus}</span>
+                            <span className="font-bold text-gray-800 uppercase text-[11px]">
+                              {order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : order.paymentMethod}
+                            </span>
+                            <span className="text-[10px] text-emerald-600 font-semibold block">{order.paymentStatus}</span>
                           </td>
                           <td className="p-3 text-gray-600">
                             {order.items.reduce((acc, it) => acc + it.quantity, 0)} units
                           </td>
                           <td className="p-3 font-black text-[#f85606]">{formatPrice(order.total)}</td>
                           <td className="p-3">
-                            <span className="bg-orange-100 text-[#f85606] font-bold px-2 py-0.5 rounded text-[10px]">
+                            <span className="bg-orange-100 text-[#f85606] font-bold px-2.5 py-1 rounded-full text-[10px]">
                               {order.status}
                             </span>
                           </td>
@@ -678,9 +704,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 setNewStatus(order.status);
                                 setCourierName(order.carrierName || 'Daraz Express (DEX)');
                               }}
-                              className="px-3 py-1.5 bg-[#f85606] hover:bg-[#e04a00] text-white rounded-lg font-bold text-xs transition cursor-pointer"
+                              className="px-3 py-1.5 bg-[#f85606] hover:bg-[#e04a00] text-white rounded-lg font-bold text-xs transition cursor-pointer shadow-xs"
                             >
-                              Update Status
+                              View Full Details
                             </button>
                           </td>
                         </tr>
@@ -936,81 +962,284 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
         )}
 
-        {/* MODAL: Update Order Status */}
+        {/* MODAL: Full Order Details & Dispatch Management */}
         {selectedOrderForEdit && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b pb-3">
-                <h3 className="font-bold text-gray-900 text-base">
-                  Update Order: {selectedOrderForEdit.id}
-                </h3>
-                <button onClick={() => setSelectedOrderForEdit(null)}>
-                  <X className="w-5 h-5 text-gray-400" />
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+              
+              {/* Modal Header */}
+              <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-orange-600 flex items-center justify-center text-white shadow-xs">
+                    <ShoppingBag className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-white text-base">
+                        Order Details: <span className="font-mono text-orange-400">{selectedOrderForEdit.id}</span>
+                      </h3>
+                      <span className="bg-orange-500/20 text-orange-300 font-bold px-2 py-0.5 rounded text-[10px] border border-orange-500/30">
+                        {selectedOrderForEdit.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-mono">
+                      Tracking: {selectedOrderForEdit.trackingNumber} • {new Date(selectedOrderForEdit.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedOrderForEdit(null)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveOrderStatus} className="space-y-3 text-xs">
-                <div>
-                  <label className="font-semibold text-gray-700 block mb-1">Change Order Status</label>
-                  <select
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value as OrderStatus)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 font-bold"
-                  >
-                    <option value="Confirmed">Confirmed</option>
-                    <option value="Processing">Processing / Packing</option>
-                    <option value="Shipped">Shipped to Sorting Center</option>
-                    <option value="Out for Delivery">Out for Delivery (Rider Dispatched)</option>
-                    <option value="Delivered">Delivered & Signed</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
+              {/* Modal Scrollable Content */}
+              <div className="p-6 overflow-y-auto space-y-5 text-xs">
+                
+                {/* 1. Customer & Delivery Information */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <h4 className="font-black text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-orange-600" />
+                      <span>Customer & Delivery Details (কাস্টমার তথ্য)</span>
+                    </h4>
+                    <span className="text-[10px] bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">
+                      {selectedOrderForEdit.shippingAddress.addressType || 'Home Delivery'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-slate-400 text-[10px] uppercase font-bold block">Customer Name</span>
+                      <span className="font-bold text-slate-900 text-sm">{selectedOrderForEdit.shippingAddress.fullName}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[10px] uppercase font-bold block">Phone Number</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="font-mono font-bold text-slate-900 text-sm">{selectedOrderForEdit.shippingAddress.phone}</span>
+                        <a 
+                          href={`tel:${selectedOrderForEdit.shippingAddress.phone}`}
+                          className="px-2 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-[10px] flex items-center gap-1 transition"
+                          title="Call Customer"
+                        >
+                          <Phone className="w-3 h-3" />
+                          <span>Call</span>
+                        </a>
+                        <a 
+                          href={`https://wa.me/88${selectedOrderForEdit.shippingAddress.phone.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 transition"
+                          title="WhatsApp Customer"
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                          <span>WhatsApp</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[10px] uppercase font-bold block">City</span>
+                      <span className="font-semibold text-slate-800">{selectedOrderForEdit.shippingAddress.city}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[10px] uppercase font-bold block">Full Delivery Address</span>
+                      <span className="font-medium text-slate-800">{selectedOrderForEdit.shippingAddress.address}</span>
+                    </div>
+                  </div>
+
+                  {/* Customer Note Highlight Box */}
+                  <div className="pt-2 border-t border-slate-200">
+                    <div className="bg-amber-50 border border-amber-300 rounded-xl p-3">
+                      <div className="flex items-center gap-1.5 text-amber-900 font-bold text-xs mb-1">
+                        <FileText className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>Customer Note (কাস্টমার স্পেশাল নোট):</span>
+                      </div>
+                      {selectedOrderForEdit.customerNote || selectedOrderForEdit.shippingAddress.customerNote ? (
+                        <p className="text-xs text-amber-950 font-semibold italic bg-white/90 p-2.5 rounded-lg border border-amber-200">
+                          "{selectedOrderForEdit.customerNote || selectedOrderForEdit.shippingAddress.customerNote}"
+                        </p>
+                      ) : (
+                        <p className="text-[11px] text-amber-700 italic">
+                          No special instructions entered by customer.
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="font-semibold text-gray-700 block mb-1">Carrier Partner</label>
-                  <select
-                    value={courierName}
-                    onChange={(e) => setCourierName(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
-                  >
-                    <option value="Daraz Express (DEX)">Daraz Express (DEX)</option>
-                    <option value="TCS Express Courier">TCS Express Courier</option>
-                    <option value="Leopard Courier Services">Leopard Courier Services</option>
-                    <option value="M&P Express Logistics">M&P Express Logistics</option>
-                  </select>
+                {/* 2. Purchased Products Table */}
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-200 flex items-center justify-between">
+                    <h4 className="font-black text-gray-900 uppercase tracking-wider text-xs flex items-center gap-1.5">
+                      <Package className="w-3.5 h-3.5 text-orange-600" />
+                      <span>Order Items ({selectedOrderForEdit.items.reduce((s, i) => s + i.quantity, 0)} Units)</span>
+                    </h4>
+                  </div>
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-gray-100 text-gray-500 font-bold uppercase text-[10px] border-b border-gray-200">
+                      <tr>
+                        <th className="p-2.5">Product</th>
+                        <th className="p-2.5">Unit Price</th>
+                        <th className="p-2.5">Qty</th>
+                        <th className="p-2.5 text-right">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {selectedOrderForEdit.items.map((it, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50">
+                          <td className="p-2.5 flex items-center gap-2.5">
+                            <img 
+                              src={it.product.image} 
+                              alt={it.product.title} 
+                              referrerPolicy="no-referrer"
+                              className="w-10 h-10 object-contain rounded-lg border border-gray-200 bg-white"
+                            />
+                            <div>
+                              <div className="font-bold text-gray-900">{it.product.title}</div>
+                              <div className="text-[10px] text-gray-400">
+                                Brand: {it.product.brand} • Category: {it.product.category}
+                                {it.selectedVariants && Object.keys(it.selectedVariants).length > 0 && (
+                                  <span> • {Object.entries(it.selectedVariants).map(([k, v]) => `${k}: ${v}`).join(', ')}</span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-2.5 font-medium text-gray-600">{formatPrice(it.priceAtPurchase)}</td>
+                          <td className="p-2.5 font-bold text-gray-900">{it.quantity}</td>
+                          <td className="p-2.5 font-bold text-gray-900 text-right">{formatPrice(it.priceAtPurchase * it.quantity)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
-                <div>
-                  <label className="font-semibold text-gray-700 block mb-1">Tracking Log Note (Customer will see this live)</label>
-                  <textarea
-                    rows={2}
-                    value={statusNote}
-                    onChange={(e) => setStatusNote(e.target.value)}
-                    placeholder="e.g. Dispatched from Karachi central warehouse via van #KH-4412"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
-                  />
+                {/* 3. Payment & Bill Summary */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3.5 space-y-2">
+                    <div className="flex items-center gap-1.5 text-emerald-900 font-bold text-xs uppercase tracking-wider">
+                      <Banknote className="w-4 h-4 text-emerald-600" />
+                      <span>Payment Method</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-gray-800">Method:</span>
+                      <span className="font-black text-emerald-800 uppercase">Cash on Delivery (COD)</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-gray-800">Status:</span>
+                      <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">
+                        {selectedOrderForEdit.paymentStatus}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 pt-1 border-t border-emerald-200">
+                      Rider must collect cash upon delivering the parcel to the customer.
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 space-y-1.5 text-xs">
+                    <div className="flex justify-between text-gray-600">
+                      <span>Subtotal:</span>
+                      <span>{formatPrice(selectedOrderForEdit.subtotal)}</span>
+                    </div>
+                    {selectedOrderForEdit.discount > 0 && (
+                      <div className="flex justify-between text-emerald-600 font-semibold">
+                        <span>Voucher Discount ({selectedOrderForEdit.appliedVoucher}):</span>
+                        <span>-{formatPrice(selectedOrderForEdit.discount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-gray-600">
+                      <span>Delivery Fee:</span>
+                      <span>{selectedOrderForEdit.shippingFee === 0 ? 'FREE' : formatPrice(selectedOrderForEdit.shippingFee)}</span>
+                    </div>
+                    <div className="flex justify-between font-black text-sm text-gray-900 pt-2 border-t border-gray-200">
+                      <span>Total Amount to Collect:</span>
+                      <span className="text-[#f85606] text-base">{formatPrice(selectedOrderForEdit.total)}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <p className="text-[11px] text-gray-500 italic">
-                  💡 Updating this immediately logs a new tracking checkpoint in the customer's Live Order Tracking timeline!
-                </p>
+                {/* 4. Update Status & Dispatch Form */}
+                <form onSubmit={handleSaveOrderStatus} className="bg-orange-50/40 border border-orange-200 rounded-xl p-4 space-y-3">
+                  <h4 className="font-black text-gray-900 uppercase tracking-wider text-xs flex items-center gap-1.5">
+                    <Truck className="w-3.5 h-3.5 text-orange-600" />
+                    <span>Update Order Status & Dispatch Log</span>
+                  </h4>
 
-                <div className="flex justify-end gap-2 pt-3 border-t">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedOrderForEdit(null)}
-                    className="px-4 py-2 border rounded-lg font-semibold"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 bg-[#f85606] text-white rounded-lg font-bold hover:bg-[#e04a00]"
-                  >
-                    Apply Status & Notify
-                  </button>
-                </div>
-              </form>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">Update Status</label>
+                      <select
+                        value={newStatus}
+                        onChange={(e) => setNewStatus(e.target.value as OrderStatus)}
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 font-bold"
+                      >
+                        <option value="Confirmed">Confirmed (Order Accepted)</option>
+                        <option value="Processing">Processing / Quality Check & Packing</option>
+                        <option value="Shipped">Shipped to Sorting Center</option>
+                        <option value="Out for Delivery">Out for Delivery (Rider Dispatched)</option>
+                        <option value="Delivered">Delivered & Signed (Payment Received)</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">Courier Partner</label>
+                      <select
+                        value={courierName}
+                        onChange={(e) => setCourierName(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 font-medium"
+                      >
+                        <option value="Daraz Express (DEX)">Daraz Express (DEX)</option>
+                        <option value="TCS Express Courier">TCS Express Courier</option>
+                        <option value="Leopard Courier Services">Leopard Courier Services</option>
+                        <option value="M&P Express Logistics">M&P Express Logistics</option>
+                        <option value="Steadfast Courier">Steadfast Courier</option>
+                        <option value="RedX Logistics">RedX Logistics</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">
+                      Tracking Update Note (Visible to customer in live tracking)
+                    </label>
+                    <input
+                      type="text"
+                      value={statusNote}
+                      onChange={(e) => setStatusNote(e.target.value)}
+                      placeholder="e.g. Dispatched from main fulfillment hub via express courier..."
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-orange-200/70">
+                    <p className="text-[10px] text-gray-500 italic">
+                      Updating will instantly log this checkpoint to customer live tracking.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrderForEdit(null)}
+                        className="px-4 py-2 border border-gray-300 rounded-lg font-bold text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+                      >
+                        Close
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-6 py-2 bg-[#f85606] hover:bg-[#e04a00] text-white rounded-lg font-black shadow-md transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Update Order Status</span>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+              </div>
             </div>
           </div>
         )}
