@@ -75,7 +75,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const shippingFee = isFreeShipping ? 0 : 199;
   const grandTotal = Math.max(0, subtotal - discount + shippingFee);
 
-  const handleConfirmOrder = (e: React.FormEvent) => {
+  const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !phone.trim() || !city.trim() || !address.trim()) {
       alert('Please fill in Name, Phone, City, and Delivery Address.');
@@ -96,7 +96,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       city: city.trim(),
       province: 'Dhaka Division',
       address: address.trim(),
-      customerNote: customerNote.trim(),
+      customerNote: customerNote.trim() || '',
       addressType: 'Home'
     };
 
@@ -108,7 +108,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       items: cart.map(item => ({
         product: item.product,
         quantity: item.quantity,
-        selectedVariants: item.selectedVariants,
+        selectedVariants: item.selectedVariants || undefined,
         priceAtPurchase: item.product.price
       })),
       shippingAddress: shippingInfo,
@@ -118,10 +118,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       discount,
       shippingFee,
       total: grandTotal,
-      appliedVoucher: appliedVoucher?.code,
+      appliedVoucher: appliedVoucher ? appliedVoucher.code : undefined,
       carrierName: 'Steadfast Courier',
       estimatedDelivery: '2-3 Business Days',
-      customerNote: customerNote.trim(),
+      customerNote: customerNote.trim() || '',
       checkpoints: [
         {
           title: 'Order Placed & Verified',
@@ -162,9 +162,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       ]
     };
 
-    // Store order into local and cloud database
+    // Store order into local storage backup immediately
     addStoredOrder(newOrder);
-    syncAddOrder(newOrder).catch(err => console.error('Cloud sync error:', err));
+
+    // Save order into Firestore Cloud Database so all devices see it in real-time
+    try {
+      const syncRes = await syncAddOrder(newOrder);
+      if (!syncRes.success) {
+        console.warn('Firestore cloud sync notice:', syncRes.error);
+      }
+    } catch (err) {
+      console.error('Cloud sync error on order creation:', err);
+    }
+
     setConfirmedOrder(newOrder);
     setIsSubmitting(false);
     setStep('confirmed');

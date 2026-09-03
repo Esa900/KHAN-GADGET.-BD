@@ -42,6 +42,7 @@ import {
   subscribeToOrders, 
   subscribeToVouchers,
   fetchRemoteProducts,
+  fetchRemoteOrders,
   syncSaveProduct,
   syncDeleteProduct,
   syncUpdateOrderStatus,
@@ -103,13 +104,17 @@ export default function App() {
   const handleManualCloudSync = async () => {
     setIsSyncing(true);
     try {
-      const freshProducts = await fetchRemoteProducts();
+      const [freshProducts, freshOrders] = await Promise.all([
+        fetchRemoteProducts(),
+        fetchRemoteOrders()
+      ]);
       if (freshProducts && freshProducts.length > 0) {
         setProducts(freshProducts);
-        showToast(`Cloud Sync Complete: ${freshProducts.length} items loaded!`);
-      } else {
-        showToast('Cloud Sync Complete: Store is up to date.');
       }
+      if (freshOrders && freshOrders.length > 0) {
+        setOrders(freshOrders);
+      }
+      showToast(`Cloud Sync Complete: Store & orders synced!`);
     } catch (err) {
       showToast('Cloud Sync error: Check internet connection.');
     } finally {
@@ -143,10 +148,23 @@ export default function App() {
         fetchRemoteProducts().then(prods => {
           if (prods && prods.length > 0) setProducts(prods);
         }).catch(console.error);
+        fetchRemoteOrders().then(ordrs => {
+          if (ordrs && ordrs.length > 0) setOrders(ordrs);
+        }).catch(console.error);
       }
     };
     window.addEventListener('focus', handleVisibilityOrFocus);
     document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+
+    // Periodic heartbeat sync every 5 seconds to ensure mobile and laptop products and orders are real-time
+    const syncInterval = setInterval(() => {
+      fetchRemoteProducts().then(prods => {
+        if (prods && prods.length > 0) setProducts(prods);
+      }).catch(console.error);
+      fetchRemoteOrders().then(ordrs => {
+        if (ordrs && ordrs.length > 0) setOrders(ordrs);
+      }).catch(console.error);
+    }, 5000);
 
     return () => {
       unsubProducts();
@@ -154,6 +172,7 @@ export default function App() {
       unsubVouchers();
       window.removeEventListener('focus', handleVisibilityOrFocus);
       document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      clearInterval(syncInterval);
     };
   }, []);
 
@@ -322,6 +341,10 @@ export default function App() {
     setAppliedVoucher(null);
     setActiveTrackingOrderId(newOrder.id);
     setIsTrackingOpen(true);
+    // Background fetch latest orders
+    fetchRemoteOrders().then(ordrs => {
+      if (ordrs && ordrs.length > 0) setOrders(ordrs);
+    }).catch(console.error);
   };
 
   // Add Product Review
@@ -387,12 +410,12 @@ export default function App() {
     }
   };
 
-  const handleAdminDeleteProduct = async (productId: string) => {
+  const handleAdminDeleteProduct = async (productId: string): Promise<boolean> => {
     deleteStoredProduct(productId);
     setProducts(prev => prev.filter(p => p.id !== productId));
-    await syncDeleteProduct(productId);
+    const res = await syncDeleteProduct(productId);
     const remote = await fetchRemoteProducts();
-    if (remote && remote.length > 0) setProducts(remote);
+    if (remote) setProducts(remote);
     // Also remove deleted product from active cart and wishlist
     setCart(prev => {
       const nextCart = prev.filter(item => item.product.id !== productId);
@@ -404,7 +427,13 @@ export default function App() {
       saveStoredWishlist(nextWishlist);
       return nextWishlist;
     });
-    showToast('Product permanently deleted from store & cloud.');
+    if (res.success) {
+      showToast('Product permanently deleted from store & cloud.');
+      return true;
+    } else {
+      showToast(`Removed locally. Cloud sync notice (${res.error}).`);
+      return false;
+    }
   };
 
   const handleAdminUpdateOrderStatus = (orderId: string, status: OrderStatus, carrier?: string, note?: string) => {
@@ -842,7 +871,6 @@ export default function App() {
         onUpdateOrderStatus={handleAdminUpdateOrderStatus}
         onAddVoucher={handleAdminAddVoucher}
         onDeleteVoucher={handleAdminDeleteVoucher}
-        onResetToDemo={handleResetToDemo}
         onRefreshCloud={handleManualCloudSync}
         isSyncing={isSyncing}
       />

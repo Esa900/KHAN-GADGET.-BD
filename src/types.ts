@@ -52,6 +52,7 @@ export interface Product {
     options: string[];
   }[];
   reviews?: ProductReview[];
+  createdAt?: string;
 }
 
 export interface CartItem {

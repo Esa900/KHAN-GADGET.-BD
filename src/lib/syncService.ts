@@ -26,14 +26,18 @@ const VOUCHERS_COLLECTION = 'vouchers';
 
 // Helper to sanitize data by replacing undefined with null so Firestore doesn't throw unsupported field errors
 export const cleanFirestoreData = (obj: any): any => {
-  if (obj === null || obj === undefined) return null;
+  if (obj === undefined) return null;
+  if (obj === null) return null;
   if (typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj.toISOString();
   if (Array.isArray(obj)) return obj.map(cleanFirestoreData);
   const result: Record<string, any> = {};
   for (const key of Object.keys(obj)) {
     const val = obj[key];
     if (val !== undefined) {
       result[key] = cleanFirestoreData(val);
+    } else {
+      result[key] = null;
     }
   }
   return result;
@@ -80,6 +84,41 @@ export const seedInitialFirestoreData = async () => {
   }
 };
 
+// Sort products so newest or custom-added products consistently appear first across all devices
+export const sortProducts = (products: Product[]): Product[] => {
+  return [...products].sort((a, b) => {
+    if (a.createdAt && b.createdAt) {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    if (a.createdAt && !b.createdAt) return -1;
+    if (!a.createdAt && b.createdAt) return 1;
+
+    // Check if ID contains timestamp e.g. kg-prod-174...
+    const timeA = a.id.startsWith('kg-prod-') ? Number(a.id.replace('kg-prod-', '')) : 0;
+    const timeB = b.id.startsWith('kg-prod-') ? Number(b.id.replace('kg-prod-', '')) : 0;
+    if (!isNaN(timeA) && !isNaN(timeB) && timeA > 1000000 && timeB > 1000000) {
+      return timeB - timeA;
+    }
+    if (!isNaN(timeA) && timeA > 1000000) return -1;
+    if (!isNaN(timeB) && timeB > 1000000) return 1;
+
+    return 0;
+  });
+};
+
+// Broadcast channel for instantaneous cross-tab and cross-window sync
+const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
+  ? new BroadcastChannel('khan_gadget_sync_channel')
+  : null;
+
+export const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED' | 'VOUCHERS_UPDATED') => {
+  try {
+    syncChannel?.postMessage({ type, timestamp: Date.now() });
+  } catch (e) {
+    // Ignore if not supported
+  }
+};
+
 // Direct one-time fetch of all products from Firestore (works reliably across mobile & desktop)
 export const fetchRemoteProducts = async (): Promise<Product[]> => {
   try {
@@ -90,8 +129,9 @@ export const fetchRemoteProducts = async (): Promise<Product[]> => {
       const prods: Product[] = [];
       retrySnap.forEach(d => prods.push(d.data() as Product));
       if (prods.length > 0) {
-        saveStoredProducts(prods);
-        return prods;
+        const sorted = sortProducts(prods);
+        saveStoredProducts(sorted);
+        return sorted;
       }
       return getStoredProducts();
     }
@@ -99,8 +139,9 @@ export const fetchRemoteProducts = async (): Promise<Product[]> => {
     snapshot.forEach(docSnap => {
       remoteProducts.push(docSnap.data() as Product);
     });
-    saveStoredProducts(remoteProducts);
-    return remoteProducts;
+    const sorted = sortProducts(remoteProducts);
+    saveStoredProducts(sorted);
+    return sorted;
   } catch (err) {
     console.error('Error fetching live products from cloud:', err);
     return getStoredProducts();
@@ -112,7 +153,7 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
   // First, deliver cached local products immediately for fast startup
   const local = getStoredProducts();
   if (local.length > 0) {
-    onUpdate(local);
+    onUpdate(sortProducts(local));
   }
 
   // Parallel direct fetch ensures other devices get fresh items immediately
@@ -121,6 +162,14 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
       onUpdate(prods);
     }
   }).catch(console.error);
+
+  // Cross-tab broadcast listener for 0ms same-browser sync
+  const handleBroadcast = (event: MessageEvent) => {
+    if (event.data?.type === 'PRODUCTS_UPDATED') {
+      fetchRemoteProducts().then(onUpdate).catch(console.error);
+    }
+  };
+  syncChannel?.addEventListener('message', handleBroadcast);
 
   const unsubscribe = onSnapshot(
     collection(db, PRODUCTS_COLLECTION),
@@ -134,9 +183,10 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
         remoteProducts.push(docSnap.data() as Product);
       });
 
+      const sorted = sortProducts(remoteProducts);
       // Update local storage backup & notify UI
-      saveStoredProducts(remoteProducts);
-      onUpdate(remoteProducts);
+      saveStoredProducts(sorted);
+      onUpdate(sorted);
     },
     (error) => {
       console.warn('Firestore live products listener fallback to local cache:', error);
@@ -144,7 +194,10 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
     }
   );
 
-  return unsubscribe;
+  return () => {
+    unsubscribe();
+    syncChannel?.removeEventListener('message', handleBroadcast);
+  };
 };
 
 // 2. Add or Update a product in Firestore (Live Sync)
@@ -153,6 +206,7 @@ export const syncSaveProduct = async (product: Product): Promise<{ success: bool
     const sanitized = cleanFirestoreData(product);
     const ref = doc(db, PRODUCTS_COLLECTION, product.id);
     await setDoc(ref, sanitized);
+    broadcastSync('PRODUCTS_UPDATED');
     console.log(`Successfully synced product ${product.id} to Firestore.`);
     return { success: true };
   } catch (err: any) {
@@ -166,6 +220,7 @@ export const syncDeleteProduct = async (productId: string): Promise<{ success: b
   try {
     const ref = doc(db, PRODUCTS_COLLECTION, productId);
     await deleteDoc(ref);
+    broadcastSync('PRODUCTS_UPDATED');
     console.log(`Successfully deleted product ${productId} from Firestore.`);
     return { success: true };
   } catch (err: any) {
@@ -174,54 +229,96 @@ export const syncDeleteProduct = async (productId: string): Promise<{ success: b
   }
 };
 
-// 4. Subscribe to Live Orders across all devices
+// Direct one-time fetch of all orders from Firestore (works reliably across mobile & desktop)
+export const fetchRemoteOrders = async (): Promise<Order[]> => {
+  try {
+    const snapshot = await getDocs(collection(db, ORDERS_COLLECTION));
+    if (snapshot.empty) {
+      await seedInitialFirestoreData();
+      const retrySnap = await getDocs(collection(db, ORDERS_COLLECTION));
+      const orders: Order[] = [];
+      retrySnap.forEach(d => orders.push(d.data() as Order));
+      if (orders.length > 0) {
+        orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        saveStoredOrders(orders);
+        return orders;
+      }
+      return getStoredOrders();
+    }
+    const remoteOrders: Order[] = [];
+    snapshot.forEach(docSnap => {
+      remoteOrders.push(docSnap.data() as Order);
+    });
+    remoteOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    saveStoredOrders(remoteOrders);
+    return remoteOrders;
+  } catch (err) {
+    console.error('Error fetching live orders from cloud:', err);
+    return getStoredOrders();
+  }
+};
+
+// 4. Subscribe to Live Orders across all devices (Mobile & Laptop)
 export const subscribeToOrders = (onUpdate: (orders: Order[]) => void) => {
   const local = getStoredOrders();
   if (local.length > 0) {
     onUpdate(local);
   }
 
+  // Direct fetch ensures newly loaded devices get fresh orders immediately on boot
+  fetchRemoteOrders().then(orders => {
+    if (orders && orders.length > 0) {
+      onUpdate(orders);
+    }
+  }).catch(console.error);
+
   const unsubscribe = onSnapshot(
     collection(db, ORDERS_COLLECTION),
-    (snapshot) => {
-      if (!snapshot.empty) {
-        const remoteOrders: Order[] = [];
-        snapshot.forEach(docSnap => {
-          remoteOrders.push(docSnap.data() as Order);
-        });
-        // Sort newest first
-        remoteOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        saveStoredOrders(remoteOrders);
-        onUpdate(remoteOrders);
+    async (snapshot) => {
+      if (snapshot.empty) {
+        await seedInitialFirestoreData();
+        return;
       }
+      const remoteOrders: Order[] = [];
+      snapshot.forEach(docSnap => {
+        remoteOrders.push(docSnap.data() as Order);
+      });
+      // Sort newest first
+      remoteOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      saveStoredOrders(remoteOrders);
+      onUpdate(remoteOrders);
     },
     (error) => {
       console.warn('Firestore orders listener fallback to local cache:', error);
-      onUpdate(getStoredOrders());
+      fetchRemoteOrders().then(onUpdate).catch(() => onUpdate(getStoredOrders()));
     }
   );
 
   return unsubscribe;
 };
 
-// 5. Add an Order to Firestore (Live Sync)
-export const syncAddOrder = async (newOrder: Order): Promise<void> => {
+// 5. Add an Order to Firestore (Live Sync with sanitized payload)
+export const syncAddOrder = async (newOrder: Order): Promise<{ success: boolean; error?: string }> => {
   try {
+    const sanitized = cleanFirestoreData(newOrder);
     const ref = doc(db, ORDERS_COLLECTION, newOrder.id);
-    await setDoc(ref, newOrder);
+    await setDoc(ref, sanitized);
+    console.log(`Successfully synced order ${newOrder.id} to Firestore.`);
 
-    // Also decrement stock in Firestore for each product
+    // Also decrement stock in Firestore for each product safely
     for (const item of newOrder.items) {
       try {
         const prodRef = doc(db, PRODUCTS_COLLECTION, item.product.id);
         const newStock = Math.max(0, item.product.stock - item.quantity);
-        await setDoc(prodRef, { ...item.product, stock: newStock }, { merge: true });
+        await setDoc(prodRef, { stock: newStock }, { merge: true });
       } catch (e) {
         console.error('Error updating stock for product:', item.product.id, e);
       }
     }
-  } catch (err) {
+    return { success: true };
+  } catch (err: any) {
     console.error('Failed to sync order to Firestore:', err);
+    return { success: false, error: err?.message || 'Failed to save order to cloud' };
   }
 };
 
@@ -231,11 +328,11 @@ export const syncUpdateOrderStatus = async (
   status: OrderStatus, 
   carrier?: string, 
   note?: string
-): Promise<void> => {
+): Promise<{ success: boolean; error?: string }> => {
   try {
     const orders = getStoredOrders();
     const targetOrder = orders.find(o => o.id === orderId);
-    if (!targetOrder) return;
+    if (!targetOrder) return { success: false, error: 'Order not found' };
 
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
     
@@ -258,10 +355,14 @@ export const syncUpdateOrderStatus = async (
       checkpoints: updatedCheckpoints
     };
 
+    const sanitized = cleanFirestoreData(updatedOrder);
     const ref = doc(db, ORDERS_COLLECTION, orderId);
-    await setDoc(ref, updatedOrder);
-  } catch (err) {
+    await setDoc(ref, sanitized);
+    console.log(`Order ${orderId} status updated to ${status} in Firestore.`);
+    return { success: true };
+  } catch (err: any) {
     console.error('Failed to update order status in Firestore:', err);
+    return { success: false, error: err?.message || 'Failed to update order in cloud' };
   }
 };
 

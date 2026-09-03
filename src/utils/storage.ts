@@ -44,18 +44,9 @@ export const getStoredProducts = (): Product[] => {
       return initial;
     }
     const parsed: Product[] = JSON.parse(data);
-    // Auto-merge newly introduced products from INITIAL_PRODUCTS that have not been explicitly deleted
-    const parsedIds = new Set(parsed.map(p => p.id));
-    const missingNewItems = INITIAL_PRODUCTS.filter(p => !parsedIds.has(p.id) && !deletedIds.includes(p.id));
-    if (missingNewItems.length > 0) {
-      const updated = [...parsed, ...missingNewItems];
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated));
-      return updated.filter(p => !deletedIds.includes(p.id));
-    }
-    if (deletedIds.length > 0) {
-      return parsed.filter(p => !deletedIds.includes(p.id));
-    }
-    return parsed;
+    if (!Array.isArray(parsed)) return INITIAL_PRODUCTS;
+    // Strictly filter out any deleted products
+    return parsed.filter(p => !deletedIds.includes(p.id));
   } catch (e) {
     console.error('Failed to get stored products', e);
     const deletedIds = getDeletedProductIds();
