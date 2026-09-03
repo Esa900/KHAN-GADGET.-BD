@@ -2,22 +2,64 @@ import { Product, Order, Voucher, CartItem, OrderStatus, TrackingCheckpoint } fr
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_VOUCHERS } from '../data/mockData';
 
 const PRODUCTS_KEY = 'khan_gadget_products_v2';
+const DELETED_PRODUCT_IDS_KEY = 'khan_gadget_deleted_products_v2';
 const ORDERS_KEY = 'khan_gadget_orders_v2';
 const VOUCHERS_KEY = 'khan_gadget_vouchers_v2';
 const CART_KEY = 'khan_gadget_cart_v2';
 const WISHLIST_KEY = 'khan_gadget_wishlist_v2';
 
+export const getDeletedProductIds = (): string[] => {
+  try {
+    const data = localStorage.getItem(DELETED_PRODUCT_IDS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const deleteStoredProduct = (productId: string): Product[] => {
+  try {
+    const deletedIds = getDeletedProductIds();
+    if (!deletedIds.includes(productId)) {
+      deletedIds.push(productId);
+      localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(deletedIds));
+    }
+    const current = getStoredProducts();
+    const filtered = current.filter(p => p.id !== productId);
+    saveStoredProducts(filtered);
+    return filtered;
+  } catch (e) {
+    console.error('Failed to delete stored product', e);
+    return [];
+  }
+};
+
 export const getStoredProducts = (): Product[] => {
   try {
+    const deletedIds = getDeletedProductIds();
     const data = localStorage.getItem(PRODUCTS_KEY);
     if (!data) {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(INITIAL_PRODUCTS));
-      return INITIAL_PRODUCTS;
+      const initial = INITIAL_PRODUCTS.filter(p => !deletedIds.includes(p.id));
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(initial));
+      return initial;
     }
-    return JSON.parse(data);
+    const parsed: Product[] = JSON.parse(data);
+    // Auto-merge newly introduced products from INITIAL_PRODUCTS that have not been explicitly deleted
+    const parsedIds = new Set(parsed.map(p => p.id));
+    const missingNewItems = INITIAL_PRODUCTS.filter(p => !parsedIds.has(p.id) && !deletedIds.includes(p.id));
+    if (missingNewItems.length > 0) {
+      const updated = [...parsed, ...missingNewItems];
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(updated));
+      return updated.filter(p => !deletedIds.includes(p.id));
+    }
+    if (deletedIds.length > 0) {
+      return parsed.filter(p => !deletedIds.includes(p.id));
+    }
+    return parsed;
   } catch (e) {
     console.error('Failed to get stored products', e);
-    return INITIAL_PRODUCTS;
+    const deletedIds = getDeletedProductIds();
+    return INITIAL_PRODUCTS.filter(p => !deletedIds.includes(p.id));
   }
 };
 
@@ -163,8 +205,10 @@ export const formatPrice = (amount: number): string => {
 
 export const resetToDemoDefaults = () => {
   localStorage.setItem(PRODUCTS_KEY, JSON.stringify(INITIAL_PRODUCTS));
+  localStorage.removeItem(DELETED_PRODUCT_IDS_KEY);
   localStorage.setItem(ORDERS_KEY, JSON.stringify(INITIAL_ORDERS));
   localStorage.setItem(VOUCHERS_KEY, JSON.stringify(INITIAL_VOUCHERS));
   localStorage.removeItem(CART_KEY);
+  localStorage.removeItem(WISHLIST_KEY);
   window.location.reload();
 };

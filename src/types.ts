@@ -1,23 +1,23 @@
 export type ProductCategory = 
   | 'All'
+  | 'Smartwatches & Wearables'
+  | 'Power Banks'
   | 'Chargers & Cables'
   | 'Audio & Earbuds'
   | 'Cases & Covers'
-  | 'Power Banks'
   | 'Screen Protectors'
   | 'Holders & Mounts'
-  | 'Smartwatch Accessories'
   | 'Gaming Accessories';
 
 export const CATEGORIES: ProductCategory[] = [
   'All',
+  'Smartwatches & Wearables',
+  'Power Banks',
   'Chargers & Cables',
   'Audio & Earbuds',
   'Cases & Covers',
-  'Power Banks',
   'Screen Protectors',
   'Holders & Mounts',
-  'Smartwatch Accessories',
   'Gaming Accessories'
 ];
 

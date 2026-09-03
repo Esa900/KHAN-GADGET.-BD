@@ -30,7 +30,7 @@ import {
   Product, ProductCategory, CATEGORIES, CartItem, Voucher, Order, OrderStatus, ProductReview 
 } from './types';
 import { 
-  getStoredProducts, saveStoredProducts, 
+  getStoredProducts, saveStoredProducts, deleteStoredProduct,
   getStoredOrders, saveStoredOrders, updateOrderStatus,
   getStoredVouchers, saveStoredVouchers,
   getStoredCart, saveStoredCart,
@@ -46,11 +46,11 @@ import {
 
 export default function App() {
   // Products, Orders, Vouchers State
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [vouchers, setVouchers] = useState<Voucher[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => getStoredProducts());
+  const [orders, setOrders] = useState<Order[]>(() => getStoredOrders());
+  const [vouchers, setVouchers] = useState<Voucher[]>(() => getStoredVouchers());
+  const [cart, setCart] = useState<CartItem[]>(() => getStoredCart());
+  const [wishlist, setWishlist] = useState<string[]>(() => getStoredWishlist());
 
   // Modals visibility
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -194,7 +194,11 @@ export default function App() {
   };
 
   const handleRemoveCartItem = (index: number) => {
-    setCart(prev => prev.filter((_, i) => i !== index));
+    setCart(prev => {
+      const nextCart = prev.filter((_, i) => i !== index);
+      saveStoredCart(nextCart);
+      return nextCart;
+    });
     showToast('Item removed from cart');
   };
 
@@ -299,10 +303,20 @@ export default function App() {
   };
 
   const handleAdminDeleteProduct = (productId: string) => {
-    const updated = products.filter(p => p.id !== productId);
-    setProducts(updated);
-    saveStoredProducts(updated);
-    showToast('Product deleted from catalog.');
+    deleteStoredProduct(productId);
+    setProducts(getStoredProducts());
+    // Also remove deleted product from active cart and wishlist
+    setCart(prev => {
+      const nextCart = prev.filter(item => item.product.id !== productId);
+      saveStoredCart(nextCart);
+      return nextCart;
+    });
+    setWishlist(prev => {
+      const nextWishlist = prev.filter(id => id !== productId);
+      saveStoredWishlist(nextWishlist);
+      return nextWishlist;
+    });
+    showToast('Product permanently deleted from store.');
   };
 
   const handleAdminUpdateOrderStatus = (orderId: string, status: OrderStatus, carrier?: string, note?: string) => {

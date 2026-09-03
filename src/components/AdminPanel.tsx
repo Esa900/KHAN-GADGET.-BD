@@ -24,13 +24,13 @@ interface AdminPanelProps {
 }
 
 const CATEGORIES: ProductCategory[] = [
+  'Smartwatches & Wearables',
+  'Power Banks',
   'Chargers & Cables',
   'Audio & Earbuds',
   'Cases & Covers',
-  'Power Banks',
   'Screen Protectors',
   'Holders & Mounts',
-  'Smartwatch Accessories',
   'Gaming Accessories'
 ];
 
@@ -103,6 +103,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     description: '',
     isActive: true
   });
+
+  // Delete confirmation modals
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [voucherToDelete, setVoucherToDelete] = useState<string | null>(null);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -313,11 +318,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           <div className="flex items-center gap-2.5">
             <button
-              onClick={() => {
-                if (confirm('Reset store back to default demo catalog and sample orders?')) {
-                  resetToDemoDefaults();
-                }
-              }}
+              onClick={() => setIsResetConfirmOpen(true)}
               className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
               title="Reset to Initial Demo State"
             >
@@ -605,11 +606,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => {
-                                  if (confirm(`Delete product "${prod.title}"?`)) {
-                                    onDeleteProduct(prod.id);
-                                  }
-                                }}
+                                type="button"
+                                onClick={() => setProductToDelete(prod)}
                                 className="p-1.5 text-gray-600 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer"
                                 title="Delete Product"
                               >
@@ -745,8 +743,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           {v.code}
                         </span>
                         <button
-                          onClick={() => onDeleteVoucher(v.code)}
-                          className="text-gray-400 hover:text-rose-600 transition"
+                          type="button"
+                          onClick={() => setVoucherToDelete(v.code)}
+                          className="text-gray-400 hover:text-rose-600 transition cursor-pointer"
                           title="Delete Voucher"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -796,11 +795,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   Restores default mobile accessories catalog, initial demo orders for tracking tests, and default vouchers.
                 </p>
                 <button
-                  onClick={() => {
-                    if (confirm('Are you sure you want to reset all data to default demo state?')) {
-                      resetToDemoDefaults();
-                    }
-                  }}
+                  type="button"
+                  onClick={() => setIsResetConfirmOpen(true)}
                   className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
                 >
                   Reset All to Factory Demo
@@ -1329,6 +1325,129 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: Confirmation for Deleting Product */}
+        {productToDelete && (
+          <div 
+            className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setProductToDelete(null)}
+          >
+            <div 
+              className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 border border-gray-100 text-center animate-in zoom-in-95 duration-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-base mb-1">Delete Product Permanently?</h3>
+              <p className="text-xs text-gray-600 mb-2">
+                Are you sure you want to remove <strong className="text-gray-900">"{productToDelete.title}"</strong> from the store?
+              </p>
+              <p className="text-[11px] text-rose-600 bg-rose-50 px-2 py-1 rounded mb-4 font-medium">
+                ⚠️ It will be permanently removed and will NOT reappear automatically.
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setProductToDelete(null)}
+                  className="flex-1 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDeleteProduct(productToDelete.id);
+                    setProductToDelete(null);
+                  }}
+                  className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition shadow-sm cursor-pointer"
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: Confirmation for Deleting Voucher */}
+        {voucherToDelete && (
+          <div 
+            className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setVoucherToDelete(null)}
+          >
+            <div 
+              className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 border border-gray-100 text-center animate-in zoom-in-95 duration-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-base mb-1">Delete Coupon?</h3>
+              <p className="text-xs text-gray-600 mb-4">
+                Remove voucher coupon code <strong className="font-mono text-gray-900">{voucherToDelete}</strong>?
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setVoucherToDelete(null)}
+                  className="flex-1 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDeleteVoucher(voucherToDelete);
+                    setVoucherToDelete(null);
+                  }}
+                  className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition shadow-sm cursor-pointer"
+                >
+                  Yes, Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: Confirmation for Resetting Demo Data */}
+        {isResetConfirmOpen && (
+          <div 
+            className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setIsResetConfirmOpen(false)}
+          >
+            <div 
+              className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 border border-gray-100 text-center animate-in zoom-in-95 duration-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <RefreshCw className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-base mb-1">Reset Store to Demo?</h3>
+              <p className="text-xs text-gray-600 mb-4">
+                This will reset all products, demo orders, and settings back to factory demo defaults.
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsResetConfirmOpen(false)}
+                  className="flex-1 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsResetConfirmOpen(false);
+                    resetToDemoDefaults();
+                  }}
+                  className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition shadow-sm cursor-pointer"
+                >
+                  Reset All
+                </button>
+              </div>
             </div>
           </div>
         )}

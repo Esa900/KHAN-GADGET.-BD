@@ -266,7 +266,7 @@ export const INITIAL_PRODUCTS: Product[] = [
   {
     id: 'kg-prod-9',
     title: 'Titanium Milanese Magnetic Loop Strap for Apple Watch & Galaxy Watch Ultra',
-    category: 'Smartwatch Accessories',
+    category: 'Smartwatches & Wearables',
     brand: 'Khan Prime',
     price: 1950,
     originalPrice: 3200,
@@ -358,6 +358,444 @@ export const INITIAL_PRODUCTS: Product[] = [
     freeDelivery: true,
     variants: [
       { name: 'Pin Style', options: ['UK 3-Pin (Pak Standard)', 'EU 2-Pin Round'] }
+    ]
+  },
+  // --- SCREENSHOT 1: Smartwatches ---
+  {
+    id: 'kg-watch-1',
+    title: 'Smart Watch Plus Men Women Plus Full Touch Screen Hi-Fi Voice Calling',
+    category: 'Smartwatches & Wearables',
+    brand: 'Smart Watch Plus',
+    price: 1111,
+    originalPrice: 2650,
+    stock: 55,
+    rating: 4.8,
+    reviewCount: 382,
+    image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
+    additionalImages: [
+      'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80'
+    ],
+    description: 'Smart Watch Plus with full metal casing, high-fidelity Bluetooth calling speaker and microphone. Features bright 1.95-inch full touch curved display, multi-sport workout tracking, heart rate, SpO2 monitor, and classic stainless steel strap.',
+    specs: {
+      'Display': '1.95" HD Full Touch Curved Screen',
+      'Connectivity': 'Bluetooth 5.2 Hi-Fi Calling & Audio',
+      'Health Tracking': 'Dynamic Heart Rate, SpO2, Sleep Monitor',
+      'Battery Life': 'Up to 5-7 Days Standby (280mAh)',
+      'Water Resistance': 'IP67 Splash & Dust Resistant',
+      'Strap Material': 'Stainless Steel Metal Link Strap'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: false,
+    variants: [
+      { name: 'Color', options: ['Classic Black Steel', 'Silver Chrome Steel'] }
+    ],
+    reviews: [
+      {
+        id: 'w1-r1',
+        author: 'Rakibul Islam',
+        rating: 5,
+        date: '2025-02-15',
+        comment: 'Best budget smartwatch in Bangladesh! Calling sound is very loud and clear.',
+        verified: true
+      }
+    ]
+  },
+  {
+    id: 'kg-watch-2',
+    title: 'LAXASFIT H9 Smart Watch Men Women Sports Fitness 1.96-inch HD Large Screen',
+    category: 'Smartwatches & Wearables',
+    brand: 'LAXASFIT',
+    price: 1212,
+    originalPrice: 2890,
+    stock: 40,
+    rating: 5.0,
+    reviewCount: 190,
+    image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80',
+    additionalImages: [
+      'https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=800&q=80'
+    ],
+    description: 'LAXASFIT H9 features an ultra-wide 1.96-inch HD vibrant color screen with rose-gold case and soft pastel silicone band. Equipped with blood oxygen sensor, Bluetooth calling mic, and 100+ sports activity modes.',
+    specs: {
+      'Display': '1.96-inch HD Borderless Curved Display',
+      'Calling': 'Hi-Fi Built-in Speaker & HD Mic',
+      'Sensors': 'Real-time SpO2, Heart Rate, Step Counter',
+      'Sports Modes': '100+ Professional Workout Modes',
+      'Compatibility': 'Android 5.0+ & iOS 9.0+'
+    },
+    isFlashSale: true,
+    isDarazMall: false,
+    freeDelivery: false,
+    variants: [
+      { name: 'Color', options: ['Rose Pink', 'Midnight Black', 'Starlight Gold'] }
+    ]
+  },
+  {
+    id: 'kg-watch-3',
+    title: 'A1 Smart Watch Bluetooth Camera For Android iOS Phones with SIM & TF Slot',
+    category: 'Smartwatches & Wearables',
+    brand: 'A1 Tech',
+    price: 1150,
+    originalPrice: 1790,
+    stock: 35,
+    rating: 4.8,
+    reviewCount: 30,
+    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80',
+    description: 'Classic standalone smartwatch featuring Micro-SIM card slot, TF memory card expansion up to 32GB, built-in 0.3MP front camera, on-screen telephone dialer, pedometer, and sleep monitor.',
+    specs: {
+      'SIM Support': 'Micro-SIM GSM 850/900/1800/1900MHz',
+      'Memory Expansion': 'TF Card Slot up to 32GB',
+      'Camera': '0.3MP Front Camera & Remote Shutter',
+      'Display': '1.54-inch TFT LCD Touch Screen',
+      'Battery': '380mAh Removable Polymer Battery'
+    },
+    isFlashSale: false,
+    isDarazMall: false,
+    freeDelivery: false,
+    variants: [
+      { name: 'Color', options: ['Carbon Black', 'Metallic Silver', 'Ocean Blue'] }
+    ]
+  },
+  {
+    id: 'kg-watch-4',
+    title: 'Y56 Smart Watches Men Women Bluetooth Smartwatch Sport Watch Waterproof Rugged',
+    category: 'Smartwatches & Wearables',
+    brand: 'Y56 Sport',
+    price: 716,
+    originalPrice: 1660,
+    stock: 60,
+    rating: 4.7,
+    reviewCount: 280,
+    image: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80',
+    description: 'Military-grade rugged shockproof smartwatch designed for extreme outdoor adventures. High-contrast negative digital display, 50m water resistance, calorie calculator, remote camera trigger, and ultra-long battery life.',
+    specs: {
+      'Design': 'Shock-resistant Tactical Bumper Casing',
+      'Waterproof': '50M / 5 ATM Deep Waterproof',
+      'Battery Life': 'Up to 12 Months (Standard Button Cell)',
+      'Functions': 'Step Pedometer, Calorie Counter, Alarm, Stopwatch',
+      'Backlight': 'High Visibility EL Backlight'
+    },
+    isFlashSale: true,
+    isDarazMall: false,
+    freeDelivery: false,
+    variants: [
+      { name: 'Color', options: ['Tactical Black', 'Army Green', 'Desert Camo'] }
+    ]
+  },
+  // --- SCREENSHOT 2: Smartwatches ---
+  {
+    id: 'kg-watch-5',
+    title: 'Apple Watch Series 11 Ultra-Slim OLED Bezel-less Display Smartwatch',
+    category: 'Smartwatches & Wearables',
+    brand: 'Apple Watch Series 11',
+    price: 1430,
+    originalPrice: 4950,
+    stock: 25,
+    rating: 4.9,
+    reviewCount: 8,
+    image: 'https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=800&q=80',
+    description: 'Series 11 high-performance smartwatch featuring premium curved borderless OLED screen, fast wireless magnetic dock charging, functional rotating digital crown knob, Bluetooth voice calling, and Siri AI assistant.',
+    specs: {
+      'Display': '2.05-inch Curved Borderless HD Retina Display',
+      'Charging': 'Wireless Magnetic Fast Charging Dock',
+      'Dial Crown': 'Active Rotating Digital Crown Knob',
+      'Calling': 'Bluetooth HD Calling with Noise Reduction Mic',
+      'Sensors': 'ECG, Heart Rate, SpO2, Sleep Tracker'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: false,
+    variants: [
+      { name: 'Case Color', options: ['Midnight Black', 'Space Grey', 'Starlight Silver'] }
+    ]
+  },
+  {
+    id: 'kg-watch-6',
+    title: 'K10 Ultra Smartwatch with SIM Support – 4G LTE Smart Watch for Men Calling Feature',
+    category: 'Smartwatches & Wearables',
+    brand: 'K10 Ultra',
+    price: 1360,
+    originalPrice: 3020,
+    stock: 35,
+    rating: 4.7,
+    reviewCount: 23,
+    image: 'https://images.unsplash.com/photo-1617043786394-f977fa12eddf?auto=format&fit=crop&w=800&q=80',
+    description: 'Rugged titanium alloy Ultra edition smartwatch with standalone 4G SIM calling, high-elastic orange wave ocean strap, 2.0-inch sapphire scratch-resistant flat screen, and sports GPS tracking.',
+    specs: {
+      'Casing': 'Titanium Alloy Industrial Rugged Case',
+      'Cellular': '4G LTE SIM Card Calling & SMS',
+      'Strap': 'High-Grade Silicone Wave Ocean Strap',
+      'Display': '2.0-inch HD Flat Screen with Scratch Shield',
+      'Wireless Charging': 'Fast Magnetic Wireless Pad'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: false,
+    variants: [
+      { name: 'Strap Color', options: ['Vibrant Orange Ocean', 'Stealth Black Ocean', 'Marine Yellow Ocean'] }
+    ]
+  },
+  {
+    id: 'kg-watch-7',
+    title: 'Men Smart Watch Bluetooth Call Fitness Clock Heart Rate with Stainless Steel Strap',
+    category: 'Smartwatches & Wearables',
+    brand: 'North Tactical',
+    price: 1051,
+    originalPrice: 2450,
+    stock: 44,
+    rating: 4.8,
+    reviewCount: 110,
+    image: 'https://images.unsplash.com/photo-1544117518-30df578096a4?auto=format&fit=crop&w=800&q=80',
+    description: 'Executive stainless steel linked wrist watch with high-definition digital watch face, multi-metric athletic health metrics (BPM, Calories, Weather), dual Bluetooth 5.0, and quick reply calls.',
+    specs: {
+      'Material': 'Brushed Stainless Steel Bezel & Metal Links',
+      'Screen': '1.85-inch IPS Full Color HD Panel',
+      'Battery': '320mAh High-Capacity Long Standby',
+      'Features': 'Real-time Heart Rate, Blood Pressure, Pedometer',
+      'Waterproof': 'IP68 Waterproof'
+    },
+    isFlashSale: true,
+    isDarazMall: false,
+    freeDelivery: false,
+    variants: [
+      { name: 'Finish', options: ['Titanium Grey Steel', 'Silver Steel', 'Onyx Black Steel'] }
+    ]
+  },
+  {
+    id: 'kg-watch-8',
+    title: '2025 Smartwatch Men Flashlight Waterproof Outdoor Rugged Tactical Watch (420mAh)',
+    category: 'Smartwatches & Wearables',
+    brand: 'Tank Tactical',
+    price: 1212,
+    originalPrice: 2890,
+    stock: 28,
+    rating: 4.9,
+    reviewCount: 21,
+    image: 'https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=800&q=80',
+    description: 'Special operations outdoor rugged smartwatch equipped with a powerful side-mounted LED spotlight flashlight, huge 420mAh battery for 15+ days standby, reinforced drop bumpers, and Bluetooth voice communication.',
+    specs: {
+      'Battery': '420mAh Mega Battery (15-20 Days Standby)',
+      'Flashlight': 'Built-in High-Lumen Emergency Side LED Torch',
+      'Durability': 'Drop-Proof Metal Armor Frame',
+      'Display': '1.96-inch High Contrast Sunlight Readable',
+      'Calling': 'Noise-Canceling Bluetooth Calling'
+    },
+    isFlashSale: true,
+    isDarazMall: false,
+    freeDelivery: false,
+    variants: [
+      { name: 'Color', options: ['Heavy Black', 'Armor Silver'] }
+    ]
+  },
+  // --- SCREENSHOT 3: Smartwatches & Wearables ---
+  {
+    id: 'kg-watch-9',
+    title: '2026 New Bluetooth Smart Watch with Call Function 1.52-inch Round Dial',
+    category: 'Smartwatches & Wearables',
+    brand: 'Chrono Tech',
+    price: 1867,
+    originalPrice: 4340,
+    stock: 32,
+    rating: 5.0,
+    reviewCount: 38,
+    image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80',
+    description: 'Classic round chronometer aesthetic with 1.52-inch circular AMOLED display, stainless steel rotating tachymeter bezel, crystal clear Hi-Fi voice calling, and wireless inductive charging.',
+    specs: {
+      'Display': '1.52-inch Circular HD AMOLED 360x360 Screen',
+      'Dial': 'Precision Stainless Steel Bezel',
+      'Calling': 'Hi-Fi Audio Bluetooth Calling',
+      'Health': '24/7 Heart Monitor, SpO2, Sleep Tracking',
+      'Charging': 'Wireless Magnetic Fast Charger'
+    },
+    isFlashSale: true,
+    isDarazMall: false,
+    freeDelivery: false,
+    variants: [
+      { name: 'Strap Style', options: ['Silver Steel Strap', 'Black Metal Strap', 'Brown Leather Band'] }
+    ]
+  },
+  {
+    id: 'kg-watch-10',
+    title: '2026 Smart Bracelet Activity Fitness Tracker Sleep Heart Rate (Slim Milanese Band)',
+    category: 'Smartwatches & Wearables',
+    brand: 'LuxeBand',
+    price: 3956,
+    originalPrice: 10140,
+    stock: 15,
+    rating: 4.9,
+    reviewCount: 65,
+    image: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=800&q=80',
+    description: 'Ultra-luxurious slim vertical jewelry fitness bracelet with magnetic Milanese mesh band. Precise biometric sleep cycle and heart rate monitor, smart notifications, and IP67 waterproof protection.',
+    specs: {
+      'Form Factor': 'Ultra-Slim Curved Jewelry Bangle',
+      'Strap': 'Premium Stainless Steel Milanese Magnetic Loop',
+      'Display': '0.96-inch OLED Curved Vertical Screen',
+      'Biometrics': 'Continuous Heart Rate, Blood Pressure, Sleep Stages',
+      'Waterproof': 'IP67 Daily Waterproof'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'Band Color', options: ['Silver Milanese', 'Rose Gold Milanese', 'Space Black'] }
+    ]
+  },
+  {
+    id: 'kg-watch-11',
+    title: 'Smart Watch Women Men Music Control Bluetooth Fitness Tracker',
+    category: 'Smartwatches & Wearables',
+    brand: 'FitPro',
+    price: 628,
+    originalPrice: 1495,
+    stock: 75,
+    rating: 4.6,
+    reviewCount: 846,
+    image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
+    description: 'Lightweight and vibrant daily fitness companion. Features vivid color screen, remote music player control, message reminders (WhatsApp, SMS), pedometer, and long-life rechargeable battery.',
+    specs: {
+      'Display': '1.3-inch Color IPS Display',
+      'Controls': 'Music Player Control & Camera Shutter',
+      'Sensors': 'Optical Heart Rate & Pedometer',
+      'Strap': 'Skin-friendly Soft Silicone',
+      'Battery Life': '5-7 Days Active Use'
+    },
+    isFlashSale: true,
+    isDarazMall: false,
+    freeDelivery: false,
+    variants: [
+      { name: 'Color', options: ['Onyx Black', 'Coral Blue', 'Blush Pink'] }
+    ]
+  },
+  {
+    id: 'kg-watch-12',
+    title: '11.11 Ultra S9 4G Android Smartwatch with Camera 32GB RAM & 256GB ROM Calling Watch',
+    category: 'Smartwatches & Wearables',
+    brand: 'Ultra S9 Pro',
+    price: 4616,
+    originalPrice: 7440,
+    stock: 12,
+    rating: 4.9,
+    reviewCount: 14,
+    image: 'https://images.unsplash.com/photo-1617043786394-f977fa12eddf?auto=format&fit=crop&w=800&q=80',
+    description: 'Full Android smartphone on your wrist. Features 32GB RAM + 256GB internal storage, rotatable HD camera for video calls, Google Play Store app downloads, standalone 4G SIM, Wi-Fi, GPS navigation, and YouTube streaming.',
+    specs: {
+      'Operating System': 'Full Android OS with Google Play Store',
+      'Storage & RAM': '32GB RAM + 256GB Internal Storage',
+      'Camera': '180° Telescopic / Rotatable HD Camera',
+      'Connectivity': '4G Nano-SIM, Dual-Band Wi-Fi, GPS',
+      'Screen': '2.04-inch AMOLED Ultra HD Display'
+    },
+    isFlashSale: false,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'Strap Color', options: ['Vibrant Orange Ocean', 'Titanium Black Ocean', 'Alpine White'] }
+    ]
+  },
+  // --- SCREENSHOT 4: Power Banks ---
+  {
+    id: 'kg-power-1',
+    title: 'Hoco J154a 22.5W + PD 20W 20000mAh Fast Charging Powerbank with LED Display',
+    category: 'Power Banks',
+    brand: 'Hoco',
+    price: 1435,
+    originalPrice: 1670,
+    stock: 80,
+    rating: 4.8,
+    reviewCount: 767,
+    image: 'https://images.unsplash.com/photo-1609592424300-3cb8fa4e99e4?auto=format&fit=crop&w=800&q=80',
+    description: 'High-capacity 20,000mAh external battery pack supporting 22.5W Huawei SuperCharge and 20W Type-C Power Delivery for iPhone and Android. Features digital LED percentage display and dual output.',
+    specs: {
+      'Capacity': '20,000mAh High-Density Polymer',
+      'Output Power': '22.5W QC 3.0 + 20W Type-C PD',
+      'Display': 'Digital LED Battery Percentage Indicator',
+      'Ports': '2x USB-A Output, 1x Type-C Bi-directional',
+      'Certifications': 'CE, FCC, RoHS Safety Standards'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: false,
+    variants: [
+      { name: 'Color', options: ['Matte Black', 'Glacier White'] }
+    ]
+  },
+  {
+    id: 'kg-power-2',
+    title: 'Proton 10000mAh Power Bank Power House X10 (751593) | 22.5W Fast Charging Slim Design',
+    category: 'Power Banks',
+    brand: 'Proton',
+    price: 880,
+    originalPrice: 1000,
+    stock: 65,
+    rating: 4.9,
+    reviewCount: 28,
+    image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80',
+    description: 'Ultra-portable pocket power bank with grooved anti-slip exterior. Delivers 22.5W high-speed charging in an exceptionally slim 10,000mAh body with multi-level surge and heat protection.',
+    specs: {
+      'Capacity': '10,000mAh Compact Pocket Size',
+      'Fast Charging': '22.5W Super Charge Output',
+      'Protection': 'Short Circuit, Overheat & Surge Protection',
+      'Warranty': '1 Year Official Brand Warranty',
+      'Weight': 'Ultra-lightweight ~185g'
+    },
+    isFlashSale: false,
+    isDarazMall: true,
+    freeDelivery: false,
+    variants: [
+      { name: 'Color', options: ['Carbon Black', 'Pure White'] }
+    ]
+  },
+  {
+    id: 'kg-power-3',
+    title: 'QCY PB20A 20000mAh 45W PD Fast Charging Mini Power bank with Built-in Lanyard',
+    category: 'Power Banks',
+    brand: 'QCY',
+    price: 3290,
+    originalPrice: 4630,
+    stock: 30,
+    rating: 4.9,
+    reviewCount: 60,
+    image: 'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80',
+    description: 'Powerful 45W high-output PD portable battery capable of fast charging laptops (MacBook Air/Pro), iPads, and smartphones. Extremely compact mini form factor with integrated heavy-duty lanyard carry cable.',
+    specs: {
+      'Output Power': '45W Max USB-C PD (Laptop Compatible)',
+      'Capacity': '20,000mAh High-Performance Cells',
+      'Form Factor': 'Mini Pocket Block with Carry Lanyard',
+      'Warranty': '12 Months Official Brand Warranty',
+      'Fast Recharge': '45W Rapid Power Bank Recharging'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'Color', options: ['Space Grey', 'Arctic White'] }
+    ]
+  },
+  {
+    id: 'kg-power-4',
+    title: 'Oraimo Power Nova Q21 20000mAh 22.5W Black Power Bank with Precision Digital Display',
+    category: 'Power Banks',
+    brand: 'Oraimo',
+    price: 2049,
+    originalPrice: 3300,
+    stock: 45,
+    rating: 4.8,
+    reviewCount: 68,
+    image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
+    description: 'Premium Oraimo Power Nova Q21 with AniFast smart charging technology. Delivers 22.5W output, bright digital percentage battery display, dual fast-charging USB ports, and durable scratch-resistant texture.',
+    specs: {
+      'Capacity': '20,000mAh Ultra-Reliable Li-Polymer',
+      'Technology': 'AniFast Intelligent Chipset 22.5W',
+      'Display': 'High-Visibility LED Digital Battery Meter',
+      'Safety': 'Multi-Protection Shield Against Overcharging',
+      'In Box': 'Power Bank + Fast Type-C Cable'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'Color', options: ['Matte Black'] }
     ]
   }
 ];
