@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "An accessory or gadget item in the store",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "banglaTitle": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "category": { "type": "string" },
+        "image": { "type": "string" },
+        "description": { "type": "string" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "inStock": { "type": "boolean" },
+        "stock": { "type": "number" },
+        "tags": { "type": "array" },
+        "specs": { "type": "object" },
+        "featured": { "type": "boolean" }
+      },
+      "required": ["id", "title", "price", "category", "image"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order details and status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "shippingCost": { "type": "number" },
+        "discount": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string" },
+        "customer": { "type": "object" },
+        "createdAt": { "type": "string" },
+        "carrierName": { "type": "string" },
+        "checkpoints": { "type": "array" }
+      },
+      "required": ["id", "items", "totalAmount", "status", "createdAt"]
+    },
+    "Voucher": {
+      "title": "Voucher",
+      "description": "Promotional coupon voucher code",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "discountPercent": { "type": "number" },
+        "maxDiscount": { "type": "number" },
+        "minSpend": { "type": "number" },
+        "description": { "type": "string" }
+      },
+      "required": ["code", "discountPercent"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Collection of all accessory items and hardware specifications"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of customer purchase orders and delivery tracking records"
+    },
+    "/vouchers/{voucherId}": {
+      "schema": "Voucher",
+      "description": "Collection of active promotional voucher codes"
+    }
+  }
+}

@@ -1,13 +1,26 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, getFirestore, Firestore } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // Initialize Firebase App
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Firestore with specific custom database ID if specified in config
-export const db = firebaseConfig.firestoreDatabaseId
-  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
-  : getFirestore(app);
+// Initialize Firestore with long-polling fallback to maintain reliable connection in preview/proxy environments
+let firestoreDb: Firestore;
+try {
+  firestoreDb = firebaseConfig.firestoreDatabaseId
+    ? initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+      }, firebaseConfig.firestoreDatabaseId)
+    : initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+      });
+} catch {
+  firestoreDb = firebaseConfig.firestoreDatabaseId
+    ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+    : getFirestore(app);
+}
 
+export const db = firestoreDb;
 export default app;
+
