@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   X, LayoutDashboard, Package, ShoppingBag, Tag, 
   Settings, Plus, Edit2, Trash2, Check, AlertCircle, 
   TrendingUp, Truck, ShieldAlert, ArrowUpRight, DollarSign, 
   Search, Eye, EyeOff, RefreshCw, KeyRound, Lock, Unlock,
-  Phone, MessageCircle, FileText, User, MapPin, Banknote
+  Phone, MessageCircle, FileText, User, MapPin, Banknote,
+  Upload, Camera, Image as ImageIcon, Link as LinkIcon, Loader2
 } from 'lucide-react';
 import { Product, Order, Voucher, OrderStatus, ProductCategory } from '../types';
 import { formatPrice, resetToDemoDefaults } from '../utils/storage';
+import { compressImage } from '../utils/image';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -80,13 +82,68 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     price: 1999,
     originalPrice: 2999,
     stock: 20,
-    image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
+    image: '',
     description: '',
     isFlashSale: false,
     isDarazMall: true,
     freeDelivery: false
   });
   const [productSearch, setProductSearch] = useState('');
+
+  // Image Upload State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const processImageFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file (JPG, PNG, WEBP, etc.)');
+      return;
+    }
+    setUploadError('');
+    setIsUploadingImage(true);
+    try {
+      const dataUrl = await compressImage(file, 900, 900, 0.82);
+      setProductForm(prev => ({ ...prev, image: dataUrl }));
+    } catch (err) {
+      console.error('Error processing uploaded image:', err);
+      setUploadError('Failed to process image. Please try selecting another picture.');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+    if (e.target) e.target.value = '';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
 
   // Order Management States
   const [orderFilter, setOrderFilter] = useState<string>('All');
@@ -121,6 +178,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
+    setImageInputMode('upload');
+    setUploadError('');
     setProductForm({
       title: '',
       category: 'Chargers & Cables',
@@ -130,7 +189,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       stock: 25,
       rating: 4.8,
       reviewCount: 15,
-      image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
+      image: '',
       description: 'High quality mobile accessory backed by Khan Gadget official warranty.',
       specs: {
         'Warranty': '1 Year Replacement',
@@ -145,6 +204,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleOpenEditProduct = (prod: Product) => {
     setEditingProduct(prod);
+    setImageInputMode(prod.image ? 'upload' : 'upload');
+    setUploadError('');
     setProductForm({ ...prod });
     setIsProductModalOpen(true);
   };
@@ -153,10 +214,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     e.preventDefault();
     if (!productForm.title || !productForm.price) return;
 
+    const finalImage = productForm.image?.trim() || 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80';
+
     if (editingProduct) {
       const updated: Product = {
         ...editingProduct,
-        ...productForm as Product
+        ...productForm as Product,
+        image: finalImage
       };
       onUpdateProduct(updated);
     } else {
@@ -170,7 +234,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         stock: Number(productForm.stock) || 10,
         rating: 4.9,
         reviewCount: 1,
-        image: productForm.image || 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80',
+        image: finalImage,
         description: productForm.description || 'Premium mobile accessory.',
         specs: productForm.specs || { 'Warranty': '12 Months' },
         isFlashSale: !!productForm.isFlashSale,
@@ -893,14 +957,173 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                 </div>
 
+                {/* Product Photo Upload / Selector */}
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1">Image URL</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="font-semibold text-gray-800 text-xs flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-[#f85606]" />
+                      <span>Product Picture (প্রোডাক্টের ছবি) *</span>
+                    </label>
+
+                    {/* Mode toggle */}
+                    <div className="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-[10px] font-bold">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageInputMode('upload');
+                          setUploadError('');
+                        }}
+                        className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition cursor-pointer ${
+                          imageInputMode === 'upload' 
+                            ? 'bg-white text-orange-600 shadow-xs' 
+                            : 'text-gray-500 hover:text-gray-800'
+                        }`}
+                      >
+                        <Upload className="w-2.5 h-2.5" />
+                        <span>Upload File (ছবি আপলোড)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageInputMode('url');
+                          setUploadError('');
+                        }}
+                        className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition cursor-pointer ${
+                          imageInputMode === 'url' 
+                            ? 'bg-white text-orange-600 shadow-xs' 
+                            : 'text-gray-500 hover:text-gray-800'
+                        }`}
+                      >
+                        <LinkIcon className="w-2.5 h-2.5" />
+                        <span>Web URL (লিংক)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Hidden native file input - triggers camera or file picker */}
                   <input
-                    type="url"
-                    value={productForm.image}
-                    onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
                   />
+
+                  {/* MODE 1: Direct File Upload */}
+                  {imageInputMode === 'upload' && (
+                    <div className="space-y-2">
+                      {productForm.image ? (
+                        <div className="border border-orange-200 bg-orange-50/50 rounded-xl p-3 flex items-center gap-3">
+                          <img
+                            src={productForm.image}
+                            alt="Selected product preview"
+                            referrerPolicy="no-referrer"
+                            className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white p-1 shadow-xs shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+                              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>Picture Selected (ছবি যুক্ত হয়েছে)</span>
+                            </div>
+                            <p className="text-[10px] text-gray-500 mt-0.5">
+                              Ready to sync across mobile and laptop devices.
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-2.5 py-1 text-[11px] font-bold text-slate-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-xs flex items-center gap-1 transition cursor-pointer"
+                              >
+                                <Upload className="w-3 h-3 text-orange-600" />
+                                <span>Change Picture</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setProductForm(prev => ({ ...prev, image: '' }))}
+                                className="px-2 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition cursor-pointer flex items-center gap-1"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>Remove</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 ${
+                            isDraggingOver 
+                              ? 'border-orange-500 bg-orange-50' 
+                              : 'border-gray-300 hover:border-orange-400 bg-gray-50/60 hover:bg-orange-50/30'
+                          }`}
+                        >
+                          {isUploadingImage ? (
+                            <div className="py-2.5 flex flex-col items-center gap-1.5 text-orange-600">
+                              <Loader2 className="w-6 h-6 animate-spin" />
+                              <span className="font-bold text-xs">Optimizing and preparing picture...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shadow-xs">
+                                <Upload className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <span className="font-bold text-xs text-gray-900 block">
+                                  Click to upload or drag & drop picture
+                                </span>
+                                <span className="text-[10px] text-gray-500 block mt-0.5">
+                                  মোবাইল বা ল্যাপটপ থেকে যেকোনো ছবি বেছে নিন (JPG, PNG, WEBP)
+                                </span>
+                              </div>
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-white border border-orange-200 px-3 py-1 rounded-full shadow-xs">
+                                <Camera className="w-3 h-3" />
+                                <span>Choose from Device / ছবি দিন</span>
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* MODE 2: Image URL fallback */}
+                  {imageInputMode === 'url' && (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          placeholder="Paste image link: https://..."
+                          value={productForm.image || ''}
+                          onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                          className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 text-xs"
+                        />
+                      </div>
+                      {productForm.image && (
+                        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2">
+                          <img
+                            src={productForm.image}
+                            alt="URL preview"
+                            referrerPolicy="no-referrer"
+                            className="w-12 h-12 object-contain rounded border border-gray-200 bg-white p-0.5 shrink-0"
+                            onError={() => setUploadError('Image URL could not be loaded. Please check link.')}
+                          />
+                          <div className="text-[10px] text-gray-500 truncate flex-1 font-mono">
+                            {productForm.image}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {uploadError && (
+                    <div className="mt-1.5 text-xs text-rose-600 font-semibold flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{uploadError}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
