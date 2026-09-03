@@ -1443,7 +1443,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   type="button"
                   onClick={() => {
                     setIsResetConfirmOpen(false);
-                    resetToDemoDefaults();
+                    if (onResetToDemo) {
+                      onResetToDemo();
+                    } else {
+                      resetToDemoDefaults();
+                    }
                   }}
                   className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition shadow-sm cursor-pointer"
                 >

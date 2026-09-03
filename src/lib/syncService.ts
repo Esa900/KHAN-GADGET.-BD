@@ -18,7 +18,7 @@ import {
   getStoredVouchers, 
   saveStoredVouchers,
   getDeletedProductIds
-} from './storage';
+} from '../utils/storage';
 
 const PRODUCTS_COLLECTION = 'products';
 const ORDERS_COLLECTION = 'orders';

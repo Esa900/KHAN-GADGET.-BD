@@ -35,8 +35,19 @@ import {
   getStoredVouchers, saveStoredVouchers,
   getStoredCart, saveStoredCart,
   getStoredWishlist, saveStoredWishlist,
-  formatPrice 
+  formatPrice, resetToDemoDefaults 
 } from './utils/storage';
+import { 
+  subscribeToProducts, 
+  subscribeToOrders, 
+  subscribeToVouchers,
+  syncSaveProduct,
+  syncDeleteProduct,
+  syncUpdateOrderStatus,
+  syncSaveVoucher,
+  syncDeleteVoucher,
+  syncResetToDemoDefaults
+} from './lib/syncService';
 import { 
   SlidersHorizontal, Sparkles, X, Check, Heart, 
   ShoppingBag, ArrowUpDown, Filter, Smartphone, Zap, 
@@ -86,13 +97,31 @@ export default function App() {
     }, 2800);
   };
 
-  // Load Initial Data from Persistent LocalStorage
+  // Real-time Cloud Sync across all devices (Mobile & Laptop)
   useEffect(() => {
+    // Initial local cache load for instant UI display
     setProducts(getStoredProducts());
     setOrders(getStoredOrders());
     setVouchers(getStoredVouchers());
     setCart(getStoredCart());
     setWishlist(getStoredWishlist());
+
+    // Connect real-time listeners to Firestore cloud database
+    const unsubProducts = subscribeToProducts((liveProducts) => {
+      setProducts(liveProducts);
+    });
+    const unsubOrders = subscribeToOrders((liveOrders) => {
+      setOrders(liveOrders);
+    });
+    const unsubVouchers = subscribeToVouchers((liveVouchers) => {
+      setVouchers(liveVouchers);
+    });
+
+    return () => {
+      unsubProducts();
+      unsubOrders();
+      unsubVouchers();
+    };
   }, []);
 
   // Save Cart and Wishlist on changes
@@ -264,34 +293,40 @@ export default function App() {
 
   // Add Product Review
   const handleAddReview = (productId: string, review: ProductReview) => {
+    let updatedTargetProduct: Product | null = null;
     const updatedProducts = products.map(p => {
       if (p.id === productId) {
         const currentReviews = p.reviews || [];
         const newReviews = [review, ...currentReviews];
         const avgRating = Number((newReviews.reduce((acc, r) => acc + r.rating, 0) / newReviews.length).toFixed(1));
-        return {
+        updatedTargetProduct = {
           ...p,
           reviews: newReviews,
           reviewCount: p.reviewCount + 1,
           rating: avgRating
         };
+        return updatedTargetProduct;
       }
       return p;
     });
 
     setProducts(updatedProducts);
     saveStoredProducts(updatedProducts);
+    if (updatedTargetProduct) {
+      syncSaveProduct(updatedTargetProduct).catch(console.error);
+    }
     if (selectedProduct && selectedProduct.id === productId) {
       setSelectedProduct(updatedProducts.find(p => p.id === productId) || null);
     }
     showToast('Thank you! Your verified review has been posted.');
   };
 
-  // Admin Actions
+  // Admin Actions with Live Multi-Device Sync
   const handleAdminAddProduct = (newProd: Product) => {
     const updated = [newProd, ...products];
     setProducts(updated);
     saveStoredProducts(updated);
+    syncSaveProduct(newProd).catch(console.error);
     showToast(`Accessory "${newProd.title}" added to store!`);
   };
 
@@ -299,12 +334,14 @@ export default function App() {
     const updated = products.map(p => p.id === updatedProd.id ? updatedProd : p);
     setProducts(updated);
     saveStoredProducts(updated);
+    syncSaveProduct(updatedProd).catch(console.error);
     showToast(`Product "${updatedProd.title}" updated.`);
   };
 
   const handleAdminDeleteProduct = (productId: string) => {
     deleteStoredProduct(productId);
-    setProducts(getStoredProducts());
+    syncDeleteProduct(productId).catch(console.error);
+    setProducts(prev => prev.filter(p => p.id !== productId));
     // Also remove deleted product from active cart and wishlist
     setCart(prev => {
       const nextCart = prev.filter(item => item.product.id !== productId);
@@ -321,6 +358,7 @@ export default function App() {
 
   const handleAdminUpdateOrderStatus = (orderId: string, status: OrderStatus, carrier?: string, note?: string) => {
     const updated = updateOrderStatus(orderId, status, carrier, note);
+    syncUpdateOrderStatus(orderId, status, carrier, note).catch(console.error);
     if (updated) {
       setOrders(getStoredOrders());
       showToast(`Order ${orderId} updated to ${status}. Tracking updated!`);
@@ -331,6 +369,7 @@ export default function App() {
     const updated = [...vouchers, newVoucher];
     setVouchers(updated);
     saveStoredVouchers(updated);
+    syncSaveVoucher(newVoucher).catch(console.error);
     showToast(`Coupon ${newVoucher.code} created!`);
   };
 
@@ -338,7 +377,13 @@ export default function App() {
     const updated = vouchers.filter(v => v.code !== code);
     setVouchers(updated);
     saveStoredVouchers(updated);
+    syncDeleteVoucher(code).catch(console.error);
     showToast(`Coupon ${code} removed.`);
+  };
+
+  const handleResetToDemo = async () => {
+    await syncResetToDemoDefaults();
+    resetToDemoDefaults();
   };
 
   const cartCount = cart.reduce((sum, it) => sum + it.quantity, 0);
@@ -744,6 +789,7 @@ export default function App() {
         onUpdateOrderStatus={handleAdminUpdateOrderStatus}
         onAddVoucher={handleAdminAddVoucher}
         onDeleteVoucher={handleAdminDeleteVoucher}
+        onResetToDemo={handleResetToDemo}
       />
 
       {/* MODAL / DRAWER: Wishlist */}

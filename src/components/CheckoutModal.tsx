@@ -6,6 +6,7 @@ import {
 import confetti from 'canvas-confetti';
 import { CartItem, Voucher, ShippingAddress, Order } from '../types';
 import { formatPrice, addStoredOrder } from '../utils/storage';
+import { syncAddOrder } from '../lib/syncService';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -161,8 +162,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       ]
     };
 
-    // Store order into database
+    // Store order into local and cloud database
     addStoredOrder(newOrder);
+    syncAddOrder(newOrder).catch(err => console.error('Cloud sync error:', err));
     setConfirmedOrder(newOrder);
     setIsSubmitting(false);
     setStep('confirmed');
