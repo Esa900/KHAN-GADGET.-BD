@@ -9,6 +9,8 @@ const CART_KEY = 'khan_gadget_cart_v2';
 const WISHLIST_KEY = 'khan_gadget_wishlist_v2';
 const RECENTLY_VIEWED_KEY = 'khan_gadget_recently_viewed_v1';
 const CATEGORIES_KEY = 'khan_gadget_categories_v2';
+const VISITOR_COUNT_KEY = 'khan_gadget_visitor_count_v1';
+const VISITOR_ID_KEY = 'khan_gadget_visitor_id_v1';
 
 export const STORE_WHATSAPP_NUMBER = '8801854774406';
 
@@ -334,6 +336,38 @@ export const renameStoredCategory = (oldName: string, newName: string): string[]
   const updated = current.map(c => c.toLowerCase() === oldName.trim().toLowerCase() ? trimmedNew : c);
   saveStoredCategories(updated);
   return updated;
+};
+
+// Website Visitors Persistence
+export const getStoredVisitorCount = (): number => {
+  try {
+    const val = localStorage.getItem(VISITOR_COUNT_KEY);
+    return val ? Math.max(0, parseInt(val, 10) || 0) : 0;
+  } catch {
+    return 0;
+  }
+};
+
+export const saveStoredVisitorCount = (count: number): void => {
+  try {
+    localStorage.setItem(VISITOR_COUNT_KEY, Math.max(0, count).toString());
+  } catch (err) {
+    console.error('Error saving visitor count:', err);
+  }
+};
+
+export const getOrSetVisitorId = (): { id: string; isNew: boolean } => {
+  try {
+    let id = localStorage.getItem(VISITOR_ID_KEY);
+    if (!id) {
+      id = 'vis_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+      localStorage.setItem(VISITOR_ID_KEY, id);
+      return { id, isNew: true };
+    }
+    return { id, isNew: false };
+  } catch {
+    return { id: 'vis_' + Date.now(), isNew: false };
+  }
 };
 
 export const resetToDemoDefaults = () => {

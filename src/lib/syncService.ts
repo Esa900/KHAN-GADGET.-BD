@@ -6,10 +6,11 @@ import {
   deleteDoc,
   onSnapshot,
   getDocs,
-  writeBatch
+  writeBatch,
+  increment
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Product, Order, Voucher, OrderStatus, TrackingCheckpoint } from '../types';
+import { Product, Order, Voucher, OrderStatus, TrackingCheckpoint, AnalyticsData } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_VOUCHERS } from '../data/mockData';
 import { 
   getStoredProducts, 
@@ -20,7 +21,10 @@ import {
   saveStoredVouchers,
   getDeletedProductIds,
   getStoredCategories,
-  saveStoredCategories
+  saveStoredCategories,
+  getStoredVisitorCount,
+  saveStoredVisitorCount,
+  getOrSetVisitorId
 } from '../utils/storage';
 
 const PRODUCTS_COLLECTION = 'products';
@@ -28,6 +32,7 @@ const ORDERS_COLLECTION = 'orders';
 const VOUCHERS_COLLECTION = 'vouchers';
 const SETTINGS_COLLECTION = 'settings';
 const CATEGORIES_DOC = 'categories';
+const ANALYTICS_DOC = 'analytics';
 
 // Helper to sanitize data by replacing undefined with null so Firestore doesn't throw unsupported field errors
 export const cleanFirestoreData = (obj: any): any => {
@@ -116,7 +121,7 @@ const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in windo
   ? new BroadcastChannel('khan_gadget_sync_channel')
   : null;
 
-export const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED' | 'VOUCHERS_UPDATED' | 'CATEGORIES_UPDATED') => {
+export const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED' | 'VOUCHERS_UPDATED' | 'CATEGORIES_UPDATED' | 'ANALYTICS_UPDATED') => {
   try {
     syncChannel?.postMessage({ type, timestamp: Date.now() });
   } catch (e) {
@@ -529,5 +534,89 @@ export const syncSaveCategories = async (categories: string[]): Promise<{ succes
     console.error('Failed to sync categories to Firestore:', err);
     return { success: false, error: err?.message || 'Failed to save categories to cloud' };
   }
+};
+
+// Website Visits & Traffic Analytics
+export const recordWebsiteVisit = async (): Promise<AnalyticsData> => {
+  const { isNew } = getOrSetVisitorId();
+  const currentLocal = getStoredVisitorCount();
+  const newLocal = currentLocal + 1;
+  saveStoredVisitorCount(newLocal);
+
+  try {
+    const analyticsRef = doc(db, SETTINGS_COLLECTION, ANALYTICS_DOC);
+    const payload: Record<string, any> = {
+      totalVisits: increment(1),
+      lastVisitAt: new Date().toISOString()
+    };
+    if (isNew) {
+      payload.uniqueVisitors = increment(1);
+    }
+    await setDoc(analyticsRef, payload, { merge: true });
+
+    const snap = await getDoc(analyticsRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      const total = Number(data.totalVisits) || newLocal;
+      const unique = Number(data.uniqueVisitors) || 1;
+      saveStoredVisitorCount(total);
+      broadcastSync('ANALYTICS_UPDATED');
+      return { totalVisits: total, uniqueVisitors: unique, lastVisitAt: data.lastVisitAt };
+    }
+  } catch (err) {
+    console.warn('Could not record visit to Firestore cloud:', err);
+  }
+
+  return { totalVisits: newLocal, uniqueVisitors: 1, lastVisitAt: new Date().toISOString() };
+};
+
+export const fetchRemoteAnalytics = async (): Promise<AnalyticsData> => {
+  try {
+    const analyticsRef = doc(db, SETTINGS_COLLECTION, ANALYTICS_DOC);
+    const snap = await getDoc(analyticsRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      const total = Number(data.totalVisits) || getStoredVisitorCount();
+      const unique = Number(data.uniqueVisitors) || 1;
+      saveStoredVisitorCount(total);
+      return { totalVisits: total, uniqueVisitors: unique, lastVisitAt: data.lastVisitAt };
+    }
+  } catch (err) {
+    console.warn('Could not fetch analytics from Firestore:', err);
+  }
+  return { totalVisits: getStoredVisitorCount(), uniqueVisitors: 1 };
+};
+
+export const subscribeToAnalytics = (onUpdate: (data: AnalyticsData) => void): (() => void) => {
+  const analyticsRef = doc(db, SETTINGS_COLLECTION, ANALYTICS_DOC);
+
+  const handleBroadcast = (e: MessageEvent) => {
+    if (e.data?.type === 'ANALYTICS_UPDATED') {
+      fetchRemoteAnalytics().then(onUpdate);
+    }
+  };
+  syncChannel?.addEventListener('message', handleBroadcast);
+
+  const unsubscribe = onSnapshot(
+    analyticsRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        const total = Number(data.totalVisits) || getStoredVisitorCount();
+        const unique = Number(data.uniqueVisitors) || 1;
+        saveStoredVisitorCount(total);
+        onUpdate({ totalVisits: total, uniqueVisitors: unique, lastVisitAt: data.lastVisitAt });
+      }
+    },
+    (error) => {
+      console.warn('Firestore analytics subscription error:', error);
+      onUpdate({ totalVisits: getStoredVisitorCount(), uniqueVisitors: 1 });
+    }
+  );
+
+  return () => {
+    unsubscribe();
+    syncChannel?.removeEventListener('message', handleBroadcast);
+  };
 };
 

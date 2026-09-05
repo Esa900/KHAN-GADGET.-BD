@@ -33,7 +33,7 @@ import {
   TrustBadges 
 } from './components/TrustBadges';
 import { 
-  Product, ProductCategory, DEFAULT_CATEGORIES, CartItem, Voucher, Order, OrderStatus, ProductReview 
+  Product, ProductCategory, DEFAULT_CATEGORIES, CartItem, Voucher, Order, OrderStatus, ProductReview, AnalyticsData 
 } from './types';
 import { 
   getStoredProducts, saveStoredProducts, deleteStoredProduct,
@@ -42,6 +42,7 @@ import {
   getStoredCart, saveStoredCart,
   getStoredWishlist, saveStoredWishlist,
   getStoredCategories, saveStoredCategories,
+  getStoredVisitorCount, saveStoredVisitorCount,
   formatPrice, resetToDemoDefaults, STORE_WHATSAPP_NUMBER 
 } from './utils/storage';
 import { 
@@ -49,9 +50,12 @@ import {
   subscribeToOrders, 
   subscribeToVouchers,
   subscribeToCategories,
+  subscribeToAnalytics,
+  recordWebsiteVisit,
   fetchRemoteProducts,
   fetchRemoteOrders,
   fetchRemoteCategories,
+  fetchRemoteAnalytics,
   syncSaveProduct,
   syncDeleteProduct,
   syncUpdateOrderStatus,
@@ -75,6 +79,11 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>(() => getStoredCart());
   const [wishlist, setWishlist] = useState<string[]>(() => getStoredWishlist());
   const [categories, setCategories] = useState<string[]>(() => getStoredCategories());
+  const [visitorStats, setVisitorStats] = useState<AnalyticsData>(() => ({
+    totalVisits: getStoredVisitorCount() || 1,
+    uniqueVisitors: 1,
+    lastVisitAt: new Date().toISOString()
+  }));
 
   // Modals visibility
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -163,6 +172,15 @@ export default function App() {
       }
     });
 
+    // User requirement: Record website visit every time user visits and listen for live analytics updates
+    recordWebsiteVisit().then(stats => {
+      if (stats) setVisitorStats(stats);
+    }).catch(console.error);
+
+    const unsubAnalytics = subscribeToAnalytics((liveStats) => {
+      if (liveStats) setVisitorStats(liveStats);
+    });
+
     // Re-sync when switching back to tab or device screen unlocks
     const handleVisibilityOrFocus = () => {
       if (document.visibilityState === 'visible') {
@@ -174,6 +192,9 @@ export default function App() {
         }).catch(console.error);
         fetchRemoteCategories().then(cats => {
           if (cats && cats.length > 0) setCategories(cats);
+        }).catch(console.error);
+        fetchRemoteAnalytics().then(stats => {
+          if (stats) setVisitorStats(stats);
         }).catch(console.error);
       }
     };
@@ -191,6 +212,9 @@ export default function App() {
       fetchRemoteCategories().then(cats => {
         if (cats && cats.length > 0) setCategories(cats);
       }).catch(console.error);
+      fetchRemoteAnalytics().then(stats => {
+        if (stats) setVisitorStats(stats);
+      }).catch(console.error);
     }, 5000);
 
     return () => {
@@ -198,6 +222,7 @@ export default function App() {
       unsubOrders();
       unsubVouchers();
       unsubCategories();
+      unsubAnalytics();
       window.removeEventListener('focus', handleVisibilityOrFocus);
       document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
       clearInterval(syncInterval);

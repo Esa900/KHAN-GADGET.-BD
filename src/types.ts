@@ -131,3 +131,9 @@ export interface Order {
   customerNote?: string;
   checkpoints: TrackingCheckpoint[];
 }
+
+export interface AnalyticsData {
+  totalVisits: number;
+  uniqueVisitors: number;
+  lastVisitAt?: string;
+}

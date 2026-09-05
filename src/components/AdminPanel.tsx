@@ -6,13 +6,14 @@ import {
   Search, Eye, EyeOff, RefreshCw, KeyRound, Lock, Unlock,
   Phone, MessageCircle, FileText, User, MapPin, Banknote,
   Upload, Camera, Image as ImageIcon, Link as LinkIcon, Loader2,
-  Printer, ExternalLink, FolderTree
+  Printer, ExternalLink, FolderTree, BarChart3, Users
 } from 'lucide-react';
-import { Product, Order, Voucher, OrderStatus, ProductCategory, DEFAULT_CATEGORIES } from '../types';
-import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl } from '../utils/storage';
+import { Product, Order, Voucher, OrderStatus, ProductCategory, DEFAULT_CATEGORIES, AnalyticsData } from '../types';
+import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl, getStoredVisitorCount } from '../utils/storage';
 import { compressImage } from '../utils/image';
 import { InvoiceModal } from './InvoiceModal';
 import { CategoryManager } from './CategoryManager';
+import { AdminAnalytics } from './AdminAnalytics';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface AdminPanelProps {
   orders: Order[];
   vouchers: Voucher[];
   categories?: string[];
+  visitorStats?: AnalyticsData;
   onAddProduct: (product: Product) => Promise<boolean> | void;
   onUpdateProduct: (product: Product) => Promise<boolean> | void;
   onDeleteProduct: (productId: string) => Promise<boolean> | void;
@@ -31,6 +33,7 @@ interface AdminPanelProps {
   onDeleteCategory?: (categoryName: string) => Promise<boolean> | void;
   onRenameCategory?: (oldName: string, newName: string) => Promise<boolean> | void;
   onRefreshCloud?: () => void;
+  onRefreshAnalytics?: () => void;
   isSyncing?: boolean;
 }
 
@@ -51,6 +54,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onDeleteCategory,
   onRenameCategory,
   onRefreshCloud,
+  onRefreshAnalytics,
+  visitorStats,
   isSyncing = false
 }) => {
   const availableCategories = (categories && categories.length > 0) ? categories : DEFAULT_CATEGORIES;
@@ -73,7 +78,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'orders' | 'vouchers' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'analysis' | 'products' | 'categories' | 'orders' | 'vouchers' | 'settings'>('dashboard');
 
   // Category Management & Filtering States
   const [selectedProductCategoryFilter, setSelectedProductCategoryFilter] = useState<string>('All');
@@ -270,10 +275,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   if (!isOpen) return null;
 
   // KPI calculations
-  const totalRevenue = orders.reduce((sum, o) => o.status !== 'Cancelled' ? sum + o.total : sum, 0);
-  const deliveredCount = orders.filter(o => o.status === 'Delivered').length;
-  const pendingCount = orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length;
+  // User mandate: Confirmed Sales Amount ONLY adds up orders when marked as 'Delivered'!
+  const deliveredOrders = orders.filter(o => o.status === 'Delivered');
+  const deliveredRevenue = deliveredOrders.reduce((sum, o) => sum + o.total, 0);
+  const deliveredCount = deliveredOrders.length;
+  const inTransitOrders = orders.filter(o => ['Confirmed', 'Processing', 'Shipped', 'Out for Delivery'].includes(o.status));
+  const inTransitRevenue = inTransitOrders.reduce((sum, o) => sum + o.total, 0);
+  const inTransitCount = inTransitOrders.length;
+  const pendingOrders = orders.filter(o => o.status === 'Pending');
+  const pendingCount = pendingOrders.length;
   const lowStockCount = products.filter(p => p.stock < 10).length;
+  const totalVisits = visitorStats?.totalVisits || getStoredVisitorCount() || 1;
+  const uniqueVisitors = visitorStats?.uniqueVisitors || 1;
 
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
@@ -546,6 +559,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="px-6 bg-gray-100 border-b border-gray-200 flex overflow-x-auto shrink-0 gap-2 py-2">
           {[
             { id: 'dashboard', label: 'Overview & KPIs', icon: LayoutDashboard },
+            { id: 'analysis', label: 'Analysis & Sales', icon: BarChart3 },
             { id: 'products', label: `Products (${products.length})`, icon: Package },
             { id: 'categories', label: `Categories (${availableCategories.length})`, icon: FolderTree },
             { id: 'orders', label: `Orders (${orders.length})`, icon: ShoppingBag },
@@ -581,55 +595,80 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
                   <div className="flex items-center justify-between text-gray-500 mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider">Gross Sales</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">আদায়কৃত মোট বিক্রয়</span>
                     <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                       <TrendingUp className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl font-black text-gray-900">{formatPrice(totalRevenue)}</div>
+                  <div className="text-2xl font-black text-gray-900">{formatPrice(deliveredRevenue)}</div>
                   <p className="text-[11px] text-emerald-600 font-semibold mt-1">
-                    ↑ 18.4% from last 30 days
+                    {deliveredCount} টি অর্ডার ডেলিভার্ড • Delivered Only
                   </p>
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
                   <div className="flex items-center justify-between text-gray-500 mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider">Total Orders</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#f85606]">মোট ভিজিটর / ব্যবহারকারী</span>
                     <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#f85606] flex items-center justify-center">
+                      <Users className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black text-gray-900">{totalVisits.toLocaleString('en-BD')}</div>
+                  <p className="text-[11px] text-[#f85606] font-semibold mt-1">
+                    প্রতিবার ভিজিটে যোগ হচ্ছে ({uniqueVisitors} ইউনিক)
+                  </p>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
+                  <div className="flex items-center justify-between text-gray-500 mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-blue-700">ইন-ট্রানজিট পাইপলাইন</span>
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Truck className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black text-gray-900">{formatPrice(inTransitRevenue)}</div>
+                  <p className="text-[11px] text-blue-600 font-semibold mt-1">
+                    {inTransitCount} টি অর্ডার ট্রানজিটে • ডেলিভারির অপেক্ষায়
+                  </p>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
+                  <div className="flex items-center justify-between text-gray-500 mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-purple-700">মোট অর্ডার ও স্টক</span>
+                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
                       <ShoppingBag className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl font-black text-gray-900">{orders.length}</div>
-                  <p className="text-[11px] text-gray-500 mt-1">
-                    {deliveredCount} delivered • {pendingCount} active in transit
+                  <div className="text-2xl font-black text-gray-900">{orders.length} টি অর্ডার</div>
+                  <p className="text-[11px] text-purple-600 font-semibold mt-1">
+                    {pendingCount} টি নতুন • লো স্টক অ্যালার্ট: {lowStockCount} টি
                   </p>
                 </div>
+              </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
-                  <div className="flex items-center justify-between text-gray-500 mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider">Accessories Catalog</span>
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <Package className="w-4 h-4" />
-                    </div>
+              {/* Quick Link Banner to Analysis Tab */}
+              <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-emerald-500/10 border border-orange-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <BarChart3 className="w-5 h-5" />
                   </div>
-                  <div className="text-2xl font-black text-gray-900">{products.length}</div>
-                  <p className="text-[11px] text-blue-600 font-semibold mt-1">
-                    {availableCategories.length} Active Categories
-                  </p>
-                </div>
-
-                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
-                  <div className="flex items-center justify-between text-gray-500 mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider">Stock Alerts</span>
-                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                      <ShieldAlert className="w-4 h-4" />
-                    </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-sm">
+                      বিস্তারিত সেলস ও ভিজিটর বিশ্লেষণ দেখতে চান?
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      ডেলিভার্ড হওয়া অর্ডারসমূহের ক্যাটেগরি আয়, সর্বোচ্চ বিক্রিত পণ্য এবং লাইভ ভিজিটর ট্র্যাকিং দেখুন।
+                    </p>
                   </div>
-                  <div className="text-2xl font-black text-gray-900">{lowStockCount}</div>
-                  <p className="text-[11px] text-amber-600 font-semibold mt-1">
-                    Items with less than 10 units
-                  </p>
                 </div>
+                <button
+                  onClick={() => setActiveTab('analysis')}
+                  className="px-4 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-xs shrink-0 self-start sm:self-auto"
+                >
+                  <BarChart3 className="w-4 h-4 text-orange-400" />
+                  <span>Analysis ট্যাবে যান</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
               </div>
 
               {/* Recent Orders in Dashboard */}
@@ -726,7 +765,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {/* TAB 2: Products Management */}
+          {/* TAB 2: Analysis & Sales Performance */}
+          {activeTab === 'analysis' && (
+            <AdminAnalytics
+              orders={orders}
+              products={products}
+              visitorStats={visitorStats || { totalVisits, uniqueVisitors }}
+              onUpdateOrderStatus={onUpdateOrderStatus}
+              onViewOrdersTab={() => setActiveTab('orders')}
+              onRefreshAnalytics={onRefreshAnalytics}
+              isSyncing={isSyncing}
+            />
+          )}
+
+          {/* TAB 3: Products Management */}
           {activeTab === 'products' && (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
