@@ -62,7 +62,8 @@ import {
   syncSaveVoucher,
   syncDeleteVoucher,
   syncSaveCategories,
-  syncResetToDemoDefaults
+  syncResetToDemoDefaults,
+  syncAllLocalToCloud
 } from './lib/syncService';
 import { 
   SlidersHorizontal, Sparkles, X, Check, Heart, 
@@ -124,6 +125,10 @@ export default function App() {
   const handleManualCloudSync = async () => {
     setIsSyncing(true);
     try {
+      // 1. Upload any local products or categories that may be un-synced
+      await syncAllLocalToCloud().catch(console.warn);
+
+      // 2. Fetch latest snapshot from cloud database
       const [freshProducts, freshOrders, freshCategories] = await Promise.all([
         fetchRemoteProducts(),
         fetchRemoteOrders(),
@@ -138,7 +143,7 @@ export default function App() {
       if (freshCategories && freshCategories.length > 0) {
         setCategories(freshCategories);
       }
-      showToast(`Cloud Sync Complete: Store & orders synced!`);
+      showToast(`Cloud Sync Complete: Store & categories live!`);
     } catch (err) {
       showToast('Cloud Sync error: Check internet connection.');
     } finally {
@@ -540,10 +545,28 @@ export default function App() {
     const updated = categories.filter(c => c.toLowerCase() !== trimmed.toLowerCase());
     setCategories(updated);
     saveStoredCategories(updated);
+
+    // If products were in the deleted category, safely reassign them to the fallback category
+    const fallbackCategory = updated[0] || 'Mobile Accessories';
+    const updatedProducts = products.map(p => {
+      if (p.category.toLowerCase() === trimmed.toLowerCase()) {
+        return { ...p, category: fallbackCategory };
+      }
+      return p;
+    });
+    setProducts(updatedProducts);
+    saveStoredProducts(updatedProducts);
+
     if (selectedCategory.toLowerCase() === trimmed.toLowerCase()) {
       setSelectedCategory('All');
     }
+
+    // Sync categories & products to cloud
     await syncSaveCategories(updated);
+    updatedProducts
+      .filter(p => p.category === fallbackCategory)
+      .forEach(p => syncSaveProduct(p).catch(console.error));
+
     showToast(`Category "${trimmed}" removed.`);
     return true;
   };
@@ -636,7 +659,7 @@ export default function App() {
               Categories
             </h3>
             <ul className="text-xs space-y-1">
-              {['All', ...categories].map((cat) => {
+              {Array.from(new Set(['All', ...categories.filter(c => c !== 'All')])).map((cat) => {
                 const isSelected = selectedCategory === cat;
                 return (
                   <li

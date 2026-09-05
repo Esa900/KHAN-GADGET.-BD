@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
 import { getStoredOrders, formatPrice, getCourierTrackingUrl } from '../utils/storage';
+import { fetchRemoteOrders } from '../lib/syncService';
 
 interface OrderTrackingModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [searchError, setSearchError] = useState('');
+  const [isSearchingRemote, setIsSearchingRemote] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -41,18 +43,35 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
       } else if (stored.length > 0 && !selectedOrder) {
         setSelectedOrder(stored[0]);
       }
+
+      // Fetch fresh orders from cloud database so newly placed orders from any device are tracked immediately
+      fetchRemoteOrders().then(remoteList => {
+        if (remoteList && remoteList.length > 0) {
+          setOrders(remoteList);
+          if (initialOrderId) {
+            const foundRemote = remoteList.find(
+              o => o.id.toLowerCase() === initialOrderId.toLowerCase() ||
+                   o.trackingNumber.toLowerCase() === initialOrderId.toLowerCase()
+            );
+            if (foundRemote) {
+              setSelectedOrder(foundRemote);
+              setSearchQuery(foundRemote.id);
+            }
+          }
+        }
+      }).catch(console.error);
     }
   }, [isOpen, initialOrderId]);
 
   if (!isOpen) return null;
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setSearchError('');
     const q = searchQuery.trim().toLowerCase();
     if (!q) return;
 
-    const found = orders.find(
+    let found = orders.find(
       o => o.id.toLowerCase() === q || 
            o.trackingNumber.toLowerCase() === q ||
            o.shippingAddress.phone.replace(/[^0-9]/g, '').includes(q.replace(/[^0-9]/g, ''))
@@ -60,8 +79,31 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
 
     if (found) {
       setSelectedOrder(found);
+      return;
+    }
+
+    // Try fetching fresh orders from Firestore cloud in case the order was placed from another device
+    setIsSearchingRemote(true);
+    try {
+      const remoteList = await fetchRemoteOrders();
+      if (remoteList && remoteList.length > 0) {
+        setOrders(remoteList);
+        found = remoteList.find(
+          o => o.id.toLowerCase() === q || 
+               o.trackingNumber.toLowerCase() === q ||
+               o.shippingAddress.phone.replace(/[^0-9]/g, '').includes(q.replace(/[^0-9]/g, ''))
+        );
+      }
+    } catch (err) {
+      console.warn('Could not query remote orders:', err);
+    } finally {
+      setIsSearchingRemote(false);
+    }
+
+    if (found) {
+      setSelectedOrder(found);
     } else {
-      setSearchError('No order found with that Order ID or Tracking Number. Please check and try again.');
+      setSearchError('No order found with that Order ID, Tracking Number, or Phone. Please check and try again.');
     }
   };
 

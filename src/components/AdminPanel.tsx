@@ -14,6 +14,7 @@ import { compressImage } from '../utils/image';
 import { InvoiceModal } from './InvoiceModal';
 import { CategoryManager } from './CategoryManager';
 import { AdminAnalytics } from './AdminAnalytics';
+import { syncAllLocalToCloud } from '../lib/syncService';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -65,12 +66,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
+  const [isUploadingCloud, setIsUploadingCloud] = useState(false);
+  const [cloudSyncFeedback, setCloudSyncFeedback] = useState<string | null>(null);
+
+  const handleTriggerCloudUpload = async () => {
+    setIsUploadingCloud(true);
+    setCloudSyncFeedback(null);
+    try {
+      const res = await syncAllLocalToCloud();
+      setCloudSyncFeedback(res.message);
+      if (onRefreshCloud) onRefreshCloud();
+      setTimeout(() => setCloudSyncFeedback(null), 5000);
+    } catch (err: any) {
+      setCloudSyncFeedback(err?.message || 'Upload failed');
+      setTimeout(() => setCloudSyncFeedback(null), 5000);
+    } finally {
+      setIsUploadingCloud(false);
+    }
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordInput === 'ESA006##') {
       setIsAuthenticated(true);
       setPasswordInput('');
       setAuthError('');
+      // Auto-sync any local products & categories to cloud on admin login
+      syncAllLocalToCloud().then(res => {
+        if (onRefreshCloud) onRefreshCloud();
+      }).catch(console.error);
     } else {
       setAuthError('Incorrect password. Access denied.');
       setPasswordInput('');
@@ -140,7 +164,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         // Targeted slot upload (replace or set specific photo 1, 2, 3, or 4)
         const file = validFiles[0];
         setUploadProgressText(`Optimizing picture for Slot ${targetSlot + 1}...`);
-        const dataUrl = await compressImage(file, 800, 800, 0.80);
+        const dataUrl = await compressImage(file, 650, 650, 0.72);
         
         setProductImages(prev => {
           const next = [...prev];
@@ -164,7 +188,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
         for (let i = 0; i < filesToProcess.length; i++) {
           setUploadProgressText(`Optimizing picture ${i + 1} of ${filesToProcess.length}...`);
-          const dataUrl = await compressImage(filesToProcess[i], 800, 800, 0.80);
+          const dataUrl = await compressImage(filesToProcess[i], 650, 650, 0.72);
           processedUrls.push(dataUrl);
         }
 
@@ -521,6 +545,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleTriggerCloudUpload}
+              disabled={isUploadingCloud || isSyncing}
+              className="text-xs bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer font-semibold disabled:opacity-50 shadow-xs"
+              title="Upload & Sync All Categories & Products to Cloud (অন্যান্য ডিভাইসে পাঠাতে ক্লাউড আপডেট করুন)"
+            >
+              <Upload className={`w-3.5 h-3.5 ${isUploadingCloud ? 'animate-bounce' : ''}`} />
+              <span className="hidden sm:inline">{isUploadingCloud ? 'Uploading...' : 'Upload to Cloud'}</span>
+            </button>
+
             {onRefreshCloud && (
               <button
                 onClick={onRefreshCloud}
@@ -584,6 +618,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             );
           })}
         </div>
+
+        {cloudSyncFeedback && (
+          <div className="bg-emerald-600 text-white px-6 py-2 text-xs font-semibold flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-200" />
+              <span>{cloudSyncFeedback}</span>
+            </div>
+            <button onClick={() => setCloudSyncFeedback(null)} className="text-emerald-100 hover:text-white cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Tab Content Container */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50/50">

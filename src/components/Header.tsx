@@ -43,7 +43,9 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
 
-  const displayCategories = ['All', ...(categories && categories.length > 0 ? categories : CATEGORIES.filter(c => c !== 'All'))];
+  const displayCategories = Array.from(
+    new Set(['All', ...(categories && categories.length > 0 ? categories.filter(c => c !== 'All') : CATEGORIES.filter(c => c !== 'All'))])
+  );
 
   const quickSearchTags = ['65W GaN', 'Power Bank', 'MagSafe', 'AirPods Case', 'Privacy Glass', 'Car Mount', 'DL05 Cooler'];
 
@@ -227,7 +229,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Mobile Category Quick Scroll (for smaller viewports) */}
       <div className="lg:hidden bg-orange-700 border-t border-orange-800/80 px-4 py-1.5 overflow-x-auto no-scrollbar flex items-center gap-2 text-xs">
-        {CATEGORIES.map((category) => (
+        {displayCategories.map((category) => (
           <button
             key={category}
             onClick={() => onSelectCategory(category)}

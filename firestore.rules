@@ -22,5 +22,9 @@ service cloud.firestore {
     match /categories/{categoryId} {
       allow read, write: if true;
     }
+    // Test collection
+    match /test/{docId} {
+      allow read, write: if true;
+    }
   }
 }

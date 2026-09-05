@@ -10,7 +10,7 @@ import {
   increment
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Product, Order, Voucher, OrderStatus, TrackingCheckpoint, AnalyticsData } from '../types';
+import { Product, Order, Voucher, OrderStatus, TrackingCheckpoint, AnalyticsData, DEFAULT_CATEGORIES } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_VOUCHERS } from '../data/mockData';
 import { 
   getStoredProducts, 
@@ -88,6 +88,18 @@ export const seedInitialFirestoreData = async () => {
         batch.set(ref, cleanFirestoreData(v));
       });
       await batch.commit();
+    }
+
+    // Ensure categories document exists in settings collection
+    const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
+    const catSnap = await getDoc(catRef);
+    if (!catSnap.exists() || !catSnap.data()?.list || catSnap.data()?.list.length === 0) {
+      const stored = getStoredCategories();
+      const initialCats = Array.from(new Set([...DEFAULT_CATEGORIES, ...stored]));
+      await setDoc(catRef, {
+        list: initialCats,
+        updatedAt: new Date().toISOString()
+      });
     }
   } catch (err) {
     console.error('Error seeding Firestore collections:', err);
@@ -216,6 +228,30 @@ export const syncSaveProduct = async (product: Product): Promise<{ success: bool
     const sanitized = cleanFirestoreData(product);
     const ref = doc(db, PRODUCTS_COLLECTION, product.id);
     await setDoc(ref, sanitized);
+
+    // If product has a category, make sure this category is recorded in settings/categories in Firestore
+    if (product.category && product.category !== 'All') {
+      try {
+        const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
+        const catSnap = await getDoc(catRef);
+        let list: string[] = [];
+        if (catSnap.exists() && Array.isArray(catSnap.data()?.list)) {
+          list = catSnap.data().list;
+        } else {
+          list = getStoredCategories();
+        }
+        if (!list.some(c => c.toLowerCase() === product.category.toLowerCase())) {
+          const updatedList = [...list, product.category];
+          await setDoc(catRef, { list: updatedList, updatedAt: new Date().toISOString() });
+          saveStoredCategories(updatedList);
+          broadcastSync('CATEGORIES_UPDATED');
+          console.log(`Auto-added category "${product.category}" to Firestore categories.`);
+        }
+      } catch (catErr) {
+        console.warn('Failed to auto-update categories for product:', catErr);
+      }
+    }
+
     broadcastSync('PRODUCTS_UPDATED');
     console.log(`Successfully synced product ${product.id} to Firestore.`);
     return { success: true };
@@ -282,6 +318,13 @@ export const subscribeToOrders = (onUpdate: (orders: Order[]) => void) => {
     }
   }).catch(console.error);
 
+  const handleBroadcast = (event: MessageEvent) => {
+    if (event.data?.type === 'ORDERS_UPDATED') {
+      fetchRemoteOrders().then(onUpdate).catch(console.error);
+    }
+  };
+  syncChannel?.addEventListener('message', handleBroadcast);
+
   const unsubscribe = onSnapshot(
     collection(db, ORDERS_COLLECTION),
     async (snapshot) => {
@@ -304,7 +347,10 @@ export const subscribeToOrders = (onUpdate: (orders: Order[]) => void) => {
     }
   );
 
-  return unsubscribe;
+  return () => {
+    unsubscribe();
+    syncChannel?.removeEventListener('message', handleBroadcast);
+  };
 };
 
 // 5. Add an Order to Firestore (Live Sync with sanitized payload)
@@ -325,6 +371,9 @@ export const syncAddOrder = async (newOrder: Order): Promise<{ success: boolean;
         console.error('Error updating stock for product:', item.product.id, e);
       }
     }
+
+    broadcastSync('ORDERS_UPDATED');
+    broadcastSync('PRODUCTS_UPDATED');
     return { success: true };
   } catch (err: any) {
     console.error('Failed to sync order to Firestore:', err);
@@ -341,7 +390,20 @@ export const syncUpdateOrderStatus = async (
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const orders = getStoredOrders();
-    const targetOrder = orders.find(o => o.id === orderId);
+    let targetOrder = orders.find(o => o.id === orderId);
+
+    // If order was placed on another device and not yet in local storage, fetch from Firestore
+    if (!targetOrder) {
+      try {
+        const docSnap = await getDoc(doc(db, ORDERS_COLLECTION, orderId));
+        if (docSnap.exists()) {
+          targetOrder = docSnap.data() as Order;
+        }
+      } catch (e) {
+        console.warn('Could not query single order from firestore:', e);
+      }
+    }
+
     if (!targetOrder) return { success: false, error: 'Order not found' };
 
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
@@ -368,6 +430,7 @@ export const syncUpdateOrderStatus = async (
     const sanitized = cleanFirestoreData(updatedOrder);
     const ref = doc(db, ORDERS_COLLECTION, orderId);
     await setDoc(ref, sanitized);
+    broadcastSync('ORDERS_UPDATED');
     console.log(`Order ${orderId} status updated to ${status} in Firestore.`);
     return { success: true };
   } catch (err: any) {
@@ -382,6 +445,13 @@ export const subscribeToVouchers = (onUpdate: (vouchers: Voucher[]) => void) => 
   if (local.length > 0) {
     onUpdate(local);
   }
+
+  const handleBroadcast = (event: MessageEvent) => {
+    if (event.data?.type === 'VOUCHERS_UPDATED') {
+      onUpdate(getStoredVouchers());
+    }
+  };
+  syncChannel?.addEventListener('message', handleBroadcast);
 
   const unsubscribe = onSnapshot(
     collection(db, VOUCHERS_COLLECTION),
@@ -401,14 +471,18 @@ export const subscribeToVouchers = (onUpdate: (vouchers: Voucher[]) => void) => 
     }
   );
 
-  return unsubscribe;
+  return () => {
+    unsubscribe();
+    syncChannel?.removeEventListener('message', handleBroadcast);
+  };
 };
 
 // 8. Save or Delete Voucher in Firestore
 export const syncSaveVoucher = async (voucher: Voucher): Promise<void> => {
   try {
     const ref = doc(db, VOUCHERS_COLLECTION, voucher.code);
-    await setDoc(ref, voucher);
+    await setDoc(ref, cleanFirestoreData(voucher));
+    broadcastSync('VOUCHERS_UPDATED');
   } catch (err) {
     console.error('Failed to sync voucher to Firestore:', err);
   }
@@ -418,6 +492,7 @@ export const syncDeleteVoucher = async (code: string): Promise<void> => {
   try {
     const ref = doc(db, VOUCHERS_COLLECTION, code);
     await deleteDoc(ref);
+    broadcastSync('VOUCHERS_UPDATED');
   } catch (err) {
     console.error('Failed to delete voucher from Firestore:', err);
   }
@@ -474,9 +549,16 @@ export const fetchRemoteCategories = async (): Promise<string[]> => {
     if (snap.exists()) {
       const data = snap.data();
       if (data && Array.isArray(data.list) && data.list.length > 0) {
-        saveStoredCategories(data.list);
-        return data.list;
+        const merged = Array.from(new Set([...DEFAULT_CATEGORIES, ...data.list]));
+        saveStoredCategories(merged);
+        return merged;
       }
+    } else {
+      // Document doesn't exist yet; initialize with default + local categories
+      const initial = Array.from(new Set([...DEFAULT_CATEGORIES, ...getStoredCategories()]));
+      await setDoc(catRef, { list: initial, updatedAt: new Date().toISOString() });
+      saveStoredCategories(initial);
+      return initial;
     }
   } catch (err) {
     console.warn('Failed to fetch remote categories from Firestore, using local:', err);
@@ -486,6 +568,13 @@ export const fetchRemoteCategories = async (): Promise<string[]> => {
 
 export const subscribeToCategories = (onUpdate: (cats: string[]) => void): (() => void) => {
   const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
+
+  // Instant direct fetch so other devices immediately receive categories on mount
+  fetchRemoteCategories().then((cats) => {
+    if (cats && cats.length > 0) {
+      onUpdate(cats);
+    }
+  }).catch(console.error);
 
   const handleBroadcast = (e: MessageEvent) => {
     if (e.data?.type === 'CATEGORIES_UPDATED') {
@@ -500,8 +589,9 @@ export const subscribeToCategories = (onUpdate: (cats: string[]) => void): (() =
       if (snapshot.exists()) {
         const data = snapshot.data();
         if (data && Array.isArray(data.list) && data.list.length > 0) {
-          saveStoredCategories(data.list);
-          onUpdate(data.list);
+          const merged = Array.from(new Set([...DEFAULT_CATEGORIES, ...data.list]));
+          saveStoredCategories(merged);
+          onUpdate(merged);
           return;
         }
       }
@@ -521,10 +611,11 @@ export const subscribeToCategories = (onUpdate: (cats: string[]) => void): (() =
 
 export const syncSaveCategories = async (categories: string[]): Promise<{ success: boolean; error?: string }> => {
   try {
-    saveStoredCategories(categories);
+    const fullCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...categories]));
+    saveStoredCategories(fullCategories);
     const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
     await setDoc(catRef, {
-      list: categories,
+      list: fullCategories,
       updatedAt: new Date().toISOString()
     });
     broadcastSync('CATEGORIES_UPDATED');
@@ -533,6 +624,63 @@ export const syncSaveCategories = async (categories: string[]): Promise<{ succes
   } catch (err: any) {
     console.error('Failed to sync categories to Firestore:', err);
     return { success: false, error: err?.message || 'Failed to save categories to cloud' };
+  }
+};
+
+// Sync all local products and categories to Firestore cloud
+export const syncAllLocalToCloud = async (): Promise<{ success: boolean; productsCount: number; categoriesCount: number; message: string }> => {
+  try {
+    const localProducts = getStoredProducts();
+    const localCategories = getStoredCategories();
+    const deletedIds = getDeletedProductIds();
+
+    // 1. Sync Categories
+    const mergedCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...localCategories]));
+    await syncSaveCategories(mergedCategories);
+
+    // 2. Sync all local non-deleted products
+    let syncedProds = 0;
+    for (const prod of localProducts) {
+      if (!deletedIds.includes(prod.id)) {
+        await syncSaveProduct(prod);
+        syncedProds++;
+      }
+    }
+
+    // 3. Sync all local vouchers
+    const localVouchers = getStoredVouchers();
+    for (const v of localVouchers) {
+      await syncSaveVoucher(v).catch(() => {});
+    }
+
+    // 4. Sync all local orders
+    const localOrders = getStoredOrders();
+    for (const o of localOrders) {
+      try {
+        const orderRef = doc(db, ORDERS_COLLECTION, o.id);
+        const orderSnap = await getDoc(orderRef);
+        if (!orderSnap.exists()) {
+          await setDoc(orderRef, cleanFirestoreData(o));
+        }
+      } catch (e) {
+        // Continue if single order fails
+      }
+    }
+
+    return {
+      success: true,
+      productsCount: syncedProds,
+      categoriesCount: mergedCategories.length,
+      message: `Successfully synchronized ${syncedProds} products and ${mergedCategories.length} categories with cloud database!`
+    };
+  } catch (err: any) {
+    console.error('Failed to sync all local data to cloud:', err);
+    return {
+      success: false,
+      productsCount: 0,
+      categoriesCount: 0,
+      message: err?.message || 'Cloud sync failed'
+    };
   }
 };
 
