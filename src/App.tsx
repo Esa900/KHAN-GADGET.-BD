@@ -27,6 +27,12 @@ import {
   Footer 
 } from './components/Footer';
 import { 
+  RecentlyViewed 
+} from './components/RecentlyViewed';
+import { 
+  TrustBadges 
+} from './components/TrustBadges';
+import { 
   Product, ProductCategory, CATEGORIES, CartItem, Voucher, Order, OrderStatus, ProductReview 
 } from './types';
 import { 
@@ -35,7 +41,7 @@ import {
   getStoredVouchers, saveStoredVouchers,
   getStoredCart, saveStoredCart,
   getStoredWishlist, saveStoredWishlist,
-  formatPrice, resetToDemoDefaults 
+  formatPrice, resetToDemoDefaults, STORE_WHATSAPP_NUMBER 
 } from './utils/storage';
 import { 
   subscribeToProducts, 
@@ -614,6 +620,18 @@ export default function App() {
             }} 
           />
 
+          {/* Customer Trust & Buyer Protection Guarantees */}
+          <TrustBadges />
+
+          {/* Recently Viewed Accessories */}
+          <RecentlyViewed
+            allProducts={products}
+            wishlist={wishlist}
+            onSelectProduct={setSelectedProduct}
+            onAddToCart={(p, e) => handleAddToCart(p, 1, undefined, e)}
+            onToggleWishlist={handleToggleWishlist}
+          />
+
           {/* Catalog Controls / Header Bar */}
           <div className="bg-white p-2.5 rounded border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
@@ -785,8 +803,8 @@ export default function App() {
                   <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">VERIFIED</span>
                 </div>
                 <div className="flex items-center justify-between p-1.5 bg-slate-50 rounded border border-slate-100">
-                  <span className="font-medium text-slate-700 text-[11px]">JazzCash / EasyPaisa</span>
-                  <span className="text-[9px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">INSTANT</span>
+                  <span className="font-medium text-slate-700 text-[11px]">bKash / Nagad / Rocket</span>
+                  <span className="text-[9px] bg-pink-100 text-pink-800 font-bold px-1.5 py-0.5 rounded">INSTANT MFS</span>
                 </div>
                 <div className="flex items-center justify-between p-1.5 bg-slate-50 rounded border border-slate-100">
                   <span className="font-medium text-slate-700 text-[11px]">Visa / Mastercard</span>

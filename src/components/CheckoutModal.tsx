@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, ShieldCheck, Banknote, CheckCircle2, ArrowRight, Truck, 
-  MapPin, Phone, User, FileText, ShoppingBag, Check, Printer, Sparkles 
+  MapPin, Phone, User, FileText, ShoppingBag, Check, Printer, Sparkles, MessageCircle 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CartItem, Voucher, ShippingAddress, Order } from '../types';
-import { formatPrice, addStoredOrder } from '../utils/storage';
+import { formatPrice, addStoredOrder, generateWhatsAppCartOrderUrl } from '../utils/storage';
 import { syncAddOrder } from '../lib/syncService';
 
 interface CheckoutModalProps {
@@ -389,14 +389,38 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto py-3 px-8 rounded-xl bg-[#f85606] hover:bg-[#e04a00] text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition cursor-pointer disabled:opacity-50"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{isSubmitting ? 'Confirming...' : 'CONFIRM ORDER (Cash on Delivery)'}</span>
-                </button>
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                  <a
+                    href={generateWhatsAppCartOrderUrl(
+                      cart.map(c => ({ 
+                        title: c.product.title, 
+                        price: c.product.price, 
+                        quantity: c.quantity, 
+                        variants: c.selectedVariants 
+                      })),
+                      grandTotal,
+                      fullName,
+                      phone,
+                      `${address}, ${city}`
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-xs"
+                    title="Order directly with WhatsApp chat"
+                  >
+                    <MessageCircle className="w-4 h-4 fill-white text-emerald-600" />
+                    <span>WhatsApp Order</span>
+                  </a>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full sm:w-auto py-3 px-8 rounded-xl bg-[#f85606] hover:bg-[#e04a00] text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition cursor-pointer disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{isSubmitting ? 'Confirming...' : 'CONFIRM ORDER (Cash on Delivery)'}</span>
+                  </button>
+                </div>
               </div>
 
             </form>

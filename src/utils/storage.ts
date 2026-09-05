@@ -7,6 +7,94 @@ const ORDERS_KEY = 'khan_gadget_orders_v2';
 const VOUCHERS_KEY = 'khan_gadget_vouchers_v2';
 const CART_KEY = 'khan_gadget_cart_v2';
 const WISHLIST_KEY = 'khan_gadget_wishlist_v2';
+const RECENTLY_VIEWED_KEY = 'khan_gadget_recently_viewed_v1';
+
+export const STORE_WHATSAPP_NUMBER = '8801854774406';
+
+export const getCourierTrackingUrl = (carrier: string = '', trackingNo: string = ''): string => {
+  const code = encodeURIComponent(trackingNo.trim());
+  const c = carrier.toLowerCase();
+  if (c.includes('steadfast') || trackingNo.toUpperCase().startsWith('STD-') || trackingNo.toUpperCase().startsWith('STEAD-')) {
+    return `https://steadfast.com.bd/t/${code}`;
+  }
+  if (c.includes('pathao')) {
+    return `https://merchant.pathao.com/tracking?consignment_id=${code}`;
+  }
+  if (c.includes('redx')) {
+    return `https://redx.com.bd/track?trackingId=${code}`;
+  }
+  if (c.includes('paperfly')) {
+    return `https://paperfly.com.bd/tracking.php?code=${code}`;
+  }
+  if (c.includes('sundarban')) {
+    return `https://sundarbancourierltd.com/`;
+  }
+  if (c.includes('ecourier')) {
+    return `https://ecourier.com.bd/tracking?id=${code}`;
+  }
+  return `https://steadfast.com.bd/t/${code}`;
+};
+
+export const getRecentlyViewedIds = (): string[] => {
+  try {
+    const data = localStorage.getItem(RECENTLY_VIEWED_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const addRecentlyViewedId = (productId: string): string[] => {
+  try {
+    const current = getRecentlyViewedIds().filter(id => id !== productId);
+    const updated = [productId, ...current].slice(0, 10);
+    localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(updated));
+    return updated;
+  } catch {
+    return [];
+  }
+};
+
+export const generateWhatsAppOrderUrl = (
+  product: Product, 
+  quantity: number = 1, 
+  variants?: Record<string, string>
+): string => {
+  let message = `*নতুন অর্ডার রিকোয়েস্ট (Khan Gadget)*\n\n`;
+  message += `📦 *পণ্য:* ${product.title}\n`;
+  message += `💰 *মূল্য:* ৳ ${product.price.toLocaleString('en-BD')} (পরিমাণ: ${quantity})\n`;
+  message += `🏷️ *ব্র্যান্ড:* ${product.brand} | *ক্যাটেগরি:* ${product.category}\n`;
+  
+  if (variants && Object.keys(variants).length > 0) {
+    const variantStr = Object.entries(variants).map(([k, v]) => `${k}: ${v}`).join(', ');
+    message += `🎨 *ভেরিয়েন্ট:* ${variantStr}\n`;
+  }
+  
+  message += `\nআমি এই পণ্যটি ক্যাশ অন ডেলিভারিতে অর্ডার করতে চাই। দয়া করে বিস্তারিত জানিয়ে কনফার্ম করুন।`;
+  return `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+};
+
+export const generateWhatsAppCartOrderUrl = (
+  items: { title: string; price: number; quantity: number; variants?: Record<string, string> }[],
+  total: number,
+  customerName?: string,
+  phone?: string,
+  address?: string
+): string => {
+  let message = `*নতুন কার্ট অর্ডার (Khan Gadget)*\n\n`;
+  if (customerName) message += `👤 *কাস্টমার:* ${customerName}\n`;
+  if (phone) message += `📞 *ফোন:* ${phone}\n`;
+  if (address) message += `📍 *ঠিকানা:* ${address}\n\n`;
+  
+  message += `🛍️ *অর্ডার আইটেম সমূহ:*\n`;
+  items.forEach((it, idx) => {
+    message += `${idx + 1}. ${it.title} (Qty: ${it.quantity}) - ৳ ${(it.price * it.quantity).toLocaleString('en-BD')}\n`;
+  });
+  
+  message += `\n💵 *মোট প্রদেয়:* ৳ ${total.toLocaleString('en-BD')} (Cash on Delivery)\n`;
+  message += `\nদয়া করে আমার অর্ডারটি কনফার্ম করুন। ধন্যবাদ!`;
+  return `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+};
 
 export const getDeletedProductIds = (): string[] => {
   try {

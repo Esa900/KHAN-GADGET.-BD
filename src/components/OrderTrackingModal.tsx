@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Search, Truck, CheckCircle2, Clock, MapPin, 
-  Package, PhoneCall, ShieldCheck, ExternalLink, AlertCircle 
+  Package, PhoneCall, ShieldCheck, ExternalLink, AlertCircle, Printer 
 } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
-import { getStoredOrders, formatPrice } from '../utils/storage';
+import { getStoredOrders, formatPrice, getCourierTrackingUrl } from '../utils/storage';
 
 interface OrderTrackingModalProps {
   isOpen: boolean;
@@ -199,6 +199,24 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                     <span className="text-gray-400 block text-[10px]">Total Amount</span>
                     <span className="font-bold text-white">{formatPrice(selectedOrder.total)}</span>
                   </div>
+                </div>
+
+                {/* Direct Courier Partner Live Tracking Link */}
+                <div className="pt-3 border-t border-gray-700/60 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-300">
+                    <Truck className="w-4 h-4 text-orange-400" />
+                    <span>Courier Consignment: <strong className="font-mono text-white">{selectedOrder.trackingNumber}</strong></span>
+                  </div>
+
+                  <a
+                    href={getCourierTrackingUrl(selectedOrder.carrierName, selectedOrder.trackingNumber)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shadow-md transition"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Track on Official Courier Website ({selectedOrder.carrierName.split(' ')[0]})</span>
+                  </a>
                 </div>
               </div>
 

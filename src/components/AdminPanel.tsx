@@ -5,11 +5,13 @@ import {
   TrendingUp, Truck, ShieldAlert, ArrowUpRight, DollarSign, 
   Search, Eye, EyeOff, RefreshCw, KeyRound, Lock, Unlock,
   Phone, MessageCircle, FileText, User, MapPin, Banknote,
-  Upload, Camera, Image as ImageIcon, Link as LinkIcon, Loader2
+  Upload, Camera, Image as ImageIcon, Link as LinkIcon, Loader2,
+  Printer, ExternalLink
 } from 'lucide-react';
 import { Product, Order, Voucher, OrderStatus, ProductCategory } from '../types';
-import { formatPrice, resetToDemoDefaults } from '../utils/storage';
+import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl } from '../utils/storage';
 import { compressImage } from '../utils/image';
+import { InvoiceModal } from './InvoiceModal';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -151,6 +153,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Order Management States
   const [orderFilter, setOrderFilter] = useState<string>('All');
   const [selectedOrderForEdit, setSelectedOrderForEdit] = useState<Order | null>(null);
+  const [orderForInvoice, setOrderForInvoice] = useState<Order | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus>('Shipped');
   const [statusNote, setStatusNote] = useState('');
   const [courierName, setCourierName] = useState('Daraz Express (DEX)');
@@ -548,7 +551,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <tr key={order.id} className="hover:bg-gray-50/80">
                           <td className="py-3 font-mono">
                             <span className="font-bold text-gray-900 block">{order.id}</span>
-                            <span className="text-[10px] text-[#f85606] font-mono">{order.trackingNumber}</span>
+                            <a 
+                              href={getCourierTrackingUrl(order.carrierName, order.trackingNumber)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-[#f85606] hover:text-orange-700 font-mono flex items-center gap-0.5 hover:underline"
+                              title="Track with Courier"
+                            >
+                              <ExternalLink className="w-2.5 h-2.5" />
+                              <span>{order.trackingNumber}</span>
+                            </a>
                           </td>
                           <td className="py-3">
                             <div className="font-bold text-gray-900">{order.shippingAddress.fullName}</div>
@@ -571,16 +583,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             </span>
                           </td>
                           <td className="py-3 text-right">
-                            <button
-                              onClick={() => {
-                                setSelectedOrderForEdit(order);
-                                setNewStatus(order.status);
-                                setCourierName(order.carrierName || 'Daraz Express (DEX)');
-                              }}
-                              className="px-2.5 py-1 bg-slate-900 hover:bg-black text-white text-[11px] font-bold rounded shadow-xs transition cursor-pointer"
-                            >
-                              Full Details
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setOrderForInvoice(order)}
+                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-bold rounded flex items-center gap-1 transition cursor-pointer"
+                                title="Print Invoice / Cash Memo"
+                              >
+                                <Printer className="w-3 h-3 text-slate-600" />
+                                <span className="hidden sm:inline">Invoice</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedOrderForEdit(order);
+                                  setNewStatus(order.status);
+                                  setCourierName(order.carrierName || 'Daraz Express (DEX)');
+                                }}
+                                className="px-2.5 py-1 bg-slate-900 hover:bg-black text-white text-[11px] font-bold rounded shadow-xs transition cursor-pointer"
+                              >
+                                Details
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -745,7 +768,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <tr key={order.id} className="hover:bg-gray-50/80">
                           <td className="p-3 font-mono">
                             <span className="font-bold text-gray-900 block">{order.id}</span>
-                            <span className="text-[11px] text-[#f85606]">{order.trackingNumber}</span>
+                            <a 
+                              href={getCourierTrackingUrl(order.carrierName, order.trackingNumber)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] text-[#f85606] hover:text-orange-700 font-mono flex items-center gap-0.5 hover:underline"
+                              title="Track with Courier"
+                            >
+                              <ExternalLink className="w-2.5 h-2.5" />
+                              <span>{order.trackingNumber}</span>
+                            </a>
                           </td>
                           <td className="p-3">
                             <div className="font-bold text-gray-900">{order.shippingAddress.fullName}</div>
@@ -776,16 +808,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             </span>
                           </td>
                           <td className="p-3 text-right">
-                            <button
-                              onClick={() => {
-                                setSelectedOrderForEdit(order);
-                                setNewStatus(order.status);
-                                setCourierName(order.carrierName || 'Daraz Express (DEX)');
-                              }}
-                              className="px-3 py-1.5 bg-[#f85606] hover:bg-[#e04a00] text-white rounded-lg font-bold text-xs transition cursor-pointer shadow-xs"
-                            >
-                              View Full Details
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setOrderForInvoice(order)}
+                                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                                title="Print Invoice / Cash Memo"
+                              >
+                                <Printer className="w-3.5 h-3.5 text-slate-600" />
+                                <span className="hidden sm:inline">Invoice</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedOrderForEdit(order);
+                                  setNewStatus(order.status);
+                                  setCourierName(order.carrierName || 'Daraz Express (DEX)');
+                                }}
+                                className="px-3 py-1.5 bg-[#f85606] hover:bg-[#e04a00] text-white rounded-lg font-bold text-xs transition cursor-pointer shadow-xs"
+                              >
+                                View Details
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1216,12 +1259,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedOrderForEdit(null)}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+
+                <div className="flex items-center gap-2">
+                  {/* Print Invoice Button */}
+                  <button
+                    type="button"
+                    onClick={() => setOrderForInvoice(selectedOrderForEdit)}
+                    className="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Print Invoice (চালান)</span>
+                  </button>
+
+                  {/* Courier Partner External Tracking */}
+                  <a
+                    href={getCourierTrackingUrl(selectedOrderForEdit.carrierName, selectedOrderForEdit.trackingNumber)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Track on Courier</span>
+                  </a>
+
+                  <button 
+                    onClick={() => setSelectedOrderForEdit(null)}
+                    className="p-1.5 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Modal Scrollable Content */}
@@ -1658,6 +1725,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
         )}
+
+        {/* Official Printable PDF Invoice Modal */}
+        <InvoiceModal
+          isOpen={Boolean(orderForInvoice)}
+          onClose={() => setOrderForInvoice(null)}
+          order={orderForInvoice}
+        />
 
       </div>
     </div>

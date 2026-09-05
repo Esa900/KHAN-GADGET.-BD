@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, Star, ShieldCheck, Truck, RefreshCw, ShoppingCart, 
-  Heart, Zap, Check, MessageSquare, MapPin, Plus, Minus 
+  Heart, Zap, Check, MessageSquare, MapPin, Plus, Minus, MessageCircle, CheckCircle2 
 } from 'lucide-react';
 import { Product, ProductReview } from '../types';
-import { formatPrice } from '../utils/storage';
+import { formatPrice, addRecentlyViewedId, generateWhatsAppOrderUrl } from '../utils/storage';
 
 interface ProductDetailModalProps {
   product: Product;
@@ -42,6 +42,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   // Delivery check state
   const [destinationCity, setDestinationCity] = useState('Dhaka');
   const [deliveryChecked, setDeliveryChecked] = useState(false);
+
+  // Track product in Recently Viewed list
+  useEffect(() => {
+    if (product?.id) {
+      addRecentlyViewedId(product.id);
+    }
+  }, [product?.id]);
 
   // Review form state
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -305,36 +312,65 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
-                <button
-                  onClick={() => onAddToCart(product, quantity, selectedVariants)}
-                  disabled={product.stock <= 0}
-                  className="flex-1 py-3 px-4 rounded-xl bg-orange-100 hover:bg-orange-200 text-[#f85606] font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>Add to Cart</span>
-                </button>
+              <div className="pt-2 flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <button
+                    onClick={() => onAddToCart(product, quantity, selectedVariants)}
+                    disabled={product.stock <= 0}
+                    className="flex-1 py-3 px-4 rounded-xl bg-orange-100 hover:bg-orange-200 text-[#f85606] font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Add to Cart</span>
+                  </button>
 
-                <button
-                  onClick={() => onBuyNow(product, quantity, selectedVariants)}
-                  disabled={product.stock <= 0}
-                  className="flex-1 py-3 px-4 rounded-xl bg-[#f85606] hover:bg-[#e04a00] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 transition cursor-pointer disabled:opacity-50"
-                >
-                  <Zap className="w-4 h-4 fill-white" />
-                  <span>Buy Now</span>
-                </button>
+                  <button
+                    onClick={() => onBuyNow(product, quantity, selectedVariants)}
+                    disabled={product.stock <= 0}
+                    className="flex-1 py-3 px-4 rounded-xl bg-[#f85606] hover:bg-[#e04a00] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 transition cursor-pointer disabled:opacity-50"
+                  >
+                    <Zap className="w-4 h-4 fill-white" />
+                    <span>Buy Now</span>
+                  </button>
 
-                <button
-                  onClick={() => onToggleWishlist(product.id)}
-                  className={`p-3 rounded-xl border flex items-center justify-center transition cursor-pointer ${
-                    isWishlisted 
-                      ? 'border-rose-300 bg-rose-50 text-rose-600' 
-                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-                  }`}
-                  title="Wishlist"
+                  <button
+                    onClick={() => onToggleWishlist(product.id)}
+                    className={`p-3 rounded-xl border flex items-center justify-center transition cursor-pointer ${
+                      isWishlisted 
+                        ? 'border-rose-300 bg-rose-50 text-rose-600' 
+                        : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                    title="Wishlist"
+                  >
+                    <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600' : ''}`} />
+                  </button>
+                </div>
+
+                {/* Direct WhatsApp Order Button */}
+                <a
+                  href={generateWhatsAppOrderUrl(product, quantity, selectedVariants)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition"
                 >
-                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600' : ''}`} />
-                </button>
+                  <MessageCircle className="w-4 h-4 fill-white text-emerald-600" />
+                  <span>Order via WhatsApp (হোয়াটসঅ্যাপে সরাসরি অর্ডার করুন)</span>
+                </a>
+              </div>
+
+              {/* Trust & Guarantee Badges for Customer Confidence */}
+              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100 text-[11px] text-gray-600">
+                <div className="flex items-center gap-1.5 p-1.5 bg-gray-50 rounded-lg">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="font-semibold text-gray-800">১০০% অরিজিনাল</span>
+                </div>
+                <div className="flex items-center gap-1.5 p-1.5 bg-gray-50 rounded-lg">
+                  <RefreshCw className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span className="font-semibold text-gray-800">৭ দিনের রিপ্লেসমেন্ট</span>
+                </div>
+                <div className="flex items-center gap-1.5 p-1.5 bg-gray-50 rounded-lg">
+                  <Truck className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                  <span className="font-semibold text-gray-800">ক্যাশ অন ডেলিভারি</span>
+                </div>
               </div>
             </div>
           </div>
