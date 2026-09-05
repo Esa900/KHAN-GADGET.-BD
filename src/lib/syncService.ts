@@ -10,7 +10,7 @@ import {
   increment
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Product, Order, Voucher, OrderStatus, TrackingCheckpoint, AnalyticsData, DEFAULT_CATEGORIES } from '../types';
+import { Product, Order, Voucher, OrderStatus, TrackingCheckpoint, AnalyticsData, DEFAULT_CATEGORIES, StoreConfig, DEFAULT_STORE_CONFIG } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_VOUCHERS } from '../data/mockData';
 import { 
   getStoredProducts, 
@@ -22,9 +22,15 @@ import {
   getDeletedProductIds,
   getStoredCategories,
   saveStoredCategories,
+  getDeletedCategoryNames,
+  markCategoryDeleted,
+  unmarkCategoryDeleted,
   getStoredVisitorCount,
   saveStoredVisitorCount,
-  getOrSetVisitorId
+  getOrSetVisitorId,
+  getStoredStoreConfig,
+  saveStoredStoreConfig,
+  BASE_VISITOR_COUNT
 } from '../utils/storage';
 
 const PRODUCTS_COLLECTION = 'products';
@@ -33,6 +39,7 @@ const VOUCHERS_COLLECTION = 'vouchers';
 const SETTINGS_COLLECTION = 'settings';
 const CATEGORIES_DOC = 'categories';
 const ANALYTICS_DOC = 'analytics';
+const STORE_CONFIG_DOC = 'store_config';
 
 // Helper to sanitize data by replacing undefined with null so Firestore doesn't throw unsupported field errors
 export const cleanFirestoreData = (obj: any): any => {
@@ -229,26 +236,29 @@ export const syncSaveProduct = async (product: Product): Promise<{ success: bool
     const ref = doc(db, PRODUCTS_COLLECTION, product.id);
     await setDoc(ref, sanitized);
 
-    // If product has a category, make sure this category is recorded in settings/categories in Firestore
+    // If product has a category, make sure this category is recorded in settings/categories in Firestore UNLESS it's deleted
     if (product.category && product.category !== 'All') {
-      try {
-        const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
-        const catSnap = await getDoc(catRef);
-        let list: string[] = [];
-        if (catSnap.exists() && Array.isArray(catSnap.data()?.list)) {
-          list = catSnap.data().list;
-        } else {
-          list = getStoredCategories();
+      const deletedCats = getDeletedCategoryNames();
+      if (!deletedCats.some(d => d.toLowerCase() === product.category.toLowerCase())) {
+        try {
+          const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
+          const catSnap = await getDoc(catRef);
+          let list: string[] = [];
+          if (catSnap.exists() && Array.isArray(catSnap.data()?.list)) {
+            list = catSnap.data().list;
+          } else {
+            list = getStoredCategories();
+          }
+          if (!list.some(c => c.toLowerCase() === product.category.toLowerCase())) {
+            const updatedList = [...list, product.category];
+            await setDoc(catRef, { list: updatedList, updatedAt: new Date().toISOString() }, { merge: true });
+            saveStoredCategories(updatedList);
+            broadcastSync('CATEGORIES_UPDATED');
+            console.log(`Auto-added category "${product.category}" to Firestore categories.`);
+          }
+        } catch (catErr) {
+          console.warn('Failed to auto-update categories for product:', catErr);
         }
-        if (!list.some(c => c.toLowerCase() === product.category.toLowerCase())) {
-          const updatedList = [...list, product.category];
-          await setDoc(catRef, { list: updatedList, updatedAt: new Date().toISOString() });
-          saveStoredCategories(updatedList);
-          broadcastSync('CATEGORIES_UPDATED');
-          console.log(`Auto-added category "${product.category}" to Firestore categories.`);
-        }
-      } catch (catErr) {
-        console.warn('Failed to auto-update categories for product:', catErr);
       }
     }
 
@@ -548,15 +558,28 @@ export const fetchRemoteCategories = async (): Promise<string[]> => {
     const snap = await getDoc(catRef);
     if (snap.exists()) {
       const data = snap.data();
+      const deletedList: string[] = Array.isArray(data.deletedList) ? data.deletedList : [];
+      deletedList.forEach(d => markCategoryDeleted(d));
+
       if (data && Array.isArray(data.list) && data.list.length > 0) {
-        const merged = Array.from(new Set([...DEFAULT_CATEGORIES, ...data.list]));
-        saveStoredCategories(merged);
-        return merged;
+        const cleaned = Array.from(
+          new Set(
+            data.list
+              .map((c: any) => (typeof c === 'string' ? c.trim() : ''))
+              .filter(c => Boolean(c) && !deletedList.some(d => d.toLowerCase() === c.toLowerCase()))
+          )
+        );
+        saveStoredCategories(cleaned);
+        return cleaned;
       }
     } else {
-      // Document doesn't exist yet; initialize with default + local categories
-      const initial = Array.from(new Set([...DEFAULT_CATEGORIES, ...getStoredCategories()]));
-      await setDoc(catRef, { list: initial, updatedAt: new Date().toISOString() });
+      // Document doesn't exist yet; initialize with local categories
+      const initial = getStoredCategories();
+      await setDoc(catRef, { 
+        list: initial, 
+        deletedList: getDeletedCategoryNames(), 
+        updatedAt: new Date().toISOString() 
+      });
       saveStoredCategories(initial);
       return initial;
     }
@@ -588,10 +611,19 @@ export const subscribeToCategories = (onUpdate: (cats: string[]) => void): (() =
     (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
-        if (data && Array.isArray(data.list) && data.list.length > 0) {
-          const merged = Array.from(new Set([...DEFAULT_CATEGORIES, ...data.list]));
-          saveStoredCategories(merged);
-          onUpdate(merged);
+        const deletedList: string[] = Array.isArray(data.deletedList) ? data.deletedList : [];
+        deletedList.forEach(d => markCategoryDeleted(d));
+
+        if (data && Array.isArray(data.list)) {
+          const remoteList = Array.from(
+            new Set(
+              data.list
+                .map((c: any) => (typeof c === 'string' ? c.trim() : ''))
+                .filter(c => Boolean(c) && !deletedList.some(d => d.toLowerCase() === c.toLowerCase()))
+            )
+          );
+          saveStoredCategories(remoteList);
+          onUpdate(remoteList);
           return;
         }
       }
@@ -609,21 +641,97 @@ export const subscribeToCategories = (onUpdate: (cats: string[]) => void): (() =
   };
 };
 
-export const syncSaveCategories = async (categories: string[]): Promise<{ success: boolean; error?: string }> => {
+export const syncSaveCategories = async (
+  categories: string[],
+  deletedCategories?: string[]
+): Promise<{ success: boolean; error?: string }> => {
   try {
-    const fullCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...categories]));
-    saveStoredCategories(fullCategories);
+    const deletedList = Array.from(new Set([...getDeletedCategoryNames(), ...(deletedCategories || [])]));
+    const sanitized = Array.from(
+      new Set(
+        categories
+          .map(c => (typeof c === 'string' ? c.trim() : ''))
+          .filter(c => Boolean(c) && !deletedList.some(d => d.toLowerCase() === c.toLowerCase()))
+      )
+    );
+    saveStoredCategories(sanitized);
+
     const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
     await setDoc(catRef, {
-      list: fullCategories,
+      list: sanitized,
+      deletedList,
       updatedAt: new Date().toISOString()
     });
     broadcastSync('CATEGORIES_UPDATED');
-    console.log('Successfully synced categories to Firestore cloud.');
+    console.log('Successfully synced categories to Firestore cloud:', sanitized);
     return { success: true };
   } catch (err: any) {
     console.error('Failed to sync categories to Firestore:', err);
     return { success: false, error: err?.message || 'Failed to save categories to cloud' };
+  }
+};
+
+export const syncDeleteCategory = async (categoryName: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const trimmed = categoryName.trim();
+    if (!trimmed) return { success: false, error: 'Empty category name' };
+
+    markCategoryDeleted(trimmed);
+
+    const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
+    const snap = await getDoc(catRef);
+
+    let currentList: string[] = [];
+    let currentDeleted: string[] = [];
+
+    if (snap.exists()) {
+      const data = snap.data();
+      if (Array.isArray(data.list)) currentList = data.list;
+      if (Array.isArray(data.deletedList)) currentDeleted = data.deletedList;
+    } else {
+      currentList = getStoredCategories();
+    }
+
+    const updatedList = currentList.filter(c => c.toLowerCase() !== trimmed.toLowerCase());
+    const updatedDeleted = Array.from(new Set([...currentDeleted, trimmed.toLowerCase(), ...getDeletedCategoryNames()]));
+
+    saveStoredCategories(updatedList);
+
+    await setDoc(catRef, {
+      list: updatedList,
+      deletedList: updatedDeleted,
+      updatedAt: new Date().toISOString()
+    });
+
+    // Update any products in Firestore whose category was this deleted category to a safe fallback
+    const fallbackCategory = updatedList[0] || 'Chargers & Cables';
+    try {
+      const productsSnap = await getDocs(collection(db, PRODUCTS_COLLECTION));
+      const batch = writeBatch(db);
+      let batchCount = 0;
+
+      productsSnap.forEach(docSnap => {
+        const prodData = docSnap.data() as Product;
+        if (prodData.category && prodData.category.toLowerCase() === trimmed.toLowerCase()) {
+          batch.update(docSnap.ref, { category: fallbackCategory });
+          batchCount++;
+        }
+      });
+
+      if (batchCount > 0) {
+        await batch.commit();
+        console.log(`Updated ${batchCount} products in Firestore from deleted category "${trimmed}" to "${fallbackCategory}"`);
+        broadcastSync('PRODUCTS_UPDATED');
+      }
+    } catch (prodErr) {
+      console.warn('Failed to batch update products for deleted category:', prodErr);
+    }
+
+    broadcastSync('CATEGORIES_UPDATED');
+    return { success: true };
+  } catch (err: any) {
+    console.error('Failed to sync delete category from Firestore:', err);
+    return { success: false, error: err?.message || 'Failed to delete category' };
   }
 };
 
@@ -634,9 +742,8 @@ export const syncAllLocalToCloud = async (): Promise<{ success: boolean; product
     const localCategories = getStoredCategories();
     const deletedIds = getDeletedProductIds();
 
-    // 1. Sync Categories
-    const mergedCategories = Array.from(new Set([...DEFAULT_CATEGORIES, ...localCategories]));
-    await syncSaveCategories(mergedCategories);
+    // 1. Sync Categories without resurrecting deleted categories
+    await syncSaveCategories(localCategories, getDeletedCategoryNames());
 
     // 2. Sync all local non-deleted products
     let syncedProds = 0;
@@ -670,8 +777,8 @@ export const syncAllLocalToCloud = async (): Promise<{ success: boolean; product
     return {
       success: true,
       productsCount: syncedProds,
-      categoriesCount: mergedCategories.length,
-      message: `Successfully synchronized ${syncedProds} products and ${mergedCategories.length} categories with cloud database!`
+      categoriesCount: localCategories.length,
+      message: `Successfully synchronized ${syncedProds} products and ${localCategories.length} categories with cloud database!`
     };
   } catch (err: any) {
     console.error('Failed to sync all local data to cloud:', err);
@@ -684,29 +791,41 @@ export const syncAllLocalToCloud = async (): Promise<{ success: boolean; product
   }
 };
 
-// Website Visits & Traffic Analytics
+// Website Visits & Traffic Analytics (Starts at baseline 8,734 views)
 export const recordWebsiteVisit = async (): Promise<AnalyticsData> => {
   const { isNew } = getOrSetVisitorId();
   const currentLocal = getStoredVisitorCount();
-  const newLocal = currentLocal + 1;
+  const newLocal = Math.max(BASE_VISITOR_COUNT, currentLocal + 1);
   saveStoredVisitorCount(newLocal);
 
   try {
     const analyticsRef = doc(db, SETTINGS_COLLECTION, ANALYTICS_DOC);
-    const payload: Record<string, any> = {
-      totalVisits: increment(1),
-      lastVisitAt: new Date().toISOString()
-    };
-    if (isNew) {
-      payload.uniqueVisitors = increment(1);
+    const snapBefore = await getDoc(analyticsRef);
+    if (!snapBefore.exists()) {
+      // First time initialization on Firestore with baseline 8,734
+      await setDoc(analyticsRef, {
+        totalVisits: BASE_VISITOR_COUNT,
+        uniqueVisitors: BASE_VISITOR_COUNT,
+        lastVisitAt: new Date().toISOString()
+      });
+    } else {
+      const payload: Record<string, any> = {
+        totalVisits: increment(1),
+        lastVisitAt: new Date().toISOString()
+      };
+      if (isNew) {
+        payload.uniqueVisitors = increment(1);
+      }
+      await setDoc(analyticsRef, payload, { merge: true });
     }
-    await setDoc(analyticsRef, payload, { merge: true });
 
     const snap = await getDoc(analyticsRef);
     if (snap.exists()) {
       const data = snap.data();
-      const total = Number(data.totalVisits) || newLocal;
-      const unique = Number(data.uniqueVisitors) || 1;
+      const rawTotal = Number(data.totalVisits) || newLocal;
+      const rawUnique = Number(data.uniqueVisitors) || 0;
+      const total = Math.max(BASE_VISITOR_COUNT, rawTotal);
+      const unique = Math.max(BASE_VISITOR_COUNT, rawUnique >= BASE_VISITOR_COUNT ? rawUnique : (BASE_VISITOR_COUNT + rawUnique));
       saveStoredVisitorCount(total);
       broadcastSync('ANALYTICS_UPDATED');
       return { totalVisits: total, uniqueVisitors: unique, lastVisitAt: data.lastVisitAt };
@@ -715,7 +834,7 @@ export const recordWebsiteVisit = async (): Promise<AnalyticsData> => {
     console.warn('Could not record visit to Firestore cloud:', err);
   }
 
-  return { totalVisits: newLocal, uniqueVisitors: 1, lastVisitAt: new Date().toISOString() };
+  return { totalVisits: newLocal, uniqueVisitors: BASE_VISITOR_COUNT, lastVisitAt: new Date().toISOString() };
 };
 
 export const fetchRemoteAnalytics = async (): Promise<AnalyticsData> => {
@@ -724,15 +843,17 @@ export const fetchRemoteAnalytics = async (): Promise<AnalyticsData> => {
     const snap = await getDoc(analyticsRef);
     if (snap.exists()) {
       const data = snap.data();
-      const total = Number(data.totalVisits) || getStoredVisitorCount();
-      const unique = Number(data.uniqueVisitors) || 1;
+      const rawTotal = Number(data.totalVisits) || getStoredVisitorCount();
+      const rawUnique = Number(data.uniqueVisitors) || 0;
+      const total = Math.max(BASE_VISITOR_COUNT, rawTotal);
+      const unique = Math.max(BASE_VISITOR_COUNT, rawUnique >= BASE_VISITOR_COUNT ? rawUnique : (BASE_VISITOR_COUNT + rawUnique));
       saveStoredVisitorCount(total);
       return { totalVisits: total, uniqueVisitors: unique, lastVisitAt: data.lastVisitAt };
     }
   } catch (err) {
     console.warn('Could not fetch analytics from Firestore:', err);
   }
-  return { totalVisits: getStoredVisitorCount(), uniqueVisitors: 1 };
+  return { totalVisits: getStoredVisitorCount(), uniqueVisitors: BASE_VISITOR_COUNT };
 };
 
 export const subscribeToAnalytics = (onUpdate: (data: AnalyticsData) => void): (() => void) => {
@@ -750,15 +871,98 @@ export const subscribeToAnalytics = (onUpdate: (data: AnalyticsData) => void): (
     (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
-        const total = Number(data.totalVisits) || getStoredVisitorCount();
-        const unique = Number(data.uniqueVisitors) || 1;
+        const rawTotal = Number(data.totalVisits) || getStoredVisitorCount();
+        const rawUnique = Number(data.uniqueVisitors) || 0;
+        const total = Math.max(BASE_VISITOR_COUNT, rawTotal);
+        const unique = Math.max(BASE_VISITOR_COUNT, rawUnique >= BASE_VISITOR_COUNT ? rawUnique : (BASE_VISITOR_COUNT + rawUnique));
         saveStoredVisitorCount(total);
         onUpdate({ totalVisits: total, uniqueVisitors: unique, lastVisitAt: data.lastVisitAt });
       }
     },
     (error) => {
       console.warn('Firestore analytics subscription error:', error);
-      onUpdate({ totalVisits: getStoredVisitorCount(), uniqueVisitors: 1 });
+      onUpdate({ totalVisits: getStoredVisitorCount(), uniqueVisitors: BASE_VISITOR_COUNT });
+    }
+  );
+
+  return () => {
+    unsubscribe();
+    syncChannel?.removeEventListener('message', handleBroadcast);
+  };
+};
+
+// Store Controls & Settings Cloud Synchronization
+export const fetchRemoteStoreConfig = async (): Promise<StoreConfig> => {
+  try {
+    const configRef = doc(db, SETTINGS_COLLECTION, STORE_CONFIG_DOC);
+    const snap = await getDoc(configRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      const merged: StoreConfig = {
+        storeName: data.storeName || DEFAULT_STORE_CONFIG.storeName,
+        phone: data.phone || DEFAULT_STORE_CONFIG.phone,
+        about: data.about || DEFAULT_STORE_CONFIG.about,
+        adminPassword: data.adminPassword || DEFAULT_STORE_CONFIG.adminPassword,
+        updatedAt: data.updatedAt || new Date().toISOString()
+      };
+      saveStoredStoreConfig(merged);
+      return merged;
+    } else {
+      // Document doesn't exist yet, initialize it on Firestore
+      const initial = getStoredStoreConfig();
+      await setDoc(configRef, cleanFirestoreData(initial));
+      return initial;
+    }
+  } catch (err) {
+    console.warn('Could not fetch store config from Firestore:', err);
+    return getStoredStoreConfig();
+  }
+};
+
+export const syncSaveStoreConfig = async (
+  config: Partial<StoreConfig>
+): Promise<{ success: boolean; config: StoreConfig; error?: string }> => {
+  const updatedLocal = saveStoredStoreConfig(config);
+  try {
+    const configRef = doc(db, SETTINGS_COLLECTION, STORE_CONFIG_DOC);
+    await setDoc(configRef, cleanFirestoreData(updatedLocal), { merge: true });
+    broadcastSync('STORE_CONFIG_UPDATED');
+    return { success: true, config: updatedLocal };
+  } catch (err: any) {
+    console.error('Failed to sync store config to Firestore:', err);
+    return { success: false, config: updatedLocal, error: err?.message || 'Failed to save to cloud' };
+  }
+};
+
+export const subscribeToStoreConfig = (onUpdate: (config: StoreConfig) => void): (() => void) => {
+  const configRef = doc(db, SETTINGS_COLLECTION, STORE_CONFIG_DOC);
+
+  const handleBroadcast = (e: MessageEvent) => {
+    if (e.data?.type === 'STORE_CONFIG_UPDATED') {
+      fetchRemoteStoreConfig().then(onUpdate);
+    }
+  };
+  syncChannel?.addEventListener('message', handleBroadcast);
+
+  const unsubscribe = onSnapshot(
+    configRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        const merged: StoreConfig = {
+          storeName: data.storeName || DEFAULT_STORE_CONFIG.storeName,
+          phone: data.phone || DEFAULT_STORE_CONFIG.phone,
+          about: data.about || DEFAULT_STORE_CONFIG.about,
+          adminPassword: data.adminPassword || DEFAULT_STORE_CONFIG.adminPassword,
+          updatedAt: data.updatedAt || new Date().toISOString()
+        };
+        saveStoredStoreConfig(merged);
+        onUpdate(merged);
+      }
+    },
+    (error) => {
+      console.warn('Firestore store config subscription error:', error);
+      onUpdate(getStoredStoreConfig());
     }
   );
 

@@ -137,3 +137,18 @@ export interface AnalyticsData {
   uniqueVisitors: number;
   lastVisitAt?: string;
 }
+
+export interface StoreConfig {
+  storeName: string;
+  phone: string;
+  about: string;
+  adminPassword?: string;
+  updatedAt?: string;
+}
+
+export const DEFAULT_STORE_CONFIG: StoreConfig = {
+  storeName: 'KHAN GADGET MALL',
+  phone: '01854774406',
+  about: "Bangladesh's premium mobile accessories mall for fast chargers, MagSafe cases, earbuds, and gaming gear.",
+  adminPassword: 'ESA006##'
+};

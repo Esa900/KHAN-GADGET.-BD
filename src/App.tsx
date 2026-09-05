@@ -33,7 +33,8 @@ import {
   TrustBadges 
 } from './components/TrustBadges';
 import { 
-  Product, ProductCategory, DEFAULT_CATEGORIES, CartItem, Voucher, Order, OrderStatus, ProductReview, AnalyticsData 
+  Product, ProductCategory, DEFAULT_CATEGORIES, CartItem, Voucher, Order, OrderStatus, ProductReview, AnalyticsData,
+  StoreConfig, DEFAULT_STORE_CONFIG
 } from './types';
 import { 
   getStoredProducts, saveStoredProducts, deleteStoredProduct,
@@ -43,6 +44,7 @@ import {
   getStoredWishlist, saveStoredWishlist,
   getStoredCategories, saveStoredCategories,
   getStoredVisitorCount, saveStoredVisitorCount,
+  getStoredStoreConfig, saveStoredStoreConfig, BASE_VISITOR_COUNT,
   formatPrice, resetToDemoDefaults, STORE_WHATSAPP_NUMBER 
 } from './utils/storage';
 import { 
@@ -51,19 +53,23 @@ import {
   subscribeToVouchers,
   subscribeToCategories,
   subscribeToAnalytics,
+  subscribeToStoreConfig,
   recordWebsiteVisit,
   fetchRemoteProducts,
   fetchRemoteOrders,
   fetchRemoteCategories,
   fetchRemoteAnalytics,
+  fetchRemoteStoreConfig,
   syncSaveProduct,
   syncDeleteProduct,
   syncUpdateOrderStatus,
   syncSaveVoucher,
   syncDeleteVoucher,
   syncSaveCategories,
+  syncDeleteCategory,
   syncResetToDemoDefaults,
-  syncAllLocalToCloud
+  syncAllLocalToCloud,
+  syncSaveStoreConfig
 } from './lib/syncService';
 import { 
   SlidersHorizontal, Sparkles, X, Check, Heart, 
@@ -80,11 +86,19 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>(() => getStoredCart());
   const [wishlist, setWishlist] = useState<string[]>(() => getStoredWishlist());
   const [categories, setCategories] = useState<string[]>(() => getStoredCategories());
+  const [storeConfig, setStoreConfig] = useState<StoreConfig>(() => getStoredStoreConfig());
   const [visitorStats, setVisitorStats] = useState<AnalyticsData>(() => ({
-    totalVisits: getStoredVisitorCount() || 1,
-    uniqueVisitors: 1,
+    totalVisits: Math.max(BASE_VISITOR_COUNT, getStoredVisitorCount() || BASE_VISITOR_COUNT),
+    uniqueVisitors: BASE_VISITOR_COUNT,
     lastVisitAt: new Date().toISOString()
   }));
+
+  // Synchronize document title with configured Store Name
+  useEffect(() => {
+    if (storeConfig?.storeName) {
+      document.title = `${storeConfig.storeName} - Premium Mobile Accessories Mall`;
+    }
+  }, [storeConfig?.storeName]);
 
   // Modals visibility
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -121,6 +135,29 @@ export default function App() {
     }, 2800);
   };
 
+  // Handler for updating store settings from Admin Panel
+  const handleUpdateStoreConfig = async (newConfig: Partial<StoreConfig>) => {
+    const updated: StoreConfig = {
+      ...storeConfig,
+      ...newConfig
+    };
+    setStoreConfig(updated);
+    saveStoredStoreConfig(updated);
+    try {
+      const res = await syncSaveStoreConfig(newConfig);
+      if (res.success) {
+        showToast('স্টোর সেটিংস সফলভাবে আপডেট ও সকল ডিভাইসে সিঙ্ক হয়েছে!');
+        return true;
+      } else {
+        showToast(`সিঙ্ক ওয়ার্নিং: ${res.error || 'লোকাল ডেটাবেজে সংরক্ষিত'}`);
+        return true;
+      }
+    } catch (err: any) {
+      showToast('সংরক্ষিত কিন্তু ক্লাউড সিঙ্কে ত্রুটি হয়েছে।');
+      return true;
+    }
+  };
+
   // Manual Cloud Sync Trigger (Allows any device to force-refresh directly from Firestore)
   const handleManualCloudSync = async () => {
     setIsSyncing(true);
@@ -129,10 +166,11 @@ export default function App() {
       await syncAllLocalToCloud().catch(console.warn);
 
       // 2. Fetch latest snapshot from cloud database
-      const [freshProducts, freshOrders, freshCategories] = await Promise.all([
+      const [freshProducts, freshOrders, freshCategories, freshConfig] = await Promise.all([
         fetchRemoteProducts(),
         fetchRemoteOrders(),
-        fetchRemoteCategories()
+        fetchRemoteCategories(),
+        fetchRemoteStoreConfig()
       ]);
       if (freshProducts && freshProducts.length > 0) {
         setProducts(freshProducts);
@@ -142,6 +180,9 @@ export default function App() {
       }
       if (freshCategories && freshCategories.length > 0) {
         setCategories(freshCategories);
+      }
+      if (freshConfig) {
+        setStoreConfig(freshConfig);
       }
       showToast(`Cloud Sync Complete: Store & categories live!`);
     } catch (err) {
@@ -160,6 +201,7 @@ export default function App() {
     setCart(getStoredCart());
     setWishlist(getStoredWishlist());
     setCategories(getStoredCategories());
+    setStoreConfig(getStoredStoreConfig());
 
     // Connect real-time listeners to Firestore cloud database
     const unsubProducts = subscribeToProducts((liveProducts) => {
@@ -174,6 +216,11 @@ export default function App() {
     const unsubCategories = subscribeToCategories((liveCategories) => {
       if (liveCategories && liveCategories.length > 0) {
         setCategories(liveCategories);
+      }
+    });
+    const unsubStoreConfig = subscribeToStoreConfig((liveConfig) => {
+      if (liveConfig) {
+        setStoreConfig(liveConfig);
       }
     });
 
@@ -198,6 +245,9 @@ export default function App() {
         fetchRemoteCategories().then(cats => {
           if (cats && cats.length > 0) setCategories(cats);
         }).catch(console.error);
+        fetchRemoteStoreConfig().then(cfg => {
+          if (cfg) setStoreConfig(cfg);
+        }).catch(console.error);
         fetchRemoteAnalytics().then(stats => {
           if (stats) setVisitorStats(stats);
         }).catch(console.error);
@@ -206,7 +256,7 @@ export default function App() {
     window.addEventListener('focus', handleVisibilityOrFocus);
     document.addEventListener('visibilitychange', handleVisibilityOrFocus);
 
-    // Periodic heartbeat sync every 5 seconds to ensure mobile and laptop products and orders are real-time
+    // Periodic heartbeat sync every 5 seconds to ensure mobile and laptop products, store config, and orders are real-time
     const syncInterval = setInterval(() => {
       fetchRemoteProducts().then(prods => {
         if (prods && prods.length > 0) setProducts(prods);
@@ -216,6 +266,9 @@ export default function App() {
       }).catch(console.error);
       fetchRemoteCategories().then(cats => {
         if (cats && cats.length > 0) setCategories(cats);
+      }).catch(console.error);
+      fetchRemoteStoreConfig().then(cfg => {
+        if (cfg) setStoreConfig(cfg);
       }).catch(console.error);
       fetchRemoteAnalytics().then(stats => {
         if (stats) setVisitorStats(stats);
@@ -227,6 +280,7 @@ export default function App() {
       unsubOrders();
       unsubVouchers();
       unsubCategories();
+      unsubStoreConfig();
       unsubAnalytics();
       window.removeEventListener('focus', handleVisibilityOrFocus);
       document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
@@ -547,7 +601,7 @@ export default function App() {
     saveStoredCategories(updated);
 
     // If products were in the deleted category, safely reassign them to the fallback category
-    const fallbackCategory = updated[0] || 'Mobile Accessories';
+    const fallbackCategory = updated[0] || 'Chargers & Cables';
     const updatedProducts = products.map(p => {
       if (p.category.toLowerCase() === trimmed.toLowerCase()) {
         return { ...p, category: fallbackCategory };
@@ -561,13 +615,10 @@ export default function App() {
       setSelectedCategory('All');
     }
 
-    // Sync categories & products to cloud
-    await syncSaveCategories(updated);
-    updatedProducts
-      .filter(p => p.category === fallbackCategory)
-      .forEach(p => syncSaveProduct(p).catch(console.error));
+    // Direct cloud sync deletion ensuring all devices remove it and reassign products
+    await syncDeleteCategory(trimmed);
 
-    showToast(`Category "${trimmed}" removed.`);
+    showToast(`Category "${trimmed}" removed and synced across all devices.`);
     return true;
   };
 
@@ -635,6 +686,7 @@ export default function App() {
           setSearchQuery('');
         }}
         categories={categories}
+        storeConfig={storeConfig}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenCart={() => setIsCartOpen(true)}
@@ -953,7 +1005,7 @@ export default function App() {
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-100 text-center">
-              <div className="text-[10px] text-slate-400 font-medium">© 2024 KHAN GADGET LTD.</div>
+              <div className="text-[10px] text-slate-400 font-medium">© {new Date().getFullYear()} {storeConfig.storeName || 'KHAN GADGET MALL'}.</div>
               <div className="text-[10px] text-slate-400">Certified Mobile Accessories Mall</div>
             </div>
           </div>
@@ -963,6 +1015,7 @@ export default function App() {
 
       {/* Footer */}
       <Footer 
+        storeConfig={storeConfig}
         onOpenTracking={() => {
           setActiveTrackingOrderId(undefined);
           setIsTrackingOpen(true);
@@ -1023,6 +1076,9 @@ export default function App() {
         orders={orders}
         vouchers={vouchers}
         categories={categories}
+        storeConfig={storeConfig}
+        onUpdateStoreConfig={handleUpdateStoreConfig}
+        visitorStats={visitorStats}
         onAddProduct={handleAdminAddProduct}
         onUpdateProduct={handleAdminUpdateProduct}
         onDeleteProduct={handleAdminDeleteProduct}
@@ -1107,17 +1163,24 @@ export default function App() {
       )}
 
       {/* Floating WhatsApp Action Button */}
-      <a
-        href="https://wa.me/8801854774406?text=Hello%20KHAN%20GADGET%2C%20I%20have%20an%20inquiry"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-5 right-5 z-40 bg-[#25D366] hover:bg-[#20ba59] text-white px-3.5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 transition hover:scale-105 cursor-pointer border border-white/20"
-        title="WhatsApp Support: 01854774406"
-      >
-        <MessageCircle className="w-5 h-5 fill-white" />
-        <span className="text-xs font-bold hidden sm:inline">WhatsApp</span>
-        <span className="text-[11px] font-mono hidden md:inline">01854774406</span>
-      </a>
+      {(() => {
+        const rawDigits = (storeConfig.phone || '01854774406').replace(/[^0-9]/g, '');
+        const targetPhone = rawDigits.startsWith('88') ? rawDigits : '88' + rawDigits;
+        const chatUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(`Hello ${storeConfig.storeName || 'KHAN GADGET MALL'}, I have an inquiry.`)}`;
+        return (
+          <a
+            href={chatUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-5 right-5 z-40 bg-[#25D366] hover:bg-[#20ba59] text-white px-3.5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 transition hover:scale-105 cursor-pointer border border-white/20"
+            title={`WhatsApp Support: ${storeConfig.phone}`}
+          >
+            <MessageCircle className="w-5 h-5 fill-white" />
+            <span className="text-xs font-bold hidden sm:inline">WhatsApp</span>
+            <span className="text-[11px] font-mono hidden md:inline">{storeConfig.phone}</span>
+          </a>
+        );
+      })()}
 
     </div>
   );

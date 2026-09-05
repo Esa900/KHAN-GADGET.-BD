@@ -1,4 +1,4 @@
-import { Product, Order, Voucher, CartItem, OrderStatus, TrackingCheckpoint, DEFAULT_CATEGORIES } from '../types';
+import { Product, Order, Voucher, CartItem, OrderStatus, TrackingCheckpoint, DEFAULT_CATEGORIES, StoreConfig, DEFAULT_STORE_CONFIG } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_VOUCHERS } from '../data/mockData';
 
 const PRODUCTS_KEY = 'khan_gadget_products_v2';
@@ -9,8 +9,23 @@ const CART_KEY = 'khan_gadget_cart_v2';
 const WISHLIST_KEY = 'khan_gadget_wishlist_v2';
 const RECENTLY_VIEWED_KEY = 'khan_gadget_recently_viewed_v1';
 const CATEGORIES_KEY = 'khan_gadget_categories_v2';
+const DELETED_CATEGORIES_KEY = 'khan_gadget_deleted_categories_v2';
+const STORE_CONFIG_KEY = 'khan_gadget_store_config_v2';
 const VISITOR_COUNT_KEY = 'khan_gadget_visitor_count_v1';
 const VISITOR_ID_KEY = 'khan_gadget_visitor_id_v1';
+
+export const BASE_VISITOR_COUNT = 8734;
+
+export const formatPhoneForWhatsApp = (rawPhone?: string): string => {
+  const digits = (rawPhone || '01854774406').replace(/[^0-9]/g, '');
+  if (digits.startsWith('88')) return digits;
+  if (digits.startsWith('0')) return '88' + digits;
+  return '880' + digits;
+};
+
+export const getStoreWhatsAppNumber = (): string => {
+  return formatPhoneForWhatsApp(getStoredStoreConfig().phone);
+};
 
 export const STORE_WHATSAPP_NUMBER = '8801854774406';
 
@@ -63,7 +78,9 @@ export const generateWhatsAppOrderUrl = (
   quantity: number = 1, 
   variants?: Record<string, string>
 ): string => {
-  let message = `*নতুন অর্ডার রিকোয়েস্ট (Khan Gadget)*\n\n`;
+  const config = getStoredStoreConfig();
+  const phone = formatPhoneForWhatsApp(config.phone);
+  let message = `*নতুন অর্ডার রিকোয়েস্ট (${config.storeName})*\n\n`;
   message += `📦 *পণ্য:* ${product.title}\n`;
   message += `💰 *মূল্য:* ৳ ${product.price.toLocaleString('en-BD')} (পরিমাণ: ${quantity})\n`;
   message += `🏷️ *ব্র্যান্ড:* ${product.brand} | *ক্যাটেগরি:* ${product.category}\n`;
@@ -74,7 +91,7 @@ export const generateWhatsAppOrderUrl = (
   }
   
   message += `\nআমি এই পণ্যটি ক্যাশ অন ডেলিভারিতে অর্ডার করতে চাই। দয়া করে বিস্তারিত জানিয়ে কনফার্ম করুন।`;
-  return `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 };
 
 export const generateWhatsAppCartOrderUrl = (
@@ -84,7 +101,9 @@ export const generateWhatsAppCartOrderUrl = (
   phone?: string,
   address?: string
 ): string => {
-  let message = `*নতুন কার্ট অর্ডার (Khan Gadget)*\n\n`;
+  const config = getStoredStoreConfig();
+  const targetPhone = formatPhoneForWhatsApp(config.phone);
+  let message = `*নতুন কার্ট অর্ডার (${config.storeName})*\n\n`;
   if (customerName) message += `👤 *কাস্টমার:* ${customerName}\n`;
   if (phone) message += `📞 *ফোন:* ${phone}\n`;
   if (address) message += `📍 *ঠিকানা:* ${address}\n\n`;
@@ -96,7 +115,7 @@ export const generateWhatsAppCartOrderUrl = (
   
   message += `\n💵 *মোট প্রদেয়:* ৳ ${total.toLocaleString('en-BD')} (Cash on Delivery)\n`;
   message += `\nদয়া করে আমার অর্ডারটি কনফার্ম করুন। ধন্যবাদ!`;
-  return `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
 };
 
 export const getDeletedProductIds = (): string[] => {
@@ -285,16 +304,53 @@ export const formatPrice = (amount: number): string => {
   return '৳ ' + (amount || 0).toLocaleString('en-BD');
 };
 
-// Categories Persistence
+// Categories Persistence & Deletion Tracking
+export const getDeletedCategoryNames = (): string[] => {
+  try {
+    const data = localStorage.getItem(DELETED_CATEGORIES_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const markCategoryDeleted = (catName: string): void => {
+  try {
+    const trimmed = catName.trim().toLowerCase();
+    if (!trimmed) return;
+    const current = getDeletedCategoryNames();
+    if (!current.some(c => c.toLowerCase() === trimmed)) {
+      current.push(trimmed);
+      localStorage.setItem(DELETED_CATEGORIES_KEY, JSON.stringify(current));
+    }
+  } catch (e) {
+    console.error('Failed to mark category as deleted:', e);
+  }
+};
+
+export const unmarkCategoryDeleted = (catName: string): void => {
+  try {
+    const trimmed = catName.trim().toLowerCase();
+    if (!trimmed) return;
+    const current = getDeletedCategoryNames();
+    const filtered = current.filter(c => c.toLowerCase() !== trimmed);
+    localStorage.setItem(DELETED_CATEGORIES_KEY, JSON.stringify(filtered));
+  } catch (e) {
+    console.error('Failed to unmark category as deleted:', e);
+  }
+};
+
 export const getStoredCategories = (): string[] => {
   try {
+    const deleted = getDeletedCategoryNames();
     const data = localStorage.getItem(CATEGORIES_KEY);
     if (data) {
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.filter(c => typeof c === 'string' && !deleted.some(d => d.toLowerCase() === c.trim().toLowerCase()));
       }
     }
+    return DEFAULT_CATEGORIES.filter(c => !deleted.some(d => d.toLowerCase() === c.trim().toLowerCase()));
   } catch (err) {
     console.error('Error reading categories from storage:', err);
   }
@@ -303,7 +359,14 @@ export const getStoredCategories = (): string[] => {
 
 export const saveStoredCategories = (categories: string[]): void => {
   try {
-    const sanitized = Array.from(new Set(categories.map(c => c.trim()).filter(Boolean)));
+    const deleted = getDeletedCategoryNames();
+    const sanitized = Array.from(
+      new Set(
+        categories
+          .map(c => (typeof c === 'string' ? c.trim() : ''))
+          .filter(c => Boolean(c) && !deleted.some(d => d.toLowerCase() === c.toLowerCase()))
+      )
+    );
     localStorage.setItem(CATEGORIES_KEY, JSON.stringify(sanitized));
   } catch (err) {
     console.error('Error saving categories to storage:', err);
@@ -313,6 +376,7 @@ export const saveStoredCategories = (categories: string[]): void => {
 export const addStoredCategory = (categoryName: string): string[] => {
   const trimmed = categoryName.trim();
   if (!trimmed) return getStoredCategories();
+  unmarkCategoryDeleted(trimmed);
   const current = getStoredCategories();
   if (!current.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
     const updated = [...current, trimmed];
@@ -323,28 +387,65 @@ export const addStoredCategory = (categoryName: string): string[] => {
 };
 
 export const removeStoredCategory = (categoryName: string): string[] => {
+  const trimmed = categoryName.trim();
+  if (!trimmed) return getStoredCategories();
+  markCategoryDeleted(trimmed);
   const current = getStoredCategories();
-  const updated = current.filter(c => c.toLowerCase() !== categoryName.trim().toLowerCase());
+  const updated = current.filter(c => c.toLowerCase() !== trimmed.toLowerCase());
   saveStoredCategories(updated);
   return updated;
 };
 
 export const renameStoredCategory = (oldName: string, newName: string): string[] => {
   const current = getStoredCategories();
+  const trimmedOld = oldName.trim();
   const trimmedNew = newName.trim();
   if (!trimmedNew) return current;
-  const updated = current.map(c => c.toLowerCase() === oldName.trim().toLowerCase() ? trimmedNew : c);
+  unmarkCategoryDeleted(trimmedNew);
+  markCategoryDeleted(trimmedOld);
+  const updated = current.map(c => c.toLowerCase() === trimmedOld.toLowerCase() ? trimmedNew : c);
   saveStoredCategories(updated);
   return updated;
+};
+
+// Store Controls & Configuration Persistence
+export const getStoredStoreConfig = (): StoreConfig => {
+  try {
+    const data = localStorage.getItem(STORE_CONFIG_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      return { ...DEFAULT_STORE_CONFIG, ...parsed };
+    }
+  } catch (err) {
+    console.error('Error reading store config from storage:', err);
+  }
+  return DEFAULT_STORE_CONFIG;
+};
+
+export const saveStoredStoreConfig = (config: Partial<StoreConfig>): StoreConfig => {
+  try {
+    const current = getStoredStoreConfig();
+    const updated: StoreConfig = {
+      ...current,
+      ...config,
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(STORE_CONFIG_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (err) {
+    console.error('Error saving store config to storage:', err);
+    return DEFAULT_STORE_CONFIG;
+  }
 };
 
 // Website Visitors Persistence
 export const getStoredVisitorCount = (): number => {
   try {
     const val = localStorage.getItem(VISITOR_COUNT_KEY);
-    return val ? Math.max(0, parseInt(val, 10) || 0) : 0;
+    const parsed = val ? parseInt(val, 10) : 0;
+    return Math.max(BASE_VISITOR_COUNT, parsed || BASE_VISITOR_COUNT);
   } catch {
-    return 0;
+    return BASE_VISITOR_COUNT;
   }
 };
 

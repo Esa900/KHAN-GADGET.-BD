@@ -8,8 +8,8 @@ import {
   Upload, Camera, Image as ImageIcon, Link as LinkIcon, Loader2,
   Printer, ExternalLink, FolderTree, BarChart3, Users
 } from 'lucide-react';
-import { Product, Order, Voucher, OrderStatus, ProductCategory, DEFAULT_CATEGORIES, AnalyticsData } from '../types';
-import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl, getStoredVisitorCount } from '../utils/storage';
+import { Product, Order, Voucher, OrderStatus, ProductCategory, DEFAULT_CATEGORIES, AnalyticsData, StoreConfig, DEFAULT_STORE_CONFIG } from '../types';
+import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl, getStoredVisitorCount, BASE_VISITOR_COUNT } from '../utils/storage';
 import { compressImage } from '../utils/image';
 import { InvoiceModal } from './InvoiceModal';
 import { CategoryManager } from './CategoryManager';
@@ -24,6 +24,7 @@ interface AdminPanelProps {
   vouchers: Voucher[];
   categories?: string[];
   visitorStats?: AnalyticsData;
+  storeConfig?: StoreConfig;
   onAddProduct: (product: Product) => Promise<boolean> | void;
   onUpdateProduct: (product: Product) => Promise<boolean> | void;
   onDeleteProduct: (productId: string) => Promise<boolean> | void;
@@ -35,6 +36,7 @@ interface AdminPanelProps {
   onRenameCategory?: (oldName: string, newName: string) => Promise<boolean> | void;
   onRefreshCloud?: () => void;
   onRefreshAnalytics?: () => void;
+  onUpdateStoreConfig?: (config: Partial<StoreConfig>) => Promise<boolean> | void;
   isSyncing?: boolean;
 }
 
@@ -45,6 +47,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   orders,
   vouchers,
   categories,
+  storeConfig,
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
@@ -56,6 +59,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onRenameCategory,
   onRefreshCloud,
   onRefreshAnalytics,
+  onUpdateStoreConfig,
   visitorStats,
   isSyncing = false
 }) => {
@@ -87,7 +91,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === 'ESA006##') {
+    const targetPassword = storeConfig?.adminPassword || 'ESA006##';
+    if (passwordInput === targetPassword) {
       setIsAuthenticated(true);
       setPasswordInput('');
       setAuthError('');
@@ -98,6 +103,80 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     } else {
       setAuthError('Incorrect password. Access denied.');
       setPasswordInput('');
+    }
+  };
+
+  // Store Controls Management States
+  const [storeNameInput, setStoreNameInput] = useState(storeConfig?.storeName || 'KHAN GADGET MALL');
+  const [storePhoneInput, setStorePhoneInput] = useState(storeConfig?.phone || '01854774406');
+  const [storeAboutInput, setStoreAboutInput] = useState(storeConfig?.about || DEFAULT_STORE_CONFIG.about);
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [storeControlsFeedback, setStoreControlsFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isSavingStoreControls, setIsSavingStoreControls] = useState(false);
+
+  // Sync inputs if external storeConfig updates from cloud or other device
+  React.useEffect(() => {
+    if (storeConfig) {
+      setStoreNameInput(storeConfig.storeName || 'KHAN GADGET MALL');
+      setStorePhoneInput(storeConfig.phone || '01854774406');
+      setStoreAboutInput(storeConfig.about || DEFAULT_STORE_CONFIG.about);
+    }
+  }, [storeConfig?.storeName, storeConfig?.phone, storeConfig?.about]);
+
+  const handleSaveStoreControls = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!storeNameInput.trim()) {
+      setStoreControlsFeedback({ type: 'error', message: 'স্টোরের নাম খালি রাখা যাবে না।' });
+      return;
+    }
+    if (!storePhoneInput.trim()) {
+      setStoreControlsFeedback({ type: 'error', message: 'যোগাযোগ ও হোয়াটসঅ্যাপ নম্বর খালি রাখা যাবে না।' });
+      return;
+    }
+
+    const payload: Partial<StoreConfig> = {
+      storeName: storeNameInput.trim(),
+      phone: storePhoneInput.trim(),
+      about: storeAboutInput.trim()
+    };
+
+    if (newAdminPassword.trim()) {
+      if (newAdminPassword.trim().length < 4) {
+        setStoreControlsFeedback({ type: 'error', message: 'নতুন পাসওয়ার্ড কমপক্ষে ৪ অক্ষরের হতে হবে।' });
+        return;
+      }
+      if (newAdminPassword.trim() !== confirmAdminPassword.trim()) {
+        setStoreControlsFeedback({ type: 'error', message: 'কনফার্ম পাসওয়ার্ড মিলছে না। দয়া করে পুনরায় চেক করুন।' });
+        return;
+      }
+      payload.adminPassword = newAdminPassword.trim();
+    }
+
+    setIsSavingStoreControls(true);
+    setStoreControlsFeedback(null);
+
+    try {
+      if (onUpdateStoreConfig) {
+        await onUpdateStoreConfig(payload);
+      }
+      setStoreControlsFeedback({
+        type: 'success',
+        message: 'স্টোরের নাম, ফোন, বিবরণ ও পাসওয়ার্ড সফলভাবে আপডেট হয়েছে এবং সকল ডিভাইসে রিয়েল-টাইমে লাইভ হয়ে গেছে!'
+      });
+      setNewAdminPassword('');
+      setConfirmAdminPassword('');
+      setTimeout(() => {
+        setStoreControlsFeedback(null);
+      }, 6000);
+    } catch (err: any) {
+      setStoreControlsFeedback({
+        type: 'error',
+        message: err?.message || 'সংরক্ষণ ব্যর্থ হয়েছে।'
+      });
+    } finally {
+      setIsSavingStoreControls(false);
     }
   };
 
@@ -309,8 +388,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const pendingOrders = orders.filter(o => o.status === 'Pending');
   const pendingCount = pendingOrders.length;
   const lowStockCount = products.filter(p => p.stock < 10).length;
-  const totalVisits = visitorStats?.totalVisits || getStoredVisitorCount() || 1;
-  const uniqueVisitors = visitorStats?.uniqueVisitors || 1;
+  const totalVisits = Math.max(BASE_VISITOR_COUNT, visitorStats?.totalVisits || getStoredVisitorCount() || BASE_VISITOR_COUNT);
+  const uniqueVisitors = Math.max(BASE_VISITOR_COUNT, visitorStats?.uniqueVisitors || BASE_VISITOR_COUNT);
 
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
@@ -1147,49 +1226,346 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           {/* TAB 5: Store Controls & Settings */}
           {activeTab === 'settings' && (
-            <div className="max-w-xl bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-6">
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 mb-1">KHAN GADGET Store Controls</h3>
-                <p className="text-xs text-gray-500">System maintenance, category rules, and demo data replenishment</p>
+            <div className="max-w-4xl space-y-6">
+              
+              {/* Header Banner */}
+              <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-gray-900 rounded-2xl p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center gap-1">
+                      <Settings className="w-3 h-3" />
+                      <span>Live Store Controls</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-700/50 px-2 py-0.5 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      Real-Time Cloud Sync
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-black mt-1.5 text-white">
+                    স্টোর কন্ট্রোল ও সেটিংস প্যানেল
+                  </h2>
+                  <p className="text-xs text-gray-300 mt-0.5">
+                    স্টোরের নাম, ফোন নম্বর, পরিচিতি ও এডমিন পাসওয়ার্ড পরিবর্তন করুন। যেকোনো পরিবর্তন সাথে সাথে সকল ডিভাইসে রিয়েল-টাইমে আপডেট হবে।
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="bg-white/10 px-3 py-1.5 rounded-xl border border-white/15 text-right">
+                    <span className="text-[10px] text-gray-400 block">Unique Visitors Baseline</span>
+                    <span className="text-xs font-mono font-bold text-amber-300">৮,৭৩৪+ Views Started</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Dynamic Categories Section */}
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FolderTree className="w-4 h-4 text-[#f85606]" />
-                    <span className="font-bold text-gray-900">Active Categories ({availableCategories.length})</span>
+              {/* Feedback Alert */}
+              {storeControlsFeedback && (
+                <div 
+                  className={`p-4 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition animate-in fade-in duration-200 ${
+                    storeControlsFeedback.type === 'success' 
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs' 
+                      : 'bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs'
+                  }`}
+                >
+                  {storeControlsFeedback.type === 'success' ? (
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  )}
+                  <span>{storeControlsFeedback.message}</span>
+                </div>
+              )}
+
+              {/* Main Controls Form */}
+              <form onSubmit={handleSaveStoreControls} className="space-y-6">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  
+                  {/* Option 1: Store Name */}
+                  <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                        <ShoppingBag className="w-3.5 h-3.5 text-[#f85606]" />
+                        <span>১. স্টোরের নাম (Store Name)</span>
+                      </label>
+                      <span className="text-[10px] bg-orange-50 text-[#f85606] font-bold px-2 py-0.5 rounded border border-orange-100">
+                        Global Brand Title
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={storeNameInput}
+                      onChange={(e) => setStoreNameInput(e.target.value)}
+                      placeholder="e.g. KHAN GADGET MALL"
+                      className="w-full text-sm font-semibold px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-[#f85606] focus:bg-white text-gray-900 transition"
+                    />
+                    <p className="text-[11px] text-gray-500 leading-relaxed">
+                      💡 এই নাম পরিবর্তন করলে ওয়েবসাইটের হেডার, ফুটার, কার্ট, চালান (Invoice), ট্র্যাকিং ও ব্রাউজার টাইটেলে এই নতুন নাম রিয়েল-টাইমে পরিবর্তিত হয়ে যাবে।
+                    </p>
                   </div>
+
+                  {/* Option 2: Store Helpline & WhatsApp Number */}
+                  <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>২. ফোন ও হোয়াটসঅ্যাপ নম্বর (Helpline & WhatsApp)</span>
+                      </label>
+                      <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-100">
+                        Live Contact
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={storePhoneInput}
+                      onChange={(e) => setStorePhoneInput(e.target.value)}
+                      placeholder="e.g. 01854774406"
+                      className="w-full text-sm font-mono font-semibold px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 focus:bg-white text-gray-900 transition"
+                    />
+                    <p className="text-[11px] text-gray-500 leading-relaxed">
+                      💡 এই নম্বর এডিট করলে ওয়েবসাইটের কল বাটন, ফুটার হেল্পলাইন এবং সরাসরি হোয়াটসঅ্যাপ অর্ডার ও চ্যাট লিংকে এই নতুন নম্বর আপডেট হয়ে যাবে।
+                    </p>
+                  </div>
+
+                </div>
+
+                {/* Option 3: About Store Description */}
+                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-blue-600" />
+                      <span>৩. স্টোর পরিচিতি / বিবরণ (About Section)</span>
+                    </label>
+                    <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-100">
+                      Footer & Branding
+                    </span>
+                  </div>
+                  <textarea
+                    rows={3}
+                    required
+                    value={storeAboutInput}
+                    onChange={(e) => setStoreAboutInput(e.target.value)}
+                    placeholder="Bangladesh's premium mobile accessories mall for fast chargers, MagSafe cases, earbuds, and gaming gear."
+                    className="w-full text-xs leading-relaxed px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-600 focus:bg-white text-gray-900 transition"
+                  />
+                  <p className="text-[11px] text-gray-500 leading-relaxed">
+                    💡 ওয়েবসাইটের ফুটারে ব্র্যান্ডের পরিচিতি হিসেবে এই বিবরণটি রিয়েল-টাইমে প্রদর্শিত হবে।
+                  </p>
+                </div>
+
+                {/* Option 4: Admin Password Change */}
+                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-purple-600" />
+                        <h4 className="text-xs font-bold text-gray-900">৪. এডমিন প্যানেল পাসওয়ার্ড পরিবর্তন (Admin Password Change)</h4>
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        সকল ডিভাইসে এডমিন প্যানেলে লগইন করার জন্য কার্যকর হবে। পাসওয়ার্ড পরিবর্তন না করতে চাইলে খালি রাখুন।
+                      </p>
+                    </div>
+                    <span className="text-[10px] bg-purple-50 text-purple-700 font-bold px-2 py-0.5 rounded border border-purple-100">
+                      Access Security
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 block mb-1.5">
+                        নতুন পাসওয়ার্ড (New Password)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? 'text' : 'password'}
+                          value={newAdminPassword}
+                          onChange={(e) => setNewAdminPassword(e.target.value)}
+                          placeholder="নতুন পাসওয়ার্ড লিখুন (কমপক্ষে ৪ অক্ষর)"
+                          className="w-full text-xs px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-600 focus:bg-white pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                          tabIndex={-1}
+                        >
+                          {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 block mb-1.5">
+                        কনফার্ম পাসওয়ার্ড (Confirm New Password)
+                      </label>
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={confirmAdminPassword}
+                        onChange={(e) => setConfirmAdminPassword(e.target.value)}
+                        placeholder="নতুন পাসওয়ার্ডটি পুনরায় লিখুন"
+                        className="w-full text-xs px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-600 focus:bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {newAdminPassword && confirmAdminPassword && newAdminPassword !== confirmAdminPassword && (
+                    <div className="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>পাসওয়ার্ড দুটি মিলছে না!</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Option 5: Unique Visitors Baseline Status Card */}
+                <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-emerald-500/10 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs font-bold">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-gray-900 text-xs sm:text-sm">
+                          ৫. ইউনিক ভিজিটর কাউন্টার (Unique Visitors Count)
+                        </h4>
+                        <span className="text-[10px] font-mono bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200">
+                          Baseline: 8,734+
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-600 mt-0.5">
+                        ইউজার রিকোয়ারমেন্ট অনুযায়ী ইউনিক ভিজিটর ও মোট ভিউ সংখ্যা সর্বনিম্ন <strong>৮,৭৩৪</strong> টি ভিউ থেকে শুরু করে লাইভ কাউন্ট হচ্ছে।
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto">
+                    <div className="bg-white px-3 py-1.5 rounded-xl border border-amber-200 shadow-2xs text-center">
+                      <span className="text-[10px] text-gray-400 block font-medium">বর্তমান মোট ভিউ</span>
+                      <span className="text-sm font-black text-gray-900 font-mono">
+                        {totalVisits.toLocaleString('en-BD')}
+                      </span>
+                    </div>
+                    <div className="bg-white px-3 py-1.5 rounded-xl border border-amber-200 shadow-2xs text-center">
+                      <span className="text-[10px] text-gray-400 block font-medium">ইউনিক ডিভাইস</span>
+                      <span className="text-sm font-black text-orange-600 font-mono">
+                        {uniqueVisitors.toLocaleString('en-BD')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Preview Card */}
+                <div className="bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 shadow-md space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                        লাইভ প্রিভিউ (Live Preview)
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400">
+                      ওয়েবসাইটে যা দেখা যাবে
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1 text-xs">
+                    <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60">
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wide block mb-1">
+                        Header Brand Name
+                      </span>
+                      <div className="text-sm font-black text-white truncate">
+                        {storeNameInput || 'KHAN GADGET MALL'}
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60">
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wide block mb-1">
+                        Hotline & WhatsApp
+                      </span>
+                      <div className="text-sm font-mono font-bold text-emerald-400 truncate">
+                        {storePhoneInput || '01854774406'}
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60">
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wide block mb-1">
+                        About Description
+                      </span>
+                      <div className="text-[11px] text-slate-300 line-clamp-2">
+                        {storeAboutInput || DEFAULT_STORE_CONFIG.about}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Save Button */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                  <span className="text-xs text-gray-500 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>সংরক্ষণ করলে ক্লাউড ডেটাবেজের মাধ্যমে মোবাইল, ল্যাপটপসহ সকল ডিভাইসে তাৎক্ষণিকভাবে লাইভ হবে।</span>
+                  </span>
+
                   <button
-                    type="button"
-                    onClick={() => setActiveTab('categories')}
-                    className="text-[11px] font-bold text-[#f85606] hover:underline flex items-center gap-1 cursor-pointer"
+                    type="submit"
+                    disabled={isSavingStoreControls}
+                    className="w-full sm:w-auto px-6 py-3 bg-[#f85606] hover:bg-[#e04a00] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition cursor-pointer disabled:opacity-50 shrink-0"
                   >
-                    <span>Manage Categories</span>
-                    <ArrowUpRight className="w-3 h-3" />
+                    {isSavingStoreControls ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>আপডেট ও সিঙ্ক হচ্ছে...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>সংরক্ষণ ও লাইভ সিঙ্ক করুন (Save Store Controls)</span>
+                      </>
+                    )}
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableCategories.map((c) => (
-                    <span 
-                      key={c}
-                      className="bg-white border border-gray-200 text-gray-700 text-[11px] px-2.5 py-1 rounded-md font-medium"
+
+              </form>
+
+              {/* Dynamic Categories Quick Link & Logistics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FolderTree className="w-4 h-4 text-[#f85606]" />
+                      <span className="font-bold text-gray-900">Active Categories ({availableCategories.length})</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('categories')}
+                      className="text-[11px] font-bold text-[#f85606] hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      {c}
-                    </span>
-                  ))}
+                      <span>Manage Categories</span>
+                      <ArrowUpRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {availableCategories.map((c) => (
+                      <span 
+                        key={c}
+                        className="bg-white border border-gray-200 text-gray-700 text-[11px] px-2 py-0.5 rounded-md font-medium"
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-4 bg-orange-50/60 rounded-xl border border-orange-100 text-xs space-y-1.5">
+                  <span className="font-bold text-gray-900 block">Warehouse & Logistics Hub</span>
+                  <p className="text-gray-600">
+                    Central Distribution: Motijheel Commercial Area, Dhaka, Bangladesh.
+                  </p>
+                  <p className="text-gray-600">
+                    Integrated Logistics: Steadfast Courier, Pathao Express, RedX Logistics, Paperfly, Sundarban Courier.
+                  </p>
                 </div>
               </div>
 
-              <div className="p-4 bg-orange-50/60 rounded-xl border border-orange-100 text-xs space-y-2">
-                <span className="font-bold text-gray-900 block">Warehouse Location</span>
-                <p className="text-gray-600">
-                  Khan Gadget Central Hub: Motijheel Commercial Area, Dhaka, Bangladesh.
-                </p>
-                <p className="text-gray-600">
-                  Couriers Integrated: Steadfast Courier, RedX Logistics, Pathao Express, Paperfly, Sundarban Courier.
-                </p>
-              </div>
             </div>
           )}
 
