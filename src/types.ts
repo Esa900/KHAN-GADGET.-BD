@@ -1,3 +1,14 @@
+export const DEFAULT_CATEGORIES: string[] = [
+  'Smartwatches & Wearables',
+  'Power Banks',
+  'Chargers & Cables',
+  'Audio & Earbuds',
+  'Cases & Covers',
+  'Screen Protectors',
+  'Holders & Mounts',
+  'Gaming Accessories'
+];
+
 export type ProductCategory = 
   | 'All'
   | 'Smartwatches & Wearables'
@@ -7,18 +18,12 @@ export type ProductCategory =
   | 'Cases & Covers'
   | 'Screen Protectors'
   | 'Holders & Mounts'
-  | 'Gaming Accessories';
+  | 'Gaming Accessories'
+  | (string & {});
 
 export const CATEGORIES: ProductCategory[] = [
   'All',
-  'Smartwatches & Wearables',
-  'Power Banks',
-  'Chargers & Cables',
-  'Audio & Earbuds',
-  'Cases & Covers',
-  'Screen Protectors',
-  'Holders & Mounts',
-  'Gaming Accessories'
+  ...DEFAULT_CATEGORIES
 ];
 
 export interface ProductReview {

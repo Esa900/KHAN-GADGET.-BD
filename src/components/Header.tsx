@@ -13,6 +13,7 @@ interface HeaderProps {
   wishlistCount: number;
   selectedCategory: ProductCategory;
   onSelectCategory: (cat: ProductCategory) => void;
+  categories?: string[];
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onOpenCart: () => void;
@@ -29,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   wishlistCount,
   selectedCategory,
   onSelectCategory,
+  categories,
   searchQuery,
   onSearchChange,
   onOpenCart,
@@ -40,6 +42,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+
+  const displayCategories = ['All', ...(categories && categories.length > 0 ? categories : CATEGORIES.filter(c => c !== 'All'))];
 
   const quickSearchTags = ['65W GaN', 'Power Bank', 'MagSafe', 'AirPods Case', 'Privacy Glass', 'Car Mount', 'DL05 Cooler'];
 
@@ -258,7 +262,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Categories</p>
               <div className="flex flex-col space-y-1">
-                {CATEGORIES.map((category) => (
+                {displayCategories.map((category) => (
                   <button
                     key={category}
                     onClick={() => {

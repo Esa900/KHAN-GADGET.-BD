@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   setDoc,
   deleteDoc,
   onSnapshot,
@@ -17,12 +18,16 @@ import {
   saveStoredOrders, 
   getStoredVouchers, 
   saveStoredVouchers,
-  getDeletedProductIds
+  getDeletedProductIds,
+  getStoredCategories,
+  saveStoredCategories
 } from '../utils/storage';
 
 const PRODUCTS_COLLECTION = 'products';
 const ORDERS_COLLECTION = 'orders';
 const VOUCHERS_COLLECTION = 'vouchers';
+const SETTINGS_COLLECTION = 'settings';
+const CATEGORIES_DOC = 'categories';
 
 // Helper to sanitize data by replacing undefined with null so Firestore doesn't throw unsupported field errors
 export const cleanFirestoreData = (obj: any): any => {
@@ -111,7 +116,7 @@ const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in windo
   ? new BroadcastChannel('khan_gadget_sync_channel')
   : null;
 
-export const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED' | 'VOUCHERS_UPDATED') => {
+export const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED' | 'VOUCHERS_UPDATED' | 'CATEGORIES_UPDATED') => {
   try {
     syncChannel?.postMessage({ type, timestamp: Date.now() });
   } catch (e) {
@@ -446,8 +451,83 @@ export const syncResetToDemoDefaults = async (): Promise<void> => {
       batch4.set(doc(db, VOUCHERS_COLLECTION, v.code), v);
     });
     await batch4.commit();
+
+    // Reset categories doc in Firestore
+    const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
+    await setDoc(catRef, { list: getStoredCategories(), updatedAt: new Date().toISOString() });
+    broadcastSync('CATEGORIES_UPDATED');
   } catch (e) {
     console.error('Failed to reset Firestore to demo defaults:', e);
+  }
+};
+
+// 10. Categories Cloud Sync Functions
+export const fetchRemoteCategories = async (): Promise<string[]> => {
+  try {
+    const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
+    const snap = await getDoc(catRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data && Array.isArray(data.list) && data.list.length > 0) {
+        saveStoredCategories(data.list);
+        return data.list;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to fetch remote categories from Firestore, using local:', err);
+  }
+  return getStoredCategories();
+};
+
+export const subscribeToCategories = (onUpdate: (cats: string[]) => void): (() => void) => {
+  const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
+
+  const handleBroadcast = (e: MessageEvent) => {
+    if (e.data?.type === 'CATEGORIES_UPDATED') {
+      onUpdate(getStoredCategories());
+    }
+  };
+  syncChannel?.addEventListener('message', handleBroadcast);
+
+  const unsubscribe = onSnapshot(
+    catRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && Array.isArray(data.list) && data.list.length > 0) {
+          saveStoredCategories(data.list);
+          onUpdate(data.list);
+          return;
+        }
+      }
+      onUpdate(getStoredCategories());
+    },
+    (error) => {
+      console.warn('Firestore live categories listener fallback to local cache:', error);
+      fetchRemoteCategories().then(onUpdate).catch(() => onUpdate(getStoredCategories()));
+    }
+  );
+
+  return () => {
+    unsubscribe();
+    syncChannel?.removeEventListener('message', handleBroadcast);
+  };
+};
+
+export const syncSaveCategories = async (categories: string[]): Promise<{ success: boolean; error?: string }> => {
+  try {
+    saveStoredCategories(categories);
+    const catRef = doc(db, SETTINGS_COLLECTION, CATEGORIES_DOC);
+    await setDoc(catRef, {
+      list: categories,
+      updatedAt: new Date().toISOString()
+    });
+    broadcastSync('CATEGORIES_UPDATED');
+    console.log('Successfully synced categories to Firestore cloud.');
+    return { success: true };
+  } catch (err: any) {
+    console.error('Failed to sync categories to Firestore:', err);
+    return { success: false, error: err?.message || 'Failed to save categories to cloud' };
   }
 };
 

@@ -6,12 +6,13 @@ import {
   Search, Eye, EyeOff, RefreshCw, KeyRound, Lock, Unlock,
   Phone, MessageCircle, FileText, User, MapPin, Banknote,
   Upload, Camera, Image as ImageIcon, Link as LinkIcon, Loader2,
-  Printer, ExternalLink
+  Printer, ExternalLink, FolderTree
 } from 'lucide-react';
-import { Product, Order, Voucher, OrderStatus, ProductCategory } from '../types';
+import { Product, Order, Voucher, OrderStatus, ProductCategory, DEFAULT_CATEGORIES } from '../types';
 import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl } from '../utils/storage';
 import { compressImage } from '../utils/image';
 import { InvoiceModal } from './InvoiceModal';
+import { CategoryManager } from './CategoryManager';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -19,26 +20,19 @@ interface AdminPanelProps {
   products: Product[];
   orders: Order[];
   vouchers: Voucher[];
+  categories?: string[];
   onAddProduct: (product: Product) => Promise<boolean> | void;
   onUpdateProduct: (product: Product) => Promise<boolean> | void;
   onDeleteProduct: (productId: string) => Promise<boolean> | void;
   onUpdateOrderStatus: (orderId: string, status: OrderStatus, carrier?: string, note?: string) => void;
   onAddVoucher: (voucher: Voucher) => void;
   onDeleteVoucher: (code: string) => void;
+  onAddCategory?: (categoryName: string) => Promise<boolean> | void;
+  onDeleteCategory?: (categoryName: string) => Promise<boolean> | void;
+  onRenameCategory?: (oldName: string, newName: string) => Promise<boolean> | void;
   onRefreshCloud?: () => void;
   isSyncing?: boolean;
 }
-
-const CATEGORIES: ProductCategory[] = [
-  'Smartwatches & Wearables',
-  'Power Banks',
-  'Chargers & Cables',
-  'Audio & Earbuds',
-  'Cases & Covers',
-  'Screen Protectors',
-  'Holders & Mounts',
-  'Gaming Accessories'
-];
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
   isOpen,
@@ -46,15 +40,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   products,
   orders,
   vouchers,
+  categories,
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
   onUpdateOrderStatus,
   onAddVoucher,
   onDeleteVoucher,
+  onAddCategory,
+  onDeleteCategory,
+  onRenameCategory,
   onRefreshCloud,
   isSyncing = false
 }) => {
+  const availableCategories = (categories && categories.length > 0) ? categories : DEFAULT_CATEGORIES;
   // App Login & Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
@@ -74,7 +73,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'vouchers' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'orders' | 'vouchers' | 'settings'>('dashboard');
+
+  // Category Management & Filtering States
+  const [selectedProductCategoryFilter, setSelectedProductCategoryFilter] = useState<string>('All');
+  const [isInlineCategoryAddOpen, setIsInlineCategoryAddOpen] = useState(false);
+  const [inlineCategoryInput, setInlineCategoryInput] = useState('');
+
+  const handleSaveInlineCategory = async () => {
+    const trimmed = inlineCategoryInput.trim();
+    if (!trimmed) return;
+    if (onAddCategory && !availableCategories.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
+      await onAddCategory(trimmed);
+    }
+    setProductForm(prev => ({ ...prev, category: trimmed as ProductCategory }));
+    setIsInlineCategoryAddOpen(false);
+    setInlineCategoryInput('');
+  };
 
   // Product Management States
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -95,35 +110,75 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   });
   const [productSearch, setProductSearch] = useState('');
 
-  // Image Upload State
+  // 4 Pictures State (Slot 0 is Main Cover, Slots 1, 2, 3 are Additional Gallery Photos)
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [activeSlotForUpload, setActiveSlotForUpload] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadProgressText, setUploadProgressText] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [urlInputText, setUrlInputText] = useState('');
 
-  const processImageFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setUploadError('Please select an image file (JPG, PNG, WEBP, etc.)');
+  const processImageFiles = async (files: File[], targetSlot: number | null = null) => {
+    const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (validFiles.length === 0) {
+      setUploadError('Please select valid image files (JPG, PNG, WEBP).');
       return;
     }
     setUploadError('');
     setIsUploadingImage(true);
+
     try {
-      const dataUrl = await compressImage(file, 900, 900, 0.82);
-      setProductForm(prev => ({ ...prev, image: dataUrl }));
+      if (targetSlot !== null) {
+        // Targeted slot upload (replace or set specific photo 1, 2, 3, or 4)
+        const file = validFiles[0];
+        setUploadProgressText(`Optimizing picture for Slot ${targetSlot + 1}...`);
+        const dataUrl = await compressImage(file, 800, 800, 0.80);
+        
+        setProductImages(prev => {
+          const next = [...prev];
+          while (next.length <= targetSlot) {
+            next.push('');
+          }
+          next[targetSlot] = dataUrl;
+          return next.filter(Boolean).slice(0, 4);
+        });
+      } else {
+        // Bulk upload: fill empty slots up to 4 total photos
+        const remainingCapacity = 4 - productImages.length;
+        if (remainingCapacity <= 0) {
+          setUploadError('Maximum 4 photos already added. Delete or change an existing photo.');
+          setIsUploadingImage(false);
+          return;
+        }
+
+        const filesToProcess = validFiles.slice(0, remainingCapacity);
+        const processedUrls: string[] = [];
+
+        for (let i = 0; i < filesToProcess.length; i++) {
+          setUploadProgressText(`Optimizing picture ${i + 1} of ${filesToProcess.length}...`);
+          const dataUrl = await compressImage(filesToProcess[i], 800, 800, 0.80);
+          processedUrls.push(dataUrl);
+        }
+
+        setProductImages(prev => [...prev, ...processedUrls].slice(0, 4));
+      }
     } catch (err) {
-      console.error('Error processing uploaded image:', err);
-      setUploadError('Failed to process image. Please try selecting another picture.');
+      console.error('Error processing uploaded image files:', err);
+      setUploadError('Failed to process image file(s). Please try again.');
     } finally {
       setIsUploadingImage(false);
+      setUploadProgressText('');
+      setActiveSlotForUpload(null);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processImageFile(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      processImageFiles(Array.from(files), activeSlotForUpload);
     }
     if (e.target) e.target.value = '';
   };
@@ -144,10 +199,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      processImageFile(file);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      processImageFiles(Array.from(files), null);
     }
+  };
+
+  const handleTriggerSlotUpload = (slotIndex: number) => {
+    setActiveSlotForUpload(slotIndex);
+    setUploadError('');
+    fileInputRef.current?.click();
+  };
+
+  const handleTriggerBulkUpload = () => {
+    setActiveSlotForUpload(null);
+    setUploadError('');
+    fileInputRef.current?.click();
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setProductImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleMakeCover = (index: number) => {
+    if (index === 0) return;
+    setProductImages(prev => {
+      const next = [...prev];
+      const [item] = next.splice(index, 1);
+      next.unshift(item);
+      return next;
+    });
+  };
+
+  const handleAddUrl = () => {
+    const trimmed = urlInputText.trim();
+    if (!trimmed) return;
+    if (productImages.length >= 4) {
+      setUploadError('Maximum 4 pictures allowed per product.');
+      return;
+    }
+    setUploadError('');
+    setProductImages(prev => [...prev, trimmed].slice(0, 4));
+    setUrlInputText('');
   };
 
   // Order Management States
@@ -186,6 +279,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setEditingProduct(null);
     setImageInputMode('upload');
     setUploadError('');
+    setUploadProgressText('');
+    setActiveSlotForUpload(null);
+    setProductImages([]);
+    setUrlInputText('');
     setProductForm({
       title: '',
       category: 'Chargers & Cables',
@@ -196,6 +293,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       rating: 4.8,
       reviewCount: 15,
       image: '',
+      additionalImages: [],
       description: 'High quality mobile accessory backed by Khan Gadget official warranty.',
       specs: {
         'Warranty': '1 Year Replacement',
@@ -210,8 +308,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleOpenEditProduct = (prod: Product) => {
     setEditingProduct(prod);
-    setImageInputMode(prod.image ? 'upload' : 'upload');
+    setImageInputMode('upload');
     setUploadError('');
+    setUploadProgressText('');
+    setActiveSlotForUpload(null);
+    const existing = [prod.image, ...(prod.additionalImages || [])].filter(Boolean);
+    setProductImages(existing.slice(0, 4));
+    setUrlInputText('');
     setProductForm({ ...prod });
     setIsProductModalOpen(true);
   };
@@ -221,14 +324,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     if (!productForm.title || !productForm.price) return;
     setIsSubmittingProduct(true);
 
-    const finalImage = productForm.image?.trim() || 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80';
+    const finalMainImage = productImages[0] || 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80';
+    const finalAdditionalImages = productImages.slice(1, 4).filter(Boolean);
 
     try {
       if (editingProduct) {
         const updated: Product = {
           ...editingProduct,
           ...productForm as Product,
-          image: finalImage
+          image: finalMainImage,
+          additionalImages: finalAdditionalImages
         };
         await onUpdateProduct(updated);
       } else {
@@ -243,7 +348,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           stock: Number(productForm.stock) || 10,
           rating: 4.9,
           reviewCount: 1,
-          image: finalImage,
+          image: finalMainImage,
+          additionalImages: finalAdditionalImages,
           description: productForm.description || 'Premium mobile accessory.',
           specs: productForm.specs || { 'Warranty': '12 Months' },
           isFlashSale: !!productForm.isFlashSale,
@@ -280,11 +386,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setIsVoucherModalOpen(false);
   };
 
-  const filteredProducts = products.filter(p =>
-    p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
-    p.brand.toLowerCase().includes(productSearch.toLowerCase()) ||
-    p.category.toLowerCase().includes(productSearch.toLowerCase())
-  );
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = 
+      p.title.toLowerCase().includes(productSearch.toLowerCase()) ||
+      p.brand.toLowerCase().includes(productSearch.toLowerCase()) ||
+      p.category.toLowerCase().includes(productSearch.toLowerCase());
+    const matchesCategory = 
+      selectedProductCategoryFilter === 'All' || 
+      p.category.toLowerCase() === selectedProductCategoryFilter.toLowerCase();
+    return matchesSearch && matchesCategory;
+  });
 
   const filteredOrders = orders.filter(o => {
     if (orderFilter === 'All') return true;
@@ -436,6 +547,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {[
             { id: 'dashboard', label: 'Overview & KPIs', icon: LayoutDashboard },
             { id: 'products', label: `Products (${products.length})`, icon: Package },
+            { id: 'categories', label: `Categories (${availableCategories.length})`, icon: FolderTree },
             { id: 'orders', label: `Orders (${orders.length})`, icon: ShoppingBag },
             { id: 'vouchers', label: `Vouchers (${vouchers.length})`, icon: Tag },
             { id: 'settings', label: 'Store Controls', icon: Settings }
@@ -502,7 +614,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   <div className="text-2xl font-black text-gray-900">{products.length}</div>
                   <p className="text-[11px] text-blue-600 font-semibold mt-1">
-                    {CATEGORIES.length} Active Categories
+                    {availableCategories.length} Active Categories
                   </p>
                 </div>
 
@@ -618,15 +730,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {activeTab === 'products' && (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="relative flex-1 max-w-sm">
-                  <input
-                    type="text"
-                    placeholder="Search by title, brand, category..."
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    className="w-full text-xs pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
-                  />
-                  <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <div className="flex flex-wrap items-center gap-2 flex-1 max-w-xl">
+                  <div className="relative flex-1 min-w-[200px]">
+                    <input
+                      type="text"
+                      placeholder="Search by title, brand, category..."
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      className="w-full text-xs pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
+                    />
+                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  </div>
+
+                  {/* Category Filter */}
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value={selectedProductCategoryFilter}
+                      onChange={(e) => setSelectedProductCategoryFilter(e.target.value)}
+                      className="text-xs bg-white border border-gray-300 rounded-lg px-2.5 py-2 font-semibold text-gray-700 focus:outline-none focus:border-orange-500"
+                    >
+                      <option value="All">All Categories</option>
+                      {availableCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+
+                    {selectedProductCategoryFilter !== 'All' && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedProductCategoryFilter('All')}
+                        className="text-[11px] text-orange-600 hover:underline font-bold px-1"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <button
@@ -725,6 +863,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* TAB: Categories Management */}
+          {activeTab === 'categories' && (
+            <CategoryManager
+              categories={availableCategories}
+              products={products}
+              onAddCategory={onAddCategory}
+              onDeleteCategory={onDeleteCategory}
+              onRenameCategory={onRenameCategory}
+              onViewCategoryProducts={(cat) => {
+                setSelectedProductCategoryFilter(cat);
+                setActiveTab('products');
+              }}
+            />
           )}
 
           {/* TAB 3: Orders Management */}
@@ -899,7 +1052,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <div className="max-w-xl bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-6">
               <div>
                 <h3 className="text-sm font-bold text-gray-900 mb-1">KHAN GADGET Store Controls</h3>
-                <p className="text-xs text-gray-500">System maintenance and demo data replenishment</p>
+                <p className="text-xs text-gray-500">System maintenance, category rules, and demo data replenishment</p>
+              </div>
+
+              {/* Dynamic Categories Section */}
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FolderTree className="w-4 h-4 text-[#f85606]" />
+                    <span className="font-bold text-gray-900">Active Categories ({availableCategories.length})</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('categories')}
+                    className="text-[11px] font-bold text-[#f85606] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Manage Categories</span>
+                    <ArrowUpRight className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {availableCategories.map((c) => (
+                    <span 
+                      key={c}
+                      className="bg-white border border-gray-200 text-gray-700 text-[11px] px-2.5 py-1 rounded-md font-medium"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div className="p-4 bg-orange-50/60 rounded-xl border border-orange-100 text-xs space-y-2">
@@ -944,16 +1125,59 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="font-semibold text-gray-700 block mb-1">Category *</label>
-                    <select
-                      value={productForm.category}
-                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value as ProductCategory })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
-                    >
-                      {CATEGORIES.map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-semibold text-gray-700 block">Category *</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsInlineCategoryAddOpen(!isInlineCategoryAddOpen);
+                          setInlineCategoryInput('');
+                        }}
+                        className="text-[10px] text-orange-600 font-bold hover:underline cursor-pointer flex items-center gap-0.5"
+                      >
+                        <Plus className="w-2.5 h-2.5" />
+                        <span>{isInlineCategoryAddOpen ? 'Cancel' : '+ New'}</span>
+                      </button>
+                    </div>
+
+                    {isInlineCategoryAddOpen ? (
+                      <div className="flex gap-1">
+                        <input
+                          type="text"
+                          value={inlineCategoryInput}
+                          onChange={(e) => setInlineCategoryInput(e.target.value)}
+                          placeholder="New category..."
+                          className="w-full px-2 py-1.5 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 text-xs"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleSaveInlineCategory();
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSaveInlineCategory}
+                          className="px-2.5 py-1.5 bg-orange-600 text-white rounded-lg font-bold text-[10px] shrink-0 hover:bg-orange-700 cursor-pointer"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value={productForm.category}
+                        onChange={(e) => setProductForm({ ...productForm, category: e.target.value as ProductCategory })}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                      >
+                        {availableCategories.map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                        {productForm.category && !availableCategories.includes(productForm.category) && (
+                          <option value={productForm.category}>{productForm.category}</option>
+                        )}
+                      </select>
+                    )}
                   </div>
                   <div>
                     <label className="font-semibold text-gray-700 block mb-1">Brand Name *</label>
@@ -1001,15 +1225,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
 
                 {/* Product Photo Upload / Selector */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="font-semibold text-gray-800 text-xs flex items-center gap-1.5">
-                      <Camera className="w-3.5 h-3.5 text-[#f85606]" />
-                      <span>Product Picture (প্রোডাক্টের ছবি) *</span>
-                    </label>
+                {/* 4 Product Photos Upload & Gallery Management */}
+                <div className="bg-gray-50/80 p-3.5 rounded-xl border border-gray-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
+                        <Camera className="w-4 h-4 text-[#f85606]" />
+                        <span>Product Pictures (৪টি ছবি আপলোড করুন)</span>
+                        <span className="bg-orange-100 text-[#f85606] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          {productImages.length} / 4
+                        </span>
+                      </label>
+                      <p className="text-[10px] text-gray-500 mt-0.5">
+                        ১ম ছবিটি প্রধান কভার ছবি (Cover Photo), বাকি ৩টি ছবি ডিটেইল গ্যালারি হিসেবে দেখাবে।
+                      </p>
+                    </div>
 
                     {/* Mode toggle */}
-                    <div className="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-[10px] font-bold">
+                    <div className="flex items-center bg-gray-200/80 p-0.5 rounded-lg text-[10px] font-bold">
                       <button
                         type="button"
                         onClick={() => {
@@ -1019,11 +1252,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition cursor-pointer ${
                           imageInputMode === 'upload' 
                             ? 'bg-white text-orange-600 shadow-xs' 
-                            : 'text-gray-500 hover:text-gray-800'
+                            : 'text-gray-600 hover:text-gray-900'
                         }`}
                       >
                         <Upload className="w-2.5 h-2.5" />
-                        <span>Upload File (ছবি আপলোড)</span>
+                        <span>Upload (ফাইল)</span>
                       </button>
                       <button
                         type="button"
@@ -1034,7 +1267,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition cursor-pointer ${
                           imageInputMode === 'url' 
                             ? 'bg-white text-orange-600 shadow-xs' 
-                            : 'text-gray-500 hover:text-gray-800'
+                            : 'text-gray-600 hover:text-gray-900'
                         }`}
                       >
                         <LinkIcon className="w-2.5 h-2.5" />
@@ -1043,126 +1276,177 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                   </div>
 
-                  {/* Hidden native file input - triggers camera or file picker */}
+                  {/* Hidden native multi-file input */}
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
                     accept="image/*"
+                    multiple
                     className="hidden"
                   />
 
-                  {/* MODE 1: Direct File Upload */}
-                  {imageInputMode === 'upload' && (
-                    <div className="space-y-2">
-                      {productForm.image ? (
-                        <div className="border border-orange-200 bg-orange-50/50 rounded-xl p-3 flex items-center gap-3">
-                          <img
-                            src={productForm.image}
-                            alt="Selected product preview"
-                            referrerPolicy="no-referrer"
-                            className="w-16 h-16 object-contain rounded-lg border border-gray-200 bg-white p-1 shadow-xs shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
-                              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              <span>Picture Selected (ছবি যুক্ত হয়েছে)</span>
-                            </div>
-                            <p className="text-[10px] text-gray-500 mt-0.5">
-                              Ready to sync across mobile and laptop devices.
-                            </p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="px-2.5 py-1 text-[11px] font-bold text-slate-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-xs flex items-center gap-1 transition cursor-pointer"
-                              >
-                                <Upload className="w-3 h-3 text-orange-600" />
-                                <span>Change Picture</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setProductForm(prev => ({ ...prev, image: '' }))}
-                                className="px-2 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition cursor-pointer flex items-center gap-1"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                                <span>Remove</span>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          onDragOver={handleDragOver}
-                          onDragLeave={handleDragLeave}
-                          onDrop={handleDrop}
-                          onClick={() => fileInputRef.current?.click()}
-                          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 ${
-                            isDraggingOver 
-                              ? 'border-orange-500 bg-orange-50' 
-                              : 'border-gray-300 hover:border-orange-400 bg-gray-50/60 hover:bg-orange-50/30'
+                  {/* 4 Slots Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {[0, 1, 2, 3].map((slotIdx) => {
+                      const img = productImages[slotIdx];
+                      const isCover = slotIdx === 0;
+
+                      return (
+                        <div 
+                          key={slotIdx}
+                          className={`relative rounded-xl border transition flex flex-col items-center justify-between p-2 min-h-[135px] ${
+                            img 
+                              ? isCover 
+                                ? 'border-orange-400 bg-orange-50/40' 
+                                : 'border-gray-200 bg-white shadow-2xs'
+                              : 'border-dashed border-gray-300 bg-white hover:border-orange-300 hover:bg-orange-50/20'
                           }`}
                         >
-                          {isUploadingImage ? (
-                            <div className="py-2.5 flex flex-col items-center gap-1.5 text-orange-600">
-                              <Loader2 className="w-6 h-6 animate-spin" />
-                              <span className="font-bold text-xs">Optimizing and preparing picture...</span>
-                            </div>
-                          ) : (
+                          {img ? (
                             <>
-                              <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shadow-xs">
-                                <Upload className="w-5 h-5" />
-                              </div>
-                              <div>
-                                <span className="font-bold text-xs text-gray-900 block">
-                                  Click to upload or drag & drop picture
+                              {/* Slot Badge */}
+                              <div className="w-full flex items-center justify-between mb-1.5">
+                                <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                                  isCover 
+                                    ? 'bg-[#f85606] text-white shadow-2xs' 
+                                    : 'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {isCover ? '★ Cover (১ম)' : `Photo ${slotIdx + 1}`}
                                 </span>
-                                <span className="text-[10px] text-gray-500 block mt-0.5">
-                                  মোবাইল বা ল্যাপটপ থেকে যেকোনো ছবি বেছে নিন (JPG, PNG, WEBP)
-                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveImage(slotIdx)}
+                                  className="w-5 h-5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition cursor-pointer"
+                                  title="Remove this photo"
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </button>
                               </div>
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-white border border-orange-200 px-3 py-1 rounded-full shadow-xs">
-                                <Camera className="w-3 h-3" />
-                                <span>Choose from Device / ছবি দিন</span>
-                              </span>
+
+                              {/* Thumbnail */}
+                              <div className="w-16 h-16 rounded-lg bg-gray-50 border border-gray-200 p-1 flex items-center justify-center overflow-hidden my-auto">
+                                <img
+                                  src={img}
+                                  alt={`Slot ${slotIdx + 1}`}
+                                  referrerPolicy="no-referrer"
+                                  className="w-full h-full object-contain mix-blend-multiply"
+                                />
+                              </div>
+
+                              {/* Bottom Actions */}
+                              <div className="w-full flex items-center justify-center gap-1 mt-1.5 pt-1 border-t border-gray-100">
+                                {!isCover && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMakeCover(slotIdx)}
+                                    className="text-[9px] font-bold text-orange-600 hover:underline px-1 py-0.5 rounded cursor-pointer"
+                                    title="Make this photo the primary cover"
+                                  >
+                                    Set Cover
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleTriggerSlotUpload(slotIdx)}
+                                  className="text-[9px] font-bold text-gray-600 hover:text-gray-900 px-1 py-0.5 rounded cursor-pointer"
+                                >
+                                  Change
+                                </button>
+                              </div>
                             </>
+                          ) : (
+                            <div 
+                              onClick={() => handleTriggerSlotUpload(slotIdx)}
+                              className="w-full h-full flex flex-col items-center justify-center cursor-pointer py-3 text-center"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-1.5 shadow-2xs">
+                                <Plus className="w-4 h-4" />
+                              </div>
+                              <span className="text-[11px] font-bold text-gray-800">
+                                {isCover ? 'Cover Photo' : `Photo ${slotIdx + 1}`}
+                              </span>
+                              <span className="text-[9px] text-gray-600">
+                                {isCover ? '(প্রধান ছবি)' : '(ছবি যোগ করুন)'}
+                              </span>
+                            </div>
                           )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Bulk Upload / Drop Zone when less than 4 */}
+                  {imageInputMode === 'upload' && productImages.length < 4 && (
+                    <div
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={handleTriggerBulkUpload}
+                      className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition flex items-center justify-center gap-2.5 ${
+                        isDraggingOver 
+                          ? 'border-orange-500 bg-orange-50' 
+                          : 'border-orange-200 bg-white hover:bg-orange-50/40'
+                      }`}
+                    >
+                      {isUploadingImage ? (
+                        <div className="flex items-center gap-2 text-orange-600 text-xs font-bold py-1">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>{uploadProgressText || 'Compressing & uploading pictures...'}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                            <Upload className="w-4 h-4" />
+                          </div>
+                          <div className="text-left">
+                            <span className="font-bold text-xs text-gray-800 block">
+                              Click to select up to {4 - productImages.length} pictures at once (বা ড্র্যাগ করুন)
+                            </span>
+                            <span className="text-[10px] text-gray-600 block">
+                              মোবাইল গ্যালারি বা পিসি থেকে একসাথে একাধিক ছবি বেছে নিন
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* MODE 2: Image URL fallback */}
+                  {/* URL Input Mode */}
                   {imageInputMode === 'url' && (
-                    <div className="space-y-2">
+                    <div className="space-y-2 bg-white p-2.5 rounded-xl border border-gray-200">
                       <div className="flex gap-2">
                         <input
                           type="url"
-                          placeholder="Paste image link: https://..."
-                          value={productForm.image || ''}
-                          onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                          className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 text-xs"
+                          placeholder="Paste image link (e.g. https://...)"
+                          value={urlInputText}
+                          onChange={(e) => setUrlInputText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddUrl();
+                            }
+                          }}
+                          className="flex-1 px-3 py-1.5 border rounded-lg focus:outline-none focus:border-orange-500 text-xs"
                         />
+                        <button
+                          type="button"
+                          disabled={productImages.length >= 4 || !urlInputText.trim()}
+                          onClick={handleAddUrl}
+                          className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-bold disabled:opacity-50 cursor-pointer shrink-0 flex items-center gap-1"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add URL</span>
+                        </button>
                       </div>
-                      {productForm.image && (
-                        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2">
-                          <img
-                            src={productForm.image}
-                            alt="URL preview"
-                            referrerPolicy="no-referrer"
-                            className="w-12 h-12 object-contain rounded border border-gray-200 bg-white p-0.5 shrink-0"
-                            onError={() => setUploadError('Image URL could not be loaded. Please check link.')}
-                          />
-                          <div className="text-[10px] text-gray-500 truncate flex-1 font-mono">
-                            {productForm.image}
-                          </div>
-                        </div>
-                      )}
+                      <p className="text-[10px] text-gray-600">
+                        ওয়েবের যেকোনো ছবির লিংক দিয়ে ৪টি ছবি পর্যন্ত যোগ করতে পারবেন।
+                      </p>
                     </div>
                   )}
 
                   {uploadError && (
-                    <div className="mt-1.5 text-xs text-rose-600 font-semibold flex items-center gap-1">
+                    <div className="text-xs text-rose-600 font-semibold flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                       <span>{uploadError}</span>
                     </div>

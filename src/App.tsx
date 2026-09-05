@@ -33,7 +33,7 @@ import {
   TrustBadges 
 } from './components/TrustBadges';
 import { 
-  Product, ProductCategory, CATEGORIES, CartItem, Voucher, Order, OrderStatus, ProductReview 
+  Product, ProductCategory, DEFAULT_CATEGORIES, CartItem, Voucher, Order, OrderStatus, ProductReview 
 } from './types';
 import { 
   getStoredProducts, saveStoredProducts, deleteStoredProduct,
@@ -41,19 +41,23 @@ import {
   getStoredVouchers, saveStoredVouchers,
   getStoredCart, saveStoredCart,
   getStoredWishlist, saveStoredWishlist,
+  getStoredCategories, saveStoredCategories,
   formatPrice, resetToDemoDefaults, STORE_WHATSAPP_NUMBER 
 } from './utils/storage';
 import { 
   subscribeToProducts, 
   subscribeToOrders, 
   subscribeToVouchers,
+  subscribeToCategories,
   fetchRemoteProducts,
   fetchRemoteOrders,
+  fetchRemoteCategories,
   syncSaveProduct,
   syncDeleteProduct,
   syncUpdateOrderStatus,
   syncSaveVoucher,
   syncDeleteVoucher,
+  syncSaveCategories,
   syncResetToDemoDefaults
 } from './lib/syncService';
 import { 
@@ -70,6 +74,7 @@ export default function App() {
   const [vouchers, setVouchers] = useState<Voucher[]>(() => getStoredVouchers());
   const [cart, setCart] = useState<CartItem[]>(() => getStoredCart());
   const [wishlist, setWishlist] = useState<string[]>(() => getStoredWishlist());
+  const [categories, setCategories] = useState<string[]>(() => getStoredCategories());
 
   // Modals visibility
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -110,15 +115,19 @@ export default function App() {
   const handleManualCloudSync = async () => {
     setIsSyncing(true);
     try {
-      const [freshProducts, freshOrders] = await Promise.all([
+      const [freshProducts, freshOrders, freshCategories] = await Promise.all([
         fetchRemoteProducts(),
-        fetchRemoteOrders()
+        fetchRemoteOrders(),
+        fetchRemoteCategories()
       ]);
       if (freshProducts && freshProducts.length > 0) {
         setProducts(freshProducts);
       }
       if (freshOrders && freshOrders.length > 0) {
         setOrders(freshOrders);
+      }
+      if (freshCategories && freshCategories.length > 0) {
+        setCategories(freshCategories);
       }
       showToast(`Cloud Sync Complete: Store & orders synced!`);
     } catch (err) {
@@ -136,6 +145,7 @@ export default function App() {
     setVouchers(getStoredVouchers());
     setCart(getStoredCart());
     setWishlist(getStoredWishlist());
+    setCategories(getStoredCategories());
 
     // Connect real-time listeners to Firestore cloud database
     const unsubProducts = subscribeToProducts((liveProducts) => {
@@ -147,6 +157,11 @@ export default function App() {
     const unsubVouchers = subscribeToVouchers((liveVouchers) => {
       setVouchers(liveVouchers);
     });
+    const unsubCategories = subscribeToCategories((liveCategories) => {
+      if (liveCategories && liveCategories.length > 0) {
+        setCategories(liveCategories);
+      }
+    });
 
     // Re-sync when switching back to tab or device screen unlocks
     const handleVisibilityOrFocus = () => {
@@ -156,6 +171,9 @@ export default function App() {
         }).catch(console.error);
         fetchRemoteOrders().then(ordrs => {
           if (ordrs && ordrs.length > 0) setOrders(ordrs);
+        }).catch(console.error);
+        fetchRemoteCategories().then(cats => {
+          if (cats && cats.length > 0) setCategories(cats);
         }).catch(console.error);
       }
     };
@@ -170,12 +188,16 @@ export default function App() {
       fetchRemoteOrders().then(ordrs => {
         if (ordrs && ordrs.length > 0) setOrders(ordrs);
       }).catch(console.error);
+      fetchRemoteCategories().then(cats => {
+        if (cats && cats.length > 0) setCategories(cats);
+      }).catch(console.error);
     }, 5000);
 
     return () => {
       unsubProducts();
       unsubOrders();
       unsubVouchers();
+      unsubCategories();
       window.removeEventListener('focus', handleVisibilityOrFocus);
       document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
       clearInterval(syncInterval);
@@ -467,6 +489,74 @@ export default function App() {
     showToast(`Coupon ${code} removed.`);
   };
 
+  // Admin Category Handlers
+  const handleAdminAddCategory = async (categoryName: string): Promise<boolean> => {
+    const trimmed = categoryName.trim();
+    if (!trimmed) return false;
+    if (categories.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
+      showToast(`Category "${trimmed}" already exists.`);
+      return false;
+    }
+    const updated = [...categories, trimmed];
+    setCategories(updated);
+    saveStoredCategories(updated);
+    const res = await syncSaveCategories(updated);
+    if (res.success) {
+      showToast(`Category "${trimmed}" added & synced to Cloud!`);
+      return true;
+    } else {
+      showToast(`Category "${trimmed}" saved locally.`);
+      return true;
+    }
+  };
+
+  const handleAdminDeleteCategory = async (categoryName: string): Promise<boolean> => {
+    const trimmed = categoryName.trim();
+    const updated = categories.filter(c => c.toLowerCase() !== trimmed.toLowerCase());
+    setCategories(updated);
+    saveStoredCategories(updated);
+    if (selectedCategory.toLowerCase() === trimmed.toLowerCase()) {
+      setSelectedCategory('All');
+    }
+    await syncSaveCategories(updated);
+    showToast(`Category "${trimmed}" removed.`);
+    return true;
+  };
+
+  const handleAdminRenameCategory = async (oldName: string, newName: string): Promise<boolean> => {
+    const trimmedOld = oldName.trim();
+    const trimmedNew = newName.trim();
+    if (!trimmedNew || trimmedOld.toLowerCase() === trimmedNew.toLowerCase()) return false;
+
+    const updatedCategories = categories.map(c => 
+      c.toLowerCase() === trimmedOld.toLowerCase() ? trimmedNew : c
+    );
+    setCategories(updatedCategories);
+    saveStoredCategories(updatedCategories);
+
+    // Update existing products with this category
+    const updatedProducts = products.map(p => {
+      if (p.category.toLowerCase() === trimmedOld.toLowerCase()) {
+        return { ...p, category: trimmedNew };
+      }
+      return p;
+    });
+    setProducts(updatedProducts);
+    saveStoredProducts(updatedProducts);
+
+    // Sync categories & updated products in background
+    syncSaveCategories(updatedCategories).catch(console.error);
+    updatedProducts.filter(p => p.category === trimmedNew).forEach(p => {
+      syncSaveProduct(p).catch(console.error);
+    });
+
+    if (selectedCategory.toLowerCase() === trimmedOld.toLowerCase()) {
+      setSelectedCategory(trimmedNew);
+    }
+    showToast(`Category renamed to "${trimmedNew}"!`);
+    return true;
+  };
+
   const handleResetToDemo = async () => {
     await syncResetToDemoDefaults();
     resetToDemoDefaults();
@@ -496,6 +586,7 @@ export default function App() {
           setSelectedCategory(cat);
           setSearchQuery('');
         }}
+        categories={categories}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenCart={() => setIsCartOpen(true)}
@@ -520,7 +611,7 @@ export default function App() {
               Categories
             </h3>
             <ul className="text-xs space-y-1">
-              {CATEGORIES.map((cat) => {
+              {['All', ...categories].map((cat) => {
                 const isSelected = selectedCategory === cat;
                 return (
                   <li
@@ -883,12 +974,16 @@ export default function App() {
         products={products}
         orders={orders}
         vouchers={vouchers}
+        categories={categories}
         onAddProduct={handleAdminAddProduct}
         onUpdateProduct={handleAdminUpdateProduct}
         onDeleteProduct={handleAdminDeleteProduct}
         onUpdateOrderStatus={handleAdminUpdateOrderStatus}
         onAddVoucher={handleAdminAddVoucher}
         onDeleteVoucher={handleAdminDeleteVoucher}
+        onAddCategory={handleAdminAddCategory}
+        onDeleteCategory={handleAdminDeleteCategory}
+        onRenameCategory={handleAdminRenameCategory}
         onRefreshCloud={handleManualCloudSync}
         isSyncing={isSyncing}
       />

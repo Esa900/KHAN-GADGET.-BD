@@ -1,4 +1,4 @@
-import { Product, Order, Voucher, CartItem, OrderStatus, TrackingCheckpoint } from '../types';
+import { Product, Order, Voucher, CartItem, OrderStatus, TrackingCheckpoint, DEFAULT_CATEGORIES } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_VOUCHERS } from '../data/mockData';
 
 const PRODUCTS_KEY = 'khan_gadget_products_v2';
@@ -8,6 +8,7 @@ const VOUCHERS_KEY = 'khan_gadget_vouchers_v2';
 const CART_KEY = 'khan_gadget_cart_v2';
 const WISHLIST_KEY = 'khan_gadget_wishlist_v2';
 const RECENTLY_VIEWED_KEY = 'khan_gadget_recently_viewed_v1';
+const CATEGORIES_KEY = 'khan_gadget_categories_v2';
 
 export const STORE_WHATSAPP_NUMBER = '8801854774406';
 
@@ -282,6 +283,59 @@ export const formatPrice = (amount: number): string => {
   return '৳ ' + (amount || 0).toLocaleString('en-BD');
 };
 
+// Categories Persistence
+export const getStoredCategories = (): string[] => {
+  try {
+    const data = localStorage.getItem(CATEGORIES_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error('Error reading categories from storage:', err);
+  }
+  return [...DEFAULT_CATEGORIES];
+};
+
+export const saveStoredCategories = (categories: string[]): void => {
+  try {
+    const sanitized = Array.from(new Set(categories.map(c => c.trim()).filter(Boolean)));
+    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(sanitized));
+  } catch (err) {
+    console.error('Error saving categories to storage:', err);
+  }
+};
+
+export const addStoredCategory = (categoryName: string): string[] => {
+  const trimmed = categoryName.trim();
+  if (!trimmed) return getStoredCategories();
+  const current = getStoredCategories();
+  if (!current.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
+    const updated = [...current, trimmed];
+    saveStoredCategories(updated);
+    return updated;
+  }
+  return current;
+};
+
+export const removeStoredCategory = (categoryName: string): string[] => {
+  const current = getStoredCategories();
+  const updated = current.filter(c => c.toLowerCase() !== categoryName.trim().toLowerCase());
+  saveStoredCategories(updated);
+  return updated;
+};
+
+export const renameStoredCategory = (oldName: string, newName: string): string[] => {
+  const current = getStoredCategories();
+  const trimmedNew = newName.trim();
+  if (!trimmedNew) return current;
+  const updated = current.map(c => c.toLowerCase() === oldName.trim().toLowerCase() ? trimmedNew : c);
+  saveStoredCategories(updated);
+  return updated;
+};
+
 export const resetToDemoDefaults = () => {
   localStorage.setItem(PRODUCTS_KEY, JSON.stringify(INITIAL_PRODUCTS));
   localStorage.removeItem(DELETED_PRODUCT_IDS_KEY);
@@ -289,5 +343,6 @@ export const resetToDemoDefaults = () => {
   localStorage.setItem(VOUCHERS_KEY, JSON.stringify(INITIAL_VOUCHERS));
   localStorage.removeItem(CART_KEY);
   localStorage.removeItem(WISHLIST_KEY);
+  localStorage.removeItem(CATEGORIES_KEY);
   window.location.reload();
 };

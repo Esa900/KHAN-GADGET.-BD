@@ -50,13 +50,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
   }, [product?.id]);
 
+  useEffect(() => {
+    setSelectedImage(product.image);
+  }, [product.image, product.id]);
+
   // Review form state
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewerName, setReviewerName] = useState('');
   const [reviewerRating, setReviewerRating] = useState(5);
   const [reviewerComment, setReviewerComment] = useState('');
 
-  const allImages = [product.image, ...(product.additionalImages || [])];
+  const allImages = [product.image, ...(product.additionalImages || [])].filter(Boolean);
   const discountPercent = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
   const handleVariantSelect = (groupName: string, option: string) => {

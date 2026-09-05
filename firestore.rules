@@ -18,5 +18,9 @@ service cloud.firestore {
     match /settings/{docId} {
       allow read, write: if true;
     }
+    // Categories collection
+    match /categories/{categoryId} {
+      allow read, write: if true;
+    }
   }
 }
