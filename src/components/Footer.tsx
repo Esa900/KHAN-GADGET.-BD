@@ -3,13 +3,21 @@ import {
   Smartphone, ShieldCheck, Truck, RefreshCw, Headphones, 
   CreditCard, PhoneCall, Mail, MapPin, Heart, MessageCircle, Lock 
 } from 'lucide-react';
+import { StoreConfig } from '../types';
 
 interface FooterProps {
+  storeConfig?: StoreConfig;
   onOpenTracking: () => void;
   onOpenAdmin: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) => {
+export const Footer: React.FC<FooterProps> = ({ storeConfig, onOpenTracking, onOpenAdmin }) => {
+  const currentStoreName = storeConfig?.storeName || 'KHAN GADGET MALL';
+  const currentPhone = storeConfig?.phone || '01854774406';
+  const currentAbout = storeConfig?.about || "Bangladesh's premium mobile accessories mall for fast chargers, MagSafe cases, earbuds, and gaming gear.";
+  const rawDigits = currentPhone.replace(/[^0-9]/g, '');
+  const whatsappNumber = rawDigits.startsWith('88') ? rawDigits : (rawDigits.startsWith('0') ? '88' + rawDigits : '880' + rawDigits);
+
   return (
     <footer className="bg-slate-900 text-slate-300 py-8 border-t border-slate-800 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -53,8 +61,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
             <div>
               <h4 className="font-bold text-white text-xs">24/7 Helpline</h4>
               <p className="text-slate-400 text-[11px] mt-0.5">
-                <a href="tel:01854774406" className="hover:text-orange-400 transition">
-                  Call: 01854774406
+                <a href={`tel:${currentPhone}`} className="hover:text-orange-400 transition">
+                  Call: {currentPhone}
                 </a>
               </p>
             </div>
@@ -70,12 +78,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
               <div className="w-7 h-7 rounded bg-orange-600 flex items-center justify-center text-white">
                 <Smartphone className="w-4 h-4" />
               </div>
-              <span className="text-base font-black tracking-tight text-white">
-                KHAN GADGET
+              <span className="text-base font-black tracking-tight text-white uppercase">
+                {currentStoreName}
               </span>
             </div>
             <p className="text-slate-400 leading-relaxed text-[11px]">
-              Bangladesh's premium mobile accessories mall for fast chargers, MagSafe cases, earbuds, and gaming gear.
+              {currentAbout}
             </p>
             <div className="flex items-center gap-1 text-[11px] text-orange-400 font-medium">
               <MapPin className="w-3 h-3" />
@@ -83,13 +91,13 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
             </div>
             <div className="pt-1">
               <a 
-                href="https://wa.me/8801854774406" 
+                href={`https://wa.me/${whatsappNumber}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold transition"
               >
                 <MessageCircle className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400" />
-                <span>WhatsApp: 01854774406</span>
+                <span>WhatsApp: {currentPhone}</span>
               </a>
             </div>
           </div>
@@ -105,22 +113,22 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
               </li>
               <li>
                 <a 
-                  href="tel:01854774406" 
+                  href={`tel:${currentPhone}`} 
                   className="hover:text-white transition flex items-center gap-1"
                 >
                   <PhoneCall className="w-3 h-3 text-orange-400" />
-                  <span>Call: 01854774406</span>
+                  <span>Call: {currentPhone}</span>
                 </a>
               </li>
               <li>
                 <a 
-                  href="https://wa.me/8801854774406" 
+                  href={`https://wa.me/${whatsappNumber}`} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="hover:text-white text-emerald-400 transition flex items-center gap-1"
                 >
                   <MessageCircle className="w-3 h-3 fill-emerald-400 text-emerald-400" />
-                  <span>WhatsApp Support</span>
+                  <span>WhatsApp Support ({currentPhone})</span>
                 </a>
               </li>
               <li><span className="hover:text-white transition cursor-pointer">Payment & COD Guide</span></li>
@@ -171,7 +179,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
         {/* Bottom copyright */}
         <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-500 text-[10px]">
           <div>
-            © {new Date().getFullYear()} KHAN GADGET Inc. All rights reserved. High Density E-Commerce Mall.
+            © {new Date().getFullYear()} {currentStoreName}. All rights reserved. High Density E-Commerce Mall.
           </div>
           <div className="flex items-center gap-1">
             <span>Built with precision for mobile accessory shoppers</span>

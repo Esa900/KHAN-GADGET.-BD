@@ -140,7 +140,7 @@ const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in windo
   ? new BroadcastChannel('khan_gadget_sync_channel')
   : null;
 
-export const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED' | 'VOUCHERS_UPDATED' | 'CATEGORIES_UPDATED' | 'ANALYTICS_UPDATED') => {
+export const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED' | 'VOUCHERS_UPDATED' | 'CATEGORIES_UPDATED' | 'ANALYTICS_UPDATED' | 'STORE_CONFIG_UPDATED') => {
   try {
     syncChannel?.postMessage({ type, timestamp: Date.now() });
   } catch (e) {

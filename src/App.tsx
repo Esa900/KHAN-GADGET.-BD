@@ -297,6 +297,13 @@ export default function App() {
     saveStoredWishlist(wishlist);
   }, [wishlist]);
 
+  // Sync document title with current store name
+  useEffect(() => {
+    if (storeConfig.storeName) {
+      document.title = `${storeConfig.storeName} | Bangladesh's Mobile Accessories Mall`;
+    }
+  }, [storeConfig.storeName]);
+
   // Available unique brands for filter
   const brands = useMemo(() => {
     const list = Array.from(new Set(products.map(p => p.brand)));

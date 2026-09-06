@@ -4,7 +4,7 @@ import {
   Smartphone, Zap, ChevronDown, PhoneCall, Gift, Sparkles, X, Menu,
   MessageCircle, Lock, RefreshCw
 } from 'lucide-react';
-import { ProductCategory, CATEGORIES } from '../types';
+import { ProductCategory, CATEGORIES, StoreConfig } from '../types';
 import { formatPrice } from '../utils/storage';
 
 interface HeaderProps {
@@ -14,6 +14,7 @@ interface HeaderProps {
   selectedCategory: ProductCategory;
   onSelectCategory: (cat: ProductCategory) => void;
   categories?: string[];
+  storeConfig?: StoreConfig;
   searchQuery: string;
   onSearchChange: (q: string) => void;
   onOpenCart: () => void;
@@ -31,6 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
   selectedCategory,
   onSelectCategory,
   categories,
+  storeConfig,
   searchQuery,
   onSearchChange,
   onOpenCart,
@@ -42,6 +44,11 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+
+  const currentStoreName = storeConfig?.storeName || 'KHAN GADGET MALL';
+  const currentPhone = storeConfig?.phone || '01854774406';
+  const rawDigits = currentPhone.replace(/[^0-9]/g, '');
+  const whatsappNumber = rawDigits.startsWith('88') ? rawDigits : (rawDigits.startsWith('0') ? '88' + rawDigits : '880' + rawDigits);
 
   const displayCategories = Array.from(
     new Set(['All', ...(categories && categories.length > 0 ? categories.filter(c => c !== 'All') : CATEGORIES.filter(c => c !== 'All'))])
@@ -64,19 +71,19 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="flex items-center space-x-3 text-[11px]">
-            <a href="tel:01854774406" className="hidden sm:flex items-center gap-1 hover:text-white transition">
+            <a href={`tel:${currentPhone}`} className="hidden sm:flex items-center gap-1 hover:text-white transition">
               <PhoneCall className="w-3 h-3 text-orange-200" />
-              <span>Contact: 01854774406</span>
+              <span>Contact: {currentPhone}</span>
             </a>
             <a 
-              href="https://wa.me/8801854774406" 
+              href={`https://wa.me/${whatsappNumber}`} 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-emerald-200 hover:text-emerald-100 transition font-bold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30"
               title="Chat on WhatsApp"
             >
               <MessageCircle className="w-3 h-3 fill-emerald-400 text-emerald-400" />
-              <span>WhatsApp: 01854774406</span>
+              <span>WhatsApp: {currentPhone}</span>
             </a>
             {onRefreshCloud && (
               <button
@@ -119,11 +126,8 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => { onSelectCategory('All'); onSearchChange(''); }} 
               className="text-left group cursor-pointer focus:outline-none flex items-center gap-2"
             >
-              <span className="text-2xl font-black tracking-tighter text-white">
-                KHAN GADGET
-              </span>
-              <span className="hidden sm:inline-block bg-white text-orange-600 text-[10px] font-extrabold uppercase px-1.5 py-0.2 rounded tracking-wider">
-                MALL
+              <span className="text-xl sm:text-2xl font-black tracking-tighter text-white uppercase">
+                {currentStoreName}
               </span>
             </button>
           </div>
@@ -250,9 +254,9 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="w-4/5 max-w-xs bg-white h-full p-4 overflow-y-auto shadow-2xl flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-gray-200 mb-3">
-                <div className="font-bold text-gray-900 text-lg flex items-center gap-1.5">
+                <div className="font-bold text-gray-900 text-lg flex items-center gap-1.5 uppercase">
                   <Smartphone className="w-5 h-5 text-[#f85606]" />
-                  <span>KHAN GADGET</span>
+                  <span>{currentStoreName}</span>
                 </div>
                 <button 
                   onClick={() => setMobileMenuOpen(false)}
@@ -308,18 +312,18 @@ export const Header: React.FC<HeaderProps> = ({
 
             <div className="pt-4 border-t border-gray-200 text-xs text-gray-600 space-y-2">
               <p className="font-semibold text-gray-800">Official Mobile Accessory Store</p>
-              <a href="tel:01854774406" className="flex items-center gap-2 text-slate-700 hover:text-orange-600 font-medium">
+              <a href={`tel:${currentPhone}`} className="flex items-center gap-2 text-slate-700 hover:text-orange-600 font-medium">
                 <PhoneCall className="w-3.5 h-3.5 text-orange-600" />
-                <span>Helpline: 01854774406</span>
+                <span>Helpline: {currentPhone}</span>
               </a>
               <a 
-                href="https://wa.me/8801854774406" 
+                href={`https://wa.me/${whatsappNumber}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-bold"
               >
                 <MessageCircle className="w-3.5 h-3.5 fill-emerald-600 text-emerald-600" />
-                <span>WhatsApp: 01854774406</span>
+                <span>WhatsApp: {currentPhone}</span>
               </a>
             </div>
           </div>

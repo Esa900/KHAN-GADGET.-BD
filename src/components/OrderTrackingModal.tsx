@@ -4,7 +4,7 @@ import {
   Package, PhoneCall, ShieldCheck, ExternalLink, AlertCircle, Printer 
 } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
-import { getStoredOrders, formatPrice, getCourierTrackingUrl } from '../utils/storage';
+import { getStoredOrders, formatPrice, getCourierTrackingUrl, getStoredStoreConfig } from '../utils/storage';
 import { fetchRemoteOrders } from '../lib/syncService';
 
 interface OrderTrackingModalProps {
@@ -18,6 +18,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   onClose,
   initialOrderId
 }) => {
+  const storeConfig = getStoredStoreConfig();
   const [searchQuery, setSearchQuery] = useState(initialOrderId || '');
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -136,7 +137,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
               <Truck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-black text-gray-900 text-base sm:text-lg">KHAN GADGET Order Tracking</h2>
+              <h2 className="font-black text-gray-900 text-base sm:text-lg">{storeConfig.storeName || 'KHAN GADGET MALL'} Order Tracking</h2>
               <p className="text-xs text-gray-500">Live parcel tracking powered by Daraz Express & TCS</p>
             </div>
           </div>

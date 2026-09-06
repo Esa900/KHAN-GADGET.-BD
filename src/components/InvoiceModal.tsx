@@ -232,10 +232,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                 <span>100% Genuine Mobile Accessories</span>
               </div>
               <p className="leading-relaxed">
-                Thank you for shopping at Khan Gadget. All items carry official replacement warranty. Please inspect your parcel before the delivery agent.
+                Thank you for shopping at {storeName}. All items carry official replacement warranty. Please inspect your parcel before the delivery agent.
               </p>
               <p className="text-[10px] text-slate-400 italic">
-                *For exchange or return queries, call our hotline at 01854774406 within 7 days.
+                *For exchange or return queries, call our hotline at {storePhone} within 7 days.
               </p>
             </div>
 

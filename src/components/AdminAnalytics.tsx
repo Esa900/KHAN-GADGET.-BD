@@ -17,7 +17,7 @@ import {
   Info
 } from 'lucide-react';
 import { Order, Product, AnalyticsData, OrderStatus } from '../types';
-import { formatPrice } from '../utils/storage';
+import { formatPrice, BASE_VISITOR_COUNT } from '../utils/storage';
 
 interface AdminAnalyticsProps {
   orders: Order[];
@@ -58,9 +58,9 @@ export const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
   // 4. Cancelled Orders
   const cancelledOrders = orders.filter(o => o.status === 'Cancelled');
 
-  // 5. Visitor Stats
-  const totalVisits = visitorStats?.totalVisits || 1;
-  const uniqueVisitors = visitorStats?.uniqueVisitors || 1;
+  // 5. Visitor Stats (starts from baseline 8,734 views)
+  const totalVisits = Math.max(BASE_VISITOR_COUNT, visitorStats?.totalVisits || BASE_VISITOR_COUNT);
+  const uniqueVisitors = Math.max(BASE_VISITOR_COUNT, visitorStats?.uniqueVisitors || BASE_VISITOR_COUNT);
 
   // 6. Performance Indicators
   const averageOrderValue = deliveredCount > 0 ? Math.round(deliveredSales / deliveredCount) : 0;

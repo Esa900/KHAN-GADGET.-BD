@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CartItem, Voucher, ShippingAddress, Order } from '../types';
-import { formatPrice, addStoredOrder, generateWhatsAppCartOrderUrl } from '../utils/storage';
+import { formatPrice, addStoredOrder, generateWhatsAppCartOrderUrl, getStoredStoreConfig } from '../utils/storage';
 import { syncAddOrder } from '../lib/syncService';
 
 interface CheckoutModalProps {
@@ -39,6 +39,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   appliedVoucher,
   onOrderSuccess
 }) => {
+  const storeConfig = getStoredStoreConfig();
+  const currentStoreName = storeConfig.storeName || 'KHAN GADGET MALL';
   const [step, setStep] = useState<'checkout' | 'confirmed'>('checkout');
 
   // Fields explicitly requested: Name, Phone, City, Address, Customer Note
@@ -125,7 +127,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       checkpoints: [
         {
           title: 'Order Placed & Verified',
-          location: 'KHAN GADGET Portal',
+          location: `${currentStoreName} Portal`,
           time: dateStr,
           description: 'Order confirmed with Cash on Delivery (COD). Awaiting warehouse packing.',
           completed: true,
@@ -133,7 +135,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         },
         {
           title: 'Quality Check & Packing',
-          location: 'Khan Gadget Fulfillment Center, Dhaka',
+          location: `${currentStoreName} Fulfillment Center, Dhaka`,
           time: 'Upcoming in 2-4 hours',
           description: 'Accessory inspection, barcode tagging & bubble packaging.',
           completed: false
@@ -208,7 +210,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
             <div>
               <h2 className="font-black text-gray-900 text-base sm:text-lg">
-                {step === 'confirmed' ? 'Order Confirmed!' : 'KHAN GADGET Checkout'}
+                {step === 'confirmed' ? 'Order Confirmed!' : `${currentStoreName} Checkout`}
               </h2>
               <p className="text-[11px] text-gray-500">
                 {step === 'confirmed' ? 'Your parcel has been placed successfully' : 'Provide delivery details to confirm your order'}

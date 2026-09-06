@@ -6,7 +6,7 @@ import {
   Search, Eye, EyeOff, RefreshCw, KeyRound, Lock, Unlock,
   Phone, MessageCircle, FileText, User, MapPin, Banknote,
   Upload, Camera, Image as ImageIcon, Link as LinkIcon, Loader2,
-  Printer, ExternalLink, FolderTree, BarChart3, Users
+  Printer, ExternalLink, FolderTree, BarChart3, Users, Sparkles, ShieldCheck
 } from 'lucide-react';
 import { Product, Order, Voucher, OrderStatus, ProductCategory, DEFAULT_CATEGORIES, AnalyticsData, StoreConfig, DEFAULT_STORE_CONFIG } from '../types';
 import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl, getStoredVisitorCount, BASE_VISITOR_COUNT } from '../utils/storage';
@@ -534,7 +534,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
               <div>
                 <h3 className="font-black text-sm text-white tracking-tight">AP</h3>
-                <p className="text-[10px] text-slate-400">KHAN GADGET Security System</p>
+                <p className="text-[10px] text-slate-400">{storeConfig?.storeName || 'KHAN GADGET MALL'} Security System</p>
               </div>
             </div>
             <button
@@ -591,7 +591,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
             <div className="text-center pt-1">
               <span className="text-[11px] text-slate-400 font-medium">
-                KHAN GADGET Security System
+                {storeConfig?.storeName || 'KHAN GADGET MALL'} Security System
               </span>
             </div>
           </form>
@@ -614,7 +614,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-black text-white text-base sm:text-lg">KHAN GADGET - AP</h2>
+                <h2 className="font-black text-white text-base sm:text-lg">{storeConfig?.storeName || 'KHAN GADGET MALL'} - AP</h2>
                 <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/30">
                   VERIFIED SESSION
                 </span>
