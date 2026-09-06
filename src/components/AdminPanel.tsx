@@ -6,7 +6,7 @@ import {
   Search, Eye, EyeOff, RefreshCw, KeyRound, Lock, Unlock,
   Phone, MessageCircle, FileText, User, MapPin, Banknote,
   Upload, Camera, Image as ImageIcon, Link as LinkIcon, Loader2,
-  Printer, ExternalLink, FolderTree, BarChart3, Users, Sparkles, ShieldCheck
+  Printer, ExternalLink, FolderTree, BarChart3, Users, Sparkles, ShieldCheck, Megaphone
 } from 'lucide-react';
 import { Product, Order, Voucher, OrderStatus, ProductCategory, DEFAULT_CATEGORIES, AnalyticsData, StoreConfig, DEFAULT_STORE_CONFIG } from '../types';
 import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl, getStoredVisitorCount, BASE_VISITOR_COUNT } from '../utils/storage';
@@ -110,6 +110,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [storeNameInput, setStoreNameInput] = useState(storeConfig?.storeName || 'KHAN GADGET MALL');
   const [storePhoneInput, setStorePhoneInput] = useState(storeConfig?.phone || '01854774406');
   const [storeAboutInput, setStoreAboutInput] = useState(storeConfig?.about || DEFAULT_STORE_CONFIG.about);
+  const [announcementTextInput, setAnnouncementTextInput] = useState(storeConfig?.announcementText ?? DEFAULT_STORE_CONFIG.announcementText ?? '');
+  const [announcementEnabledInput, setAnnouncementEnabledInput] = useState(storeConfig?.announcementEnabled !== false);
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -122,8 +124,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       setStoreNameInput(storeConfig.storeName || 'KHAN GADGET MALL');
       setStorePhoneInput(storeConfig.phone || '01854774406');
       setStoreAboutInput(storeConfig.about || DEFAULT_STORE_CONFIG.about);
+      setAnnouncementTextInput(storeConfig.announcementText ?? DEFAULT_STORE_CONFIG.announcementText ?? '');
+      setAnnouncementEnabledInput(storeConfig.announcementEnabled !== false);
     }
-  }, [storeConfig?.storeName, storeConfig?.phone, storeConfig?.about]);
+  }, [storeConfig?.storeName, storeConfig?.phone, storeConfig?.about, storeConfig?.announcementText, storeConfig?.announcementEnabled]);
 
   const handleSaveStoreControls = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +143,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const payload: Partial<StoreConfig> = {
       storeName: storeNameInput.trim(),
       phone: storePhoneInput.trim(),
-      about: storeAboutInput.trim()
+      about: storeAboutInput.trim(),
+      announcementText: announcementTextInput.trim(),
+      announcementEnabled: announcementEnabledInput
     };
 
     if (newAdminPassword.trim()) {
@@ -1417,41 +1423,106 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   )}
                 </div>
 
-                {/* Option 5: Unique Visitors Baseline Status Card */}
-                <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-emerald-500/10 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs font-bold">
-                      <Users className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-gray-900 text-xs sm:text-sm">
-                          ৫. ইউনিক ভিজিটর কাউন্টার (Unique Visitors Count)
-                        </h4>
-                        <span className="text-[10px] font-mono bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200">
-                          Baseline: 8,734+
-                        </span>
+                {/* Option 5: Store Announcement Marquee */}
+                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#f85606] flex items-center justify-center font-bold shrink-0">
+                        <Megaphone className="w-4 h-4" />
                       </div>
-                      <p className="text-[11px] text-gray-600 mt-0.5">
-                        ইউজার রিকোয়ারমেন্ট অনুযায়ী ইউনিক ভিজিটর ও মোট ভিউ সংখ্যা সর্বনিম্ন <strong>৮,৭৩৪</strong> টি ভিউ থেকে শুরু করে লাইভ কাউন্ট হচ্ছে।
-                      </p>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                          <span>৫. অফার ও প্রমো নোটিশ বার (Store Announcement Marquee)</span>
+                        </h4>
+                        <p className="text-[11px] text-gray-500">
+                          ওয়েবসাইটের শীর্ষে চলমান অফার/নোটিশ টেক্সট প্রদর্শন ও পরিবর্তন করুন।
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Toggle Switch */}
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <span className="text-[11px] font-semibold text-gray-700">
+                        {announcementEnabledInput ? 'নোটিশ চালু' : 'নোটিশ বন্ধ'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setAnnouncementEnabledInput(!announcementEnabledInput)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          announcementEnabledInput ? 'bg-[#f85606]' : 'bg-gray-300'
+                        }`}
+                        role="switch"
+                        aria-checked={announcementEnabledInput}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            announcementEnabledInput ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto">
-                    <div className="bg-white px-3 py-1.5 rounded-xl border border-amber-200 shadow-2xs text-center">
-                      <span className="text-[10px] text-gray-400 block font-medium">বর্তমান মোট ভিউ</span>
-                      <span className="text-sm font-black text-gray-900 font-mono">
-                        {totalVisits.toLocaleString('en-BD')}
-                      </span>
-                    </div>
-                    <div className="bg-white px-3 py-1.5 rounded-xl border border-amber-200 shadow-2xs text-center">
-                      <span className="text-[10px] text-gray-400 block font-medium">ইউনিক ডিভাইস</span>
-                      <span className="text-sm font-black text-orange-600 font-mono">
-                        {uniqueVisitors.toLocaleString('en-BD')}
-                      </span>
+                  {/* Textarea for Announcement */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-700 block">
+                      চলমান অফার টেক্সট (Marquee Offer Text)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={announcementTextInput}
+                      onChange={(e) => setAnnouncementTextInput(e.target.value)}
+                      placeholder="যেমন: 🔥 আজকের অর্ডারে ১০% ছাড়! প্রোমোকোড: KHAN10 | সারাদেশে ক্যাশ অন ডেলিভারি | ১০০% জেনুইন গ্যাজেট"
+                      className="w-full text-xs leading-relaxed px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-[#f85606] focus:bg-white text-gray-900 transition font-medium"
+                    />
+                  </div>
+
+                  {/* Quick Preset Buttons */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">
+                      দ্রুত ব্যবহারের জন্য প্রস্তুত ফরম্যাট (ক্লিক করলেই বসে যাবে):
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAnnouncementTextInput('🔥 আজকের স্পেশাল অফার: যেকোনো গ্যাজেট অর্ডারে ১০% ইনস্ট্যান্ট ছাড়! প্রোমোকোড: KHAN10 | সারাদেশে ক্যাশ অন ডেলিভারি')}
+                        className="px-2.5 py-1 text-[11px] font-medium bg-orange-50 hover:bg-orange-100 text-orange-800 rounded-lg border border-orange-200 cursor-pointer transition text-left"
+                      >
+                        🔥 ১০% ছাড় ও ক্যাশ অন ডেলিভারি
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAnnouncementTextInput('⚡ স্পেশাল অফার: ২,০০০ টাকার অর্ডারে সারাদেশে সম্পূর্ণ ফ্রি ডেলিভারি! সীমিত সময়ের জন্য')}
+                        className="px-2.5 py-1 text-[11px] font-medium bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg border border-amber-200 cursor-pointer transition text-left"
+                      >
+                        ⚡ ফ্রি ডেলিভারি অফার
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAnnouncementTextInput('✨ নতুন অরিজিনাল MagSafe চার্জার, ইয়ারবাডস ও প্রিমিয়াম কভার কালেকশন স্টক ইন! দ্রুত অর্ডার করুন')}
+                        className="px-2.5 py-1 text-[11px] font-medium bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg border border-blue-200 cursor-pointer transition text-left"
+                      >
+                        ✨ নিউ স্টক ইন নোটিশ
+                      </button>
                     </div>
                   </div>
+
+                  {/* Live Marquee Preview */}
+                  {announcementEnabledInput && announcementTextInput.trim() && (
+                    <div className="pt-2 border-t border-gray-100 space-y-1.5">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                        লাইভ প্রিভিউ (ওয়েবসাইটের শীর্ষে যেভাবে চলবে):
+                      </span>
+                      <div className="bg-slate-900 text-amber-300 py-1.5 px-3 rounded-xl overflow-hidden flex items-center gap-2 border border-slate-800 text-xs">
+                        <span className="bg-[#f85606] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded shrink-0 shadow-xs">
+                          HOT OFFER
+                        </span>
+                        <div className="overflow-hidden relative whitespace-nowrap flex-1">
+                          <span className="font-semibold text-white">{announcementTextInput}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Live Preview Card */}

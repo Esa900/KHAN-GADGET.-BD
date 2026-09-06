@@ -903,6 +903,8 @@ export const fetchRemoteStoreConfig = async (): Promise<StoreConfig> => {
         phone: data.phone || DEFAULT_STORE_CONFIG.phone,
         about: data.about || DEFAULT_STORE_CONFIG.about,
         adminPassword: data.adminPassword || DEFAULT_STORE_CONFIG.adminPassword,
+        announcementText: data.announcementText !== undefined ? data.announcementText : DEFAULT_STORE_CONFIG.announcementText,
+        announcementEnabled: data.announcementEnabled !== undefined ? data.announcementEnabled : DEFAULT_STORE_CONFIG.announcementEnabled,
         updatedAt: data.updatedAt || new Date().toISOString()
       };
       saveStoredStoreConfig(merged);
@@ -954,6 +956,8 @@ export const subscribeToStoreConfig = (onUpdate: (config: StoreConfig) => void):
           phone: data.phone || DEFAULT_STORE_CONFIG.phone,
           about: data.about || DEFAULT_STORE_CONFIG.about,
           adminPassword: data.adminPassword || DEFAULT_STORE_CONFIG.adminPassword,
+          announcementText: data.announcementText !== undefined ? data.announcementText : DEFAULT_STORE_CONFIG.announcementText,
+          announcementEnabled: data.announcementEnabled !== undefined ? data.announcementEnabled : DEFAULT_STORE_CONFIG.announcementEnabled,
           updatedAt: data.updatedAt || new Date().toISOString()
         };
         saveStoredStoreConfig(merged);

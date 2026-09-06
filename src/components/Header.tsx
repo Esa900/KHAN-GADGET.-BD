@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Search, ShoppingCart, Truck, ShieldCheck, Heart, Shield, 
   Smartphone, Zap, ChevronDown, PhoneCall, Gift, Sparkles, X, Menu,
-  MessageCircle, Lock, RefreshCw
+  MessageCircle, Lock, RefreshCw, Megaphone, Check
 } from 'lucide-react';
 import { ProductCategory, CATEGORIES, StoreConfig } from '../types';
 import { formatPrice } from '../utils/storage';
@@ -44,11 +44,22 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const currentStoreName = storeConfig?.storeName || 'KHAN GADGET MALL';
   const currentPhone = storeConfig?.phone || '01854774406';
+  const announcementEnabled = storeConfig?.announcementEnabled !== false;
+  const announcementText = storeConfig?.announcementText || '🔥 আজকের স্পেশাল অফার: যেকোনো গ্যাজেট অর্ডারে ১০% ইনস্ট্যান্ট ছাড়! প্রোমোকোড: KHAN10 | সারাদেশে ক্যাশ অন ডেলিভারি | ১০০% অরিজিনাল প্রোডাক্ট';
   const rawDigits = currentPhone.replace(/[^0-9]/g, '');
   const whatsappNumber = rawDigits.startsWith('88') ? rawDigits : (rawDigits.startsWith('0') ? '88' + rawDigits : '880' + rawDigits);
+
+  const handleCopyPromo = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText('KHAN10').catch(() => {});
+    }
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2500);
+  };
 
   const displayCategories = Array.from(
     new Set(['All', ...(categories && categories.length > 0 ? categories.filter(c => c !== 'All') : CATEGORIES.filter(c => c !== 'All'))])
@@ -58,6 +69,72 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header id="khan-gadget-header" className="sticky top-0 z-40 bg-orange-600 text-white shadow-md">
+      {/* 1. Store Announcement Marquee Notice Bar */}
+      {announcementEnabled && announcementText && (
+        <div 
+          id="store-announcement-marquee" 
+          className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-amber-300 py-1.5 px-3 sm:px-6 border-b border-amber-500/20 text-xs shadow-inner overflow-hidden relative"
+        >
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 overflow-hidden flex-1">
+              <div className="shrink-0 flex items-center gap-1.5 bg-[#f85606] text-white px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase shadow-xs">
+                <Megaphone className="w-3 h-3 text-white animate-pulse" />
+                <span className="hidden xs:inline">স্পেশাল অফার</span>
+                <span className="xs:hidden">HOT</span>
+              </div>
+
+              {/* Infinite Smooth Scrolling Marquee */}
+              <div className="overflow-hidden relative whitespace-nowrap flex-1 select-none">
+                <div className="animate-marquee flex items-center text-slate-100 font-medium text-[11px] sm:text-xs">
+                  <span className="flex items-center gap-4 pr-12">
+                    <span className="text-amber-200 font-semibold">{announcementText}</span>
+                    <span className="text-orange-400 font-bold">•</span>
+                    <span className="text-emerald-300 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                      কুপন: KHAN10
+                    </span>
+                    <span className="text-orange-400 font-bold">•</span>
+                    <span className="text-slate-300">{currentStoreName}</span>
+                    <span className="text-orange-400 font-bold">•</span>
+                  </span>
+                  <span className="flex items-center gap-4 pr-12">
+                    <span className="text-amber-200 font-semibold">{announcementText}</span>
+                    <span className="text-orange-400 font-bold">•</span>
+                    <span className="text-emerald-300 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                      কুপন: KHAN10
+                    </span>
+                    <span className="text-orange-400 font-bold">•</span>
+                    <span className="text-slate-300">{currentStoreName}</span>
+                    <span className="text-orange-400 font-bold">•</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Copy Promo Code Button */}
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleCopyPromo}
+                className="bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 hover:text-white px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-amber-400/40 transition cursor-pointer flex items-center gap-1 shrink-0"
+                title="কুপন কোড কপি করুন"
+              >
+                {codeCopied ? (
+                  <>
+                    <Check className="w-2.5 h-2.5 text-emerald-400" />
+                    <span className="text-emerald-300">কপি হয়েছে!</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-2.5 h-2.5 text-amber-300" />
+                    <span>কোড: KHAN10</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top High-Density Utility Strip */}
       <div className="bg-orange-700/80 text-orange-100 text-[11px] font-medium py-1 px-4 sm:px-6 border-b border-orange-700">
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-2">

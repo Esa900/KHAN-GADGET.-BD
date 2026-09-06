@@ -234,12 +234,9 @@ export const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
             </div>
             
             <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-[11px]">
-              <span className="text-gray-600 font-medium flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f85606]"></span>
-                <span>প্রতি ভিজিটে যোগ হচ্ছে</span>
-              </span>
-              <span className="text-orange-600 font-bold">
-                {uniqueVisitors} ইউনিক ডিভাইস
+              <span className="text-gray-500 font-medium flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>লাইভ ট্র্যাকিং সক্রিয়</span>
               </span>
             </div>
           </div>
