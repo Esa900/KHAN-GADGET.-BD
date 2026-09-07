@@ -330,10 +330,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <button
                     onClick={() => onBuyNow(product, quantity, selectedVariants)}
                     disabled={product.stock <= 0}
-                    className="flex-1 py-3 px-4 rounded-xl bg-[#f85606] hover:bg-[#e04a00] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-orange-500/25 transition cursor-pointer disabled:opacity-50"
+                    className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-[#f85606] hover:from-orange-600 hover:to-[#e04a00] text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition cursor-pointer disabled:opacity-50"
                   >
-                    <Zap className="w-4 h-4 fill-white" />
-                    <span>Buy Now</span>
+                    <Zap className="w-4 h-4 fill-amber-300 text-amber-300" />
+                    <span>এখনই কিনুন (১-ক্লিক অর্ডার)</span>
                   </button>
 
                   <button

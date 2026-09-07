@@ -7,6 +7,7 @@ interface ProductCardProps {
   product: Product;
   isWishlisted: boolean;
   onAddToCart: (product: Product, e: React.MouseEvent) => void;
+  onQuickBuy?: (product: Product, e: React.MouseEvent) => void;
   onToggleWishlist: (productId: string, e: React.MouseEvent) => void;
   onSelectProduct: (product: Product) => void;
 }
@@ -15,6 +16,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   isWishlisted,
   onAddToCart,
+  onQuickBuy,
   onToggleWishlist,
   onSelectProduct
 }) => {
@@ -106,19 +108,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           ) : null}
         </div>
 
-        <button
-          id={`add-to-cart-btn-${product.id}`}
-          disabled={isOutOfStock}
-          onClick={(e) => onAddToCart(product, e)}
-          className={`w-full py-1.5 px-2 rounded text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
-            isOutOfStock 
-              ? 'bg-slate-200 text-slate-500 cursor-not-allowed text-[11px]'
-              : 'bg-orange-600 hover:bg-orange-500 text-white shadow-xs'
-          }`}
-        >
-          <ShoppingCart className="w-3.5 h-3.5" />
-          <span>{isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}</span>
-        </button>
+        {isOutOfStock ? (
+          <button
+            id={`add-to-cart-btn-${product.id}`}
+            disabled
+            className="w-full py-1.5 px-2 rounded text-[11px] font-bold bg-slate-200 text-slate-500 cursor-not-allowed flex items-center justify-center gap-1"
+          >
+            স্টক শেষ (OUT OF STOCK)
+          </button>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <button
+              id={`quick-buy-btn-${product.id}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onQuickBuy) onQuickBuy(product, e);
+                else onSelectProduct(product);
+              }}
+              className="flex-1 py-1.5 px-2 rounded text-xs font-black bg-gradient-to-r from-orange-500 to-[#f85606] hover:from-orange-600 hover:to-[#e04a00] text-white shadow-xs flex items-center justify-center gap-1 transition cursor-pointer"
+              title="১-ক্লিক ফাস্ট অর্ডার"
+            >
+              <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300 shrink-0" />
+              <span>এখনই কিনুন</span>
+            </button>
+            <button
+              id={`add-to-cart-btn-${product.id}`}
+              onClick={(e) => onAddToCart(product, e)}
+              className="py-1.5 px-2.5 rounded text-xs font-bold bg-orange-50 hover:bg-orange-100 text-[#f85606] border border-orange-200 flex items-center justify-center transition cursor-pointer"
+              title="কার্টে যোগ করুন"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

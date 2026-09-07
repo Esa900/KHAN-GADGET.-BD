@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { History, Eye, ShoppingCart, Heart, ArrowRight, Trash2 } from 'lucide-react';
+import { History, Eye, ShoppingCart, Heart, ArrowRight, Trash2, Zap } from 'lucide-react';
 import { Product } from '../types';
 import { getRecentlyViewedIds, formatPrice } from '../utils/storage';
 
@@ -8,6 +8,7 @@ interface RecentlyViewedProps {
   wishlist: string[];
   onSelectProduct: (product: Product) => void;
   onAddToCart: (product: Product, e: React.MouseEvent) => void;
+  onQuickBuy?: (product: Product) => void;
   onToggleWishlist: (productId: string, e: React.MouseEvent) => void;
 }
 
@@ -16,6 +17,7 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
   wishlist,
   onSelectProduct,
   onAddToCart,
+  onQuickBuy,
   onToggleWishlist
 }) => {
   const [viewedProducts, setViewedProducts] = useState<Product[]>([]);
@@ -105,18 +107,33 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                 </h4>
               </div>
 
-              <div className="mt-2 pt-1 border-t border-slate-200/60 flex items-center justify-between">
-                <span className="font-bold text-xs text-orange-600 font-mono">
+              <div className="mt-2 pt-1 border-t border-slate-200/60 flex items-center justify-between gap-1">
+                <span className="font-bold text-xs text-orange-600 font-mono truncate">
                   {formatPrice(product.price)}
                 </span>
-                <button
-                  disabled={isOutOfStock}
-                  onClick={(e) => onAddToCart(product, e)}
-                  className="p-1 rounded bg-orange-600 hover:bg-orange-500 text-white transition disabled:opacity-40"
-                  title="Add to cart"
-                >
-                  <ShoppingCart className="w-3 h-3" />
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  {onQuickBuy && !isOutOfStock && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onQuickBuy(product);
+                      }}
+                      className="p-1 rounded bg-orange-600 hover:bg-orange-700 text-white transition cursor-pointer"
+                      title="১-ক্লিক অর্ডার"
+                    >
+                      <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
+                    </button>
+                  )}
+                  <button
+                    disabled={isOutOfStock}
+                    onClick={(e) => onAddToCart(product, e)}
+                    className="p-1 rounded bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 transition disabled:opacity-40 cursor-pointer"
+                    title="Add to cart"
+                  >
+                    <ShoppingCart className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
           );

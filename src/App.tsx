@@ -18,6 +18,9 @@ import {
   CheckoutModal 
 } from './components/CheckoutModal';
 import { 
+  QuickOrderModal 
+} from './components/QuickOrderModal';
+import { 
   OrderTrackingModal 
 } from './components/OrderTrackingModal';
 import { 
@@ -108,6 +111,11 @@ export default function App() {
   const [activeTrackingOrderId, setActiveTrackingOrderId] = useState<string | undefined>(undefined);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+
+  // 1-Click Buy Now Modal State
+  const [quickBuyProduct, setQuickBuyProduct] = useState<Product | null>(null);
+  const [quickBuyQuantity, setQuickBuyQuantity] = useState<number>(1);
+  const [quickBuyVariants, setQuickBuyVariants] = useState<Record<string, string>>({});
 
   // Quick Track Input
   const [quickTrackInput, setQuickTrackInput] = useState('');
@@ -402,14 +410,23 @@ export default function App() {
     showToast('Item removed from cart');
   };
 
+  const handleOpenQuickBuy = (
+    product: Product,
+    quantity: number = 1,
+    selectedVariants: Record<string, string> = {}
+  ) => {
+    setQuickBuyProduct(product);
+    setQuickBuyQuantity(quantity);
+    setQuickBuyVariants(selectedVariants);
+    setSelectedProduct(null);
+  };
+
   const handleBuyNow = (
     product: Product, 
     quantity: number, 
     selectedVariants: Record<string, string>
   ) => {
-    handleAddToCart(product, quantity, selectedVariants);
-    setSelectedProduct(null);
-    setIsCheckoutOpen(true);
+    handleOpenQuickBuy(product, quantity, selectedVariants);
   };
 
   // Wishlist Toggle
@@ -827,6 +844,7 @@ export default function App() {
             wishlist={wishlist}
             onSelectProduct={setSelectedProduct}
             onAddToCart={(p, e) => handleAddToCart(p, 1, undefined, e)}
+            onQuickBuy={(p) => handleOpenQuickBuy(p, 1, {})}
             onToggleWishlist={handleToggleWishlist}
           />
 
@@ -914,6 +932,7 @@ export default function App() {
                     product={product}
                     isWishlisted={wishlist.includes(product.id)}
                     onAddToCart={(p, e) => handleAddToCart(p, 1, undefined, e)}
+                    onQuickBuy={(p) => handleOpenQuickBuy(p, 1, {})}
                     onToggleWishlist={handleToggleWishlist}
                     onSelectProduct={setSelectedProduct}
                   />
@@ -1057,6 +1076,23 @@ export default function App() {
         appliedVoucher={appliedVoucher}
         onApplyVoucher={handleApplyVoucher}
         onRemoveVoucher={handleRemoveVoucher}
+      />
+
+      {/* MODAL: 1-Click Fast Buy Now Modal (১-ক্লিক ফাস্ট চেকআউট) */}
+      <QuickOrderModal
+        isOpen={Boolean(quickBuyProduct)}
+        product={quickBuyProduct}
+        initialQuantity={quickBuyQuantity}
+        initialVariants={quickBuyVariants}
+        onClose={() => setQuickBuyProduct(null)}
+        onOrderSuccess={(newOrder) => {
+          handleOrderSuccess(newOrder);
+          showToast(`⚡ ১-ক্লিক অর্ডার সম্পন্ন হয়েছে! অর্ডার আইডি: ${newOrder.id}`);
+        }}
+        onOpenTracking={(orderId) => {
+          setActiveTrackingOrderId(orderId);
+          setIsTrackingOpen(true);
+        }}
       />
 
       {/* MODAL: Checkout with Secure Payments */}
