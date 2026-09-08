@@ -78,7 +78,7 @@ import {
   SlidersHorizontal, Sparkles, X, Check, Heart, 
   ShoppingBag, ArrowUpDown, Filter, Smartphone, Zap, 
   Layers, ShieldCheck, Truck, Clock, RefreshCw,
-  MessageCircle, Lock
+  MessageCircle, Lock, ArrowRight, ChevronRight
 } from 'lucide-react';
 
 export default function App() {
@@ -360,6 +360,7 @@ export default function App() {
       return 0; // featured default
     });
   }, [products, selectedCategory, selectedBrand, onlyFreeDelivery, onlyDarazMall, onlyFlashSale, searchQuery, sortBy]);
+
 
   // Cart Management
   const handleAddToCart = (
@@ -827,26 +828,15 @@ export default function App() {
         {/* Center Section: Banner, Header bar & Product Grid */}
         <section className="flex-1 flex flex-col gap-3 min-w-0">
           
-          {/* Flash Sale Banner */}
+          {/* Flash Sale Banner with Live Timer */}
           <FlashSaleBanner 
             onSelectVoucher={(code) => {
               handleApplyVoucher(code);
               showToast(`কুপন ${code} সফলভাবে যোগ করা হয়েছে!`);
             }} 
           />
-
           {/* Customer Trust & Buyer Protection Guarantees */}
           <TrustBadges />
-
-          {/* Recently Viewed Accessories */}
-          <RecentlyViewed
-            allProducts={products}
-            wishlist={wishlist}
-            onSelectProduct={setSelectedProduct}
-            onAddToCart={(p, e) => handleAddToCart(p, 1, undefined, e)}
-            onQuickBuy={(p) => handleOpenQuickBuy(p, 1, {})}
-            onToggleWishlist={handleToggleWishlist}
-          />
 
           {/* Catalog Controls / Header Bar */}
           <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -855,7 +845,7 @@ export default function App() {
                 {searchQuery ? (
                   <span>অনুসন্ধান ফলাফল &ldquo;<span className="text-emerald-800">{searchQuery}</span>&rdquo;</span>
                 ) : selectedCategory === 'All' ? (
-                  <span>সকল প্রিমিয়াম গ্যাজেট ও অ্যাক্সেসরিজ</span>
+                  <span>সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ</span>
                 ) : (
                   <span>{selectedCategory}</span>
                 )}
@@ -899,7 +889,7 @@ export default function App() {
                   setOnlyFlashSale(false);
                   setSearchQuery('');
                 }}
-                className="mt-3 px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition cursor-pointer"
+                className="mt-3 px-4 py-2 rounded-xl bg-emerald-800 text-white text-xs font-bold hover:bg-emerald-900 transition cursor-pointer"
               >
                 সব ফিল্টার মুছুন
               </button>
@@ -908,13 +898,13 @@ export default function App() {
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5">
               {filteredProducts.map((product, idx) => (
                 <React.Fragment key={product.id}>
-                  {/* High Density Promotion Card after 2nd product */}
+                  {/* High Density Promotion Card */}
                   {idx === 2 && (
                     <div className="col-span-2 bg-gradient-to-br from-[#063b1d] to-[#0b542a] rounded-xl p-4 text-white flex flex-col justify-center shadow-xs border border-emerald-700/40">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">স্পেশাল মেগা অফার</span>
                       <h3 className="text-base sm:text-lg font-black mt-1">প্রিমিয়াম গ্রাহক ক্লাব</h3>
                       <p className="text-xs text-emerald-100/90 mt-0.5 leading-relaxed">
-                        কুপন কোড ব্যবহার করে অতিরিক্ত ছাড় ও সারাদেশে দ্রুত হোম ডেলিভারি নিশ্চিত করুন।
+                        কুপন কোড ব্যবহার করে অতিরিক্ত ছাড় ও সারাদেশে দ্রুত হোম ডেলিভারি নিশ্চিত করুন।
                       </p>
                       <button 
                         onClick={() => {
@@ -940,6 +930,16 @@ export default function App() {
               ))}
             </div>
           )}
+
+          {/* Recently Viewed Accessories */}
+          <RecentlyViewed
+            allProducts={products}
+            wishlist={wishlist}
+            onSelectProduct={setSelectedProduct}
+            onAddToCart={(p, e) => handleAddToCart(p, 1, undefined, e)}
+            onQuickBuy={(p) => handleOpenQuickBuy(p, 1, {})}
+            onToggleWishlist={handleToggleWishlist}
+          />
         </section>
 
         {/* Right Aside: Order Tracking & Secure Payment */}

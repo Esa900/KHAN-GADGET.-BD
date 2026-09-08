@@ -1,4 +1,8 @@
 export const DEFAULT_CATEGORIES: string[] = [
+  'Electronic Gadget',
+  'Food Items',
+  "Men's Fashion",
+  "Women's Fashion",
   'Smartwatches & Wearables',
   'Power Banks',
   'Chargers & Cables',
@@ -11,6 +15,10 @@ export const DEFAULT_CATEGORIES: string[] = [
 
 export type ProductCategory = 
   | 'All'
+  | 'Electronic Gadget'
+  | 'Food Items'
+  | "Men's Fashion"
+  | "Women's Fashion"
   | 'Smartwatches & Wearables'
   | 'Power Banks'
   | 'Chargers & Cables'

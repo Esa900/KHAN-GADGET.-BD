@@ -179,7 +179,7 @@ export const Header: React.FC<HeaderProps> = ({
               title="AP"
             >
               <Lock className="w-3 h-3" />
-              <span>Admin</span>
+              <span>AP</span>
             </button>
           </div>
         </div>
@@ -209,9 +209,6 @@ export const Header: React.FC<HeaderProps> = ({
               <div>
                 <span className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase block leading-none">
                   {currentStoreName}
-                </span>
-                <span className="text-[10px] text-emerald-200 uppercase tracking-widest font-semibold block mt-0.5">
-                  Ghorer Bazar Quality Gadgets
                 </span>
               </div>
             </button>
@@ -393,7 +390,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 rounded-lg"
                 >
                   <Lock className="w-4 h-4 text-amber-600" />
-                  <span>Admin</span>
+                  <span>AP</span>
                 </button>
               </div>
             </div>

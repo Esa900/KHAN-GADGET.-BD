@@ -797,6 +797,466 @@ export const INITIAL_PRODUCTS: Product[] = [
     variants: [
       { name: 'Color', options: ['Matte Black'] }
     ]
+  },
+  // ==================== FOOD ITEMS (খাদ্যদ্রব্য ও অর্গানিক পণ্য) ====================
+  {
+    id: 'kg-food-1',
+    title: 'Radhuni Pure Mustard Oil (ঘানি ভাঙা খাঁটি সরিষার তেল - ১ লিটার বোতল)',
+    category: 'Food Items',
+    brand: 'Radhuni',
+    price: 320,
+    originalPrice: 360,
+    stock: 50,
+    rating: 4.9,
+    reviewCount: 420,
+    image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=800&q=80',
+    description: '১০০% বিশুদ্ধ ঘানি ভাঙা কাঠের ঘানির সরিষার তেল। ঝাঁজালো সুবাস ও খাঁটি পুষ্টিগুণে ভরপুর। কোনো ক্ষতিকর কেমিক্যাল বা কৃত্রিম রঙ নেই।',
+    specs: {
+      'পরিমাণ': '১ লিটার বোতল',
+      'প্রস্তুত প্রণালী': 'ঘানি ভাঙা কোল্ড প্রেসড',
+      'ব্র্যান্ড': 'রাধুনী পিওর',
+      'সংরক্ষণ': 'শুকনো ও ঠান্ডা স্থানে রাখুন'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true
+  },
+  {
+    id: 'kg-food-2',
+    title: 'Fresh Padma River Hilsa Fish (তাজা পদ্মার রূপালী ইলিশ - ১ পিস ৯০০ গ্রাম-১ কেজি)',
+    category: 'Food Items',
+    brand: 'Padma Fresh',
+    price: 1650,
+    originalPrice: 1850,
+    stock: 25,
+    rating: 5.0,
+    reviewCount: 310,
+    image: 'https://images.unsplash.com/photo-1534483509719-3feaee7c30da?auto=format&fit=crop&w=800&q=80',
+    description: 'সরাসরি চাঁদপুর ও মাওয়া ঘাট থেকে সংগৃহীত তাজা পদ্মার রূপালী ইলিশ। কোনো বরফের রাসায়নিক নেই, প্রাকৃতিক স্বাদে ভরপুর ও সেরা সাইজ।',
+    specs: {
+      'ওজন': '৯০০ গ্রাম থেকে ১ কেজি (১ পিস)',
+      'উৎস': 'পদ্মা নদী, চাঁদপুর',
+      'ডেলিভারি': 'আইস বক্সে বিশেষ হাইজিনিক ডেলিভারি'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true
+  },
+  {
+    id: 'kg-food-3',
+    title: 'Deshi Red Onion / Local Peyaj (দেশি লাল পেঁয়াজ - ১ কেজি)',
+    category: 'Food Items',
+    brand: 'Deshi Agro',
+    price: 70,
+    originalPrice: 85,
+    stock: 120,
+    rating: 4.8,
+    reviewCount: 180,
+    image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=800&q=80',
+    description: 'তাজা বাছাইকৃত দেশি লাল পেঁয়াজ। রান্নায় চমৎকার ঘ্রাণ এবং সঠিক স্বাদের জন্য আদর্শ। শুকনো ও পরিষ্কার প্যাক।',
+    specs: {
+      'ওজন': '১ কেজি নেট',
+      'ধরন': 'দেশি লাল পেঁয়াজ'
+    },
+    isFlashSale: true,
+    isDarazMall: false,
+    freeDelivery: false
+  },
+  {
+    id: 'kg-food-4',
+    title: 'Bogura Diamond Fresh Potato (বগুড়ার ডায়মন্ড আলু - ২ কেজি প্যাক)',
+    category: 'Food Items',
+    brand: 'Bogura Agro',
+    price: 65,
+    originalPrice: 80,
+    stock: 95,
+    rating: 4.7,
+    reviewCount: 140,
+    image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
+    description: 'বগুড়ার বিখ্যাত ডায়মন্ড জাতের তাজা গোল আলু। ভাজি, তরকারি কিংবা ভর্তার জন্য অত্যন্ত সুস্বাদু।',
+    specs: {
+      'ওজন': '২ কেজি প্যাক',
+      'জাত': 'ডায়মন্ড'
+    },
+    isFlashSale: true,
+    isDarazMall: false,
+    freeDelivery: false
+  },
+  {
+    id: 'kg-food-5',
+    title: 'Premium Miniket Rice (প্রিমিয়াম মিনিকেট চাল - ৫ কেজি ব্যাগ)',
+    category: 'Food Items',
+    brand: 'Pran Agro',
+    price: 385,
+    originalPrice: 420,
+    stock: 60,
+    rating: 4.9,
+    reviewCount: 290,
+    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=80',
+    description: 'উচ্চমানের দীর্ঘ দানার প্রিমিয়াম মিনিকেট চাল। রান্নার পর ভাত হয় ঝরঝরে ও সুগন্ধিযুক্ত।',
+    specs: {
+      'ওজন': '৫ কেজি পলিব্যাগ',
+      'গুণমান': '১০০% পরিষ্কার ও পাথর মুক্ত'
+    },
+    isFlashSale: false,
+    isDarazMall: true,
+    freeDelivery: true
+  },
+  {
+    id: 'kg-food-6',
+    title: 'Fresh Deshi Beef Bone-in (তাজা দেশি গরুর মাংস - ১ কেজি)',
+    category: 'Food Items',
+    brand: 'Bengal Halal',
+    price: 780,
+    originalPrice: 820,
+    stock: 30,
+    rating: 4.9,
+    reviewCount: 220,
+    image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=800&q=80',
+    description: '১০০% হালাল জবাইকৃত তাজা দেশি গরুর মাংস। সঠিক পরিমাণে হাড় ও মাংসের কম্বিনেশনসহ পরিষ্কারভাবে কাটা।',
+    specs: {
+      'ওজন': '১ কেজি',
+      'সার্টিফিকেশন': '১০০% হালাল জবাই'
+    },
+    isFlashSale: false,
+    isDarazMall: true,
+    freeDelivery: true
+  },
+  {
+    id: 'kg-food-7',
+    title: 'Pabna Pure Cow Gawa Ghee (পাবনার খাঁটি দানাদার গাওয়া ঘি - ৫০০ গ্রাম)',
+    category: 'Food Items',
+    brand: 'Pabna Organic',
+    price: 690,
+    originalPrice: 750,
+    stock: 40,
+    rating: 5.0,
+    reviewCount: 340,
+    image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=800&q=80',
+    description: 'পাবনার চাটমোহর ও বাঘাবাড়ির খাঁটি গাভীর দুধের মাখন থেকে তৈরি সুগন্ধি দানাদার গাওয়া ঘি।',
+    specs: {
+      'ওজন': '৫০০ গ্রাম কাঁচের জার',
+      'উপাদান': '১০০% খাঁটি দুধের মাখন'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true
+  },
+  {
+    id: 'kg-food-8',
+    title: 'Farm Fresh Brown Eggs (ফার্ম ফ্রেশ দেশি লাল ডিম - ১২ পিস)',
+    category: 'Food Items',
+    brand: 'Kazi Farms',
+    price: 142,
+    originalPrice: 155,
+    stock: 80,
+    rating: 4.8,
+    reviewCount: 195,
+    image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=800&q=80',
+    description: 'ফার্ম ফ্রেশ স্বাস্থ্যসম্মত পুষ্টিকর বাদামি ডিম। প্রোটিনের সমৃদ্ধ উৎস, সুরক্ষিত কার্ডবোর্ড বক্সে প্যাক করা।',
+    specs: {
+      'পরিমাণ': '১ ডজন (১২ পিস)',
+      'প্যাকিং': 'শক-প্রুফ ডিম কেস'
+    },
+    isFlashSale: true,
+    isDarazMall: false,
+    freeDelivery: false
+  },
+
+  // ==================== ELECTRONIC GADGET (ইলেকট্রনিক গ্যাজেট) ====================
+  {
+    id: 'kg-gadget-1',
+    title: 'Haylou Solar Plus RT3 AMOLED Bluetooth Calling Smartwatch with SpO2',
+    category: 'Electronic Gadget',
+    brand: 'Haylou',
+    price: 3650,
+    originalPrice: 4200,
+    stock: 35,
+    rating: 4.9,
+    reviewCount: 312,
+    image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
+    description: '1.43-inch AMOLED high-definition screen with 466*466 resolution, crystal clear Bluetooth calling, 105 workout sports modes, continuous heart rate and blood oxygen monitoring.',
+    specs: {
+      'Screen': '1.43" AMOLED HD (466x466)',
+      'Calling': 'Bluetooth HD Voice Call Support',
+      'Battery': 'Up to 7 Days Normal Use',
+      'Waterproof': 'IP68 Professional Water Resistant'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'Color', options: ['Obsidian Black', 'Silver Gray'] }
+    ]
+  },
+  {
+    id: 'kg-gadget-2',
+    title: 'Realme Buds Air 5 Pro ANC Dual Dynamic Driver Wireless Earbuds (50dB ANC)',
+    category: 'Electronic Gadget',
+    brand: 'Realme',
+    price: 5790,
+    originalPrice: 6500,
+    stock: 22,
+    rating: 4.9,
+    reviewCount: 410,
+    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80',
+    description: 'Flagship 50dB Active Noise Cancellation with dual coaxial drivers (11mm bass + 6mm planar tweeter), LDAC Hi-Res Audio certification, and 40-hour total playback.',
+    specs: {
+      'ANC': '50dB Deep Active Noise Reduction',
+      'Audio': 'Hi-Res Wireless & LDAC Codec',
+      'Playtime': 'Up to 40 Hours with Case',
+      'Latency': '40ms Ultra-Low Gaming Latency'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'Color', options: ['Astral Black', 'Sunrise Beige'] }
+    ]
+  },
+  {
+    id: 'kg-gadget-3',
+    title: 'Remax RPP-292 20,000mAh 22.5W Fast Charging Power Bank with LED Display',
+    category: 'Electronic Gadget',
+    brand: 'Remax',
+    price: 1950,
+    originalPrice: 2400,
+    stock: 45,
+    rating: 4.8,
+    reviewCount: 260,
+    image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=800&q=80',
+    description: 'Heavy duty high-speed power bank with dual USB-A and Type-C PD 20W/22.5W outputs. Compact, safe polymer core, and digital battery meter.',
+    specs: {
+      'Capacity': '20,000mAh Polymer Battery',
+      'Fast Charge': '22.5W SuperCharge / PD 20W',
+      'Display': 'LED Numeric Battery Indicator',
+      'Warranty': '1 Year Replacement'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true
+  },
+  {
+    id: 'kg-gadget-4',
+    title: 'JBL GO 3 Portable Waterproof Bluetooth Speaker with Deep Punchy Bass',
+    category: 'Electronic Gadget',
+    brand: 'JBL',
+    price: 3750,
+    originalPrice: 4200,
+    stock: 28,
+    rating: 4.9,
+    reviewCount: 380,
+    image: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=800&q=80',
+    description: 'Bold styling and rich JBL Pro Sound in a pocket-sized package. IP67 waterproof and dustproof design with integrated loop for carrying anywhere.',
+    specs: {
+      'Sound': 'Original JBL Pro Sound',
+      'Playtime': 'Up to 5 Hours on a Single Charge',
+      'Protection': 'IP67 Waterproof and Dustproof',
+      'Connectivity': 'Bluetooth 5.1'
+    },
+    isFlashSale: false,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'Color', options: ['Squad Camo', 'Ocean Blue', 'Midnight Black', 'Red'] }
+    ]
+  },
+
+  // ==================== MEN'S FASHION (পুরুষদের ফ্যাশন) ====================
+  {
+    id: 'kg-mens-1',
+    title: 'Aarong Heritage Embroidered Silk Panjabi (আড়ং হেরিটেজ এমব্রয়ডারি সিল্ক পাঞ্জাবি)',
+    category: "Men's Fashion",
+    brand: 'Aarong Heritage',
+    price: 3200,
+    originalPrice: 3650,
+    stock: 20,
+    rating: 4.9,
+    reviewCount: 160,
+    image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80',
+    description: 'উৎসবের সেরা ঐতিহ্যবাহী হ্যান্ডলুম সিল্ক পাঞ্জাবি। কলার ও বুকে চমৎকার জর্ডোস ও সুতোর নিখুঁত হাতের কাজ। প্রিমিয়াম ফিটিংস।',
+    specs: {
+      'কাপড়': '১০০% পিওর হ্যান্ডলুম সিল্ক ও কটন ব্লেন্ড',
+      'ডিজাইন': 'হাতের এমব্রয়ডারি কারুকাজ',
+      'ফিট': 'রেগুলার স্লিম কমফোর্ট ফিট'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'সাইজ', options: ['40 (M)', '42 (L)', '44 (XL)'] },
+      { name: 'রং', options: ['মার্জিত সাদা (Pearl White)', 'রয়্যাল ব্লু (Royal Blue)', 'মেরুন (Maroon)'] }
+    ]
+  },
+  {
+    id: 'kg-mens-2',
+    title: 'Richman Executive 100% Egyptian Cotton Formal Shirt (রিচম্যান এক্সিকিউটিভ কটন শার্ট)',
+    category: "Men's Fashion",
+    brand: 'Richman',
+    price: 2100,
+    originalPrice: 2450,
+    stock: 35,
+    rating: 4.8,
+    reviewCount: 190,
+    image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80',
+    description: 'অফিস ও এক্সিকিউটিভ মিটিংয়ের জন্য পারফেক্ট শতভাগ মিশরীয় কটনের প্রিমিয়াম ফুল হাতা ফরমাল শার্ট। রিঙ্কল-ফ্রি এবং আরামদায়ক।',
+    specs: {
+      'কাপড়': '১০০% ইজিপশিয়ান প্রিমিয়াম কটন',
+      'কলার': 'কাটঅ্যাওয়ে মডার্ন কলার',
+      'ফিটিং': 'টেইলর স্লিম ফিট'
+    },
+    isFlashSale: false,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'সাইজ', options: ['15 (M)', '15.5 (L)', '16 (XL)'] },
+      { name: 'রং', options: ['স্কাই ব্লু (Sky Blue)', 'সাদা (Crisp White)', 'লাইট পিঙ্ক'] }
+    ]
+  },
+  {
+    id: 'kg-mens-3',
+    title: 'Artisan Premium Stretch Indigo Denim Jeans (আর্টিসান প্রিমিয়াম স্ট্রেচ ডেনিম জিন্স)',
+    category: "Men's Fashion",
+    brand: 'Artisan',
+    price: 2190,
+    originalPrice: 2600,
+    stock: 40,
+    rating: 4.8,
+    reviewCount: 175,
+    image: 'https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=800&q=80',
+    description: '১২ আউন্স হেভিওয়েট প্রিমিয়াম স্ট্রেচেবল ডেনিম প্যান্ট। নিখুঁত ওয়াশ ও আরামদায়ক বসার সুবিধা। দীর্ঘস্থায়ী ও টেকসই ফেব্রিক।',
+    specs: {
+      'উপাদান': '৯৮% তুলা, ২% স্প্যানডেক্স ইলাস্টেন',
+      'ওয়াশ': 'ডিপ ইন্ডিগো বায়ো স্টোন ওয়াশ',
+      'কাট': 'স্লিম টেপারড লেগ'
+    },
+    isFlashSale: false,
+    isDarazMall: true,
+    freeDelivery: false,
+    variants: [
+      { name: 'কোমরের মাপ', options: ['30', '32', '34', '36'] }
+    ]
+  },
+  {
+    id: 'kg-mens-4',
+    title: 'Handcrafted 100% Top-Grain Leather Shoe Loafer (হাতে তৈরি খাঁটি চামড়ার এক্সিকিউটিভ লোফার)',
+    category: "Men's Fashion",
+    brand: 'Apex Royal',
+    price: 1750,
+    originalPrice: 2200,
+    stock: 25,
+    rating: 4.9,
+    reviewCount: 140,
+    image: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=800&q=80',
+    description: 'খাঁটি জেনুইন লেদারের তৈরি প্রিমিয়াম হ্যান্ডমেড লোফার জুতো। কুশনিং ইনসোল দীর্ঘ সময় হাঁটার পরও পায়ের আরাম নিশ্চিত করে।',
+    specs: {
+      'চামড়া': '১০০% খাঁটি গরুর টপ-গ্রেইন লেদার',
+      'সোল': 'অ্যান্টি-স্লিপ রাবার গ্রিপ সোল',
+      'ইনসোল': 'মেমোরি ফোম কমফোর্ট প্যাডিং'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'সাইজ', options: ['40', '41', '42', '43', '44'] },
+      { name: 'রং', options: ['ক্লাসিক ব্ল্যাক', 'চকলেট ব্রাউন'] }
+    ]
+  },
+
+  // ==================== WOMEN'S FASHION (মহিলাদের ফ্যাশন) ====================
+  {
+    id: 'kg-womens-1',
+    title: 'Authentic Handwoven Dhakai Jamdani Saree (ঐতিহ্যবাহী খাঁটি হাতে বোনা ঢাকাই জামদানি শাড়ি)',
+    category: "Women's Fashion",
+    brand: 'Dhakai Heritage',
+    price: 7200,
+    originalPrice: 8500,
+    stock: 15,
+    rating: 5.0,
+    reviewCount: 280,
+    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    description: 'রূপগঞ্জ ও ডেমরার অভিজ্ঞ তাঁতীদের নিখুঁত হাতে বোনা ৮৪ কাউন্ট কটন সিল্ক ঢাকাই জামদানি। রাজকীয় সোনালী জরির জলছাপ ও আচল ডিজাইন।',
+    specs: {
+      'কাউন্ট': '৮৪ কাউন্ট ফাইন কটন সিল্ক',
+      'দৈর্ঘ্য': '১২ হাত ফুল শাড়ি (ব্লাউজ পিস সহ)',
+      'ডিজাইন': 'ঐতিহ্যবাহী ময়ূরপঙ্খী ও পানপাতা বুটি'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'রং', options: ['টকটকে লাল (Festive Crimson)', 'কালো ও সোনালী জরি (Black Gold)', 'রয়্যাল নীল (Royal Blue)'] }
+    ]
+  },
+  {
+    id: 'kg-womens-2',
+    title: 'Kay Kraft Embroidered Luxury Cotton Three-Piece (কে ক্র্যাফ্ট লাক্সারি এমব্রয়ডারি থ্রি-পিস)',
+    category: "Women's Fashion",
+    brand: 'Kay Kraft',
+    price: 4150,
+    originalPrice: 4800,
+    stock: 24,
+    rating: 4.8,
+    reviewCount: 150,
+    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    description: 'উচ্চমানের লাক্সারি লন কটন থ্রি-পিস সেট। কামিজের সামনে ও হাতায় চমৎকার সূক্ষ্ম কাজ, সাথে ভারী ম্যাচিং শিফন ওড়না।',
+    specs: {
+      'কামিজ': 'প্রিমিয়াম লন কটন উইথ এমব্রয়ডারি (৩ গজ)',
+      'সেলোয়ার': 'সফট পিওর কটন (২.৫ গজ)',
+      'ওড়না': 'প্রিমিয়াম পিওর শিফন প্রিন্ট ওড়না (৫ হাত)'
+    },
+    isFlashSale: false,
+    isDarazMall: true,
+    freeDelivery: true
+  },
+  {
+    id: 'kg-womens-3',
+    title: 'Premium Dubai Cherry Chiffon Borka & Hijab Set (প্রিমিয়াম দুবাই চেরি জর্জেট বোরকা ও হিজাব সেট)',
+    category: "Women's Fashion",
+    brand: 'Dubai Modest',
+    price: 2650,
+    originalPrice: 3200,
+    stock: 30,
+    rating: 4.9,
+    reviewCount: 210,
+    image: 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=800&q=80',
+    description: 'আসল দুবাই চেরি জর্জেট কাপড়ে তৈরি রুচিশীল ও মার্জিত ডিজাইনের বোরকা ও ম্যাচিং হিজাব সেট। শরীর ঠান্ডা রাখে এবং সহজে কুঁচকে যায় না।',
+    specs: {
+      'ফেব্রিক': 'অরিজিনাল দুবাই চেরি জর্জেট',
+      'সাইজ': '৫২, ৫৪, ৫৬ (ফ্রি বডি সাইজ)',
+      'সেটে যা আছে': 'ফুল বোরকা গাউন + প্রিমিয়াম বড় হিজাব'
+    },
+    isFlashSale: true,
+    isDarazMall: true,
+    freeDelivery: true,
+    variants: [
+      { name: 'বোরকার লম্বা', options: ['52 Inch', '54 Inch', '56 Inch'] },
+      { name: 'রং', options: ['জেট ব্ল্যাক', 'সি-গ্রিন', 'কফি চকলেট'] }
+    ]
+  },
+  {
+    id: 'kg-womens-4',
+    title: "Anjan's Hand Block Printed 100% Cotton Kurti (অঞ্জনস হাতে ব্লক প্রিন্ট ১০০% কটন ডিজাইনার কুর্তি)",
+    category: "Women's Fashion",
+    brand: "Anjan's",
+    price: 1390,
+    originalPrice: 1650,
+    stock: 35,
+    rating: 4.7,
+    reviewCount: 120,
+    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+    description: 'দৈনন্দিন বিশ্ববিদ্যালয়, কলেজ বা অফিসে পরার জন্য আরামদায়ক ১০০% খাঁটি সুতি ব্লক প্রিন্ট কুর্তি। পরিবেশবান্ধব রঙে প্রস্তুত।',
+    specs: {
+      'কাপড়': '১০০% দেশি তাজা সুতি',
+      'প্রিন্ট': 'হাতের কাঠের ব্লকের নান্দনিক প্রিন্ট',
+      'ফিট': 'মডার্ন এ-লাইন ফিট'
+    },
+    isFlashSale: false,
+    isDarazMall: false,
+    freeDelivery: false,
+    variants: [
+      { name: 'সাইজ', options: ['38 (M)', '40 (L)', '42 (XL)'] }
+    ]
   }
 ];
 

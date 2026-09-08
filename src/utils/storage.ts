@@ -155,8 +155,14 @@ export const getStoredProducts = (): Product[] => {
     }
     const parsed: Product[] = JSON.parse(data);
     if (!Array.isArray(parsed)) return INITIAL_PRODUCTS;
-    // Strictly filter out any deleted products
-    return parsed.filter(p => !deletedIds.includes(p.id));
+    // Ensure any newly added default products in updates are merged in
+    const existingIds = new Set(parsed.map(p => p.id));
+    const missingNew = INITIAL_PRODUCTS.filter(p => !existingIds.has(p.id) && !deletedIds.includes(p.id));
+    const merged = [...parsed, ...missingNew].filter(p => !deletedIds.includes(p.id));
+    if (missingNew.length > 0) {
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(merged));
+    }
+    return merged;
   } catch (e) {
     console.error('Failed to get stored products', e);
     const deletedIds = getDeletedProductIds();
@@ -347,7 +353,9 @@ export const getStoredCategories = (): string[] => {
     if (data) {
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.filter(c => typeof c === 'string' && !deleted.some(d => d.toLowerCase() === c.trim().toLowerCase()));
+        // Merge any new default categories
+        const combined = Array.from(new Set([...DEFAULT_CATEGORIES, ...parsed]));
+        return combined.filter(c => typeof c === 'string' && !deleted.some(d => d.toLowerCase() === c.trim().toLowerCase()));
       }
     }
     return DEFAULT_CATEGORIES.filter(c => !deleted.some(d => d.toLowerCase() === c.trim().toLowerCase()));

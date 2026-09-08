@@ -1,6 +1,6 @@
 {
-  "name": "KHAN GADGET MALL",
-  "description": "Ghorer Bazar-style premium e-commerce store with secure order tracking, 1-click fast checkout, and comprehensive admin dashboard.",
+  "name": "KHAN GADGET BD - Premium Gadgets & Lifestyle Mall",
+  "description": "KHAN GADGET BD: অরিজিনাল গ্যাজেট, প্রিমিয়াম লাইফস্টাইল এবং খাঁটি খাদ্যপণ্যের বিশ্বস্ত অনলাইন মার্কেটপ্লেস।",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
