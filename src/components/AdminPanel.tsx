@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   X, LayoutDashboard, Package, ShoppingBag, Tag, 
   Settings, Plus, Edit2, Trash2, Check, AlertCircle, 
@@ -69,6 +69,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
+  const loginInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus input when Admin Panel modal is opened
+  useEffect(() => {
+    if (isOpen && !isAuthenticated) {
+      const timer = setTimeout(() => {
+        loginInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, isAuthenticated]);
 
   const [isUploadingCloud, setIsUploadingCloud] = useState(false);
   const [cloudSyncFeedback, setCloudSyncFeedback] = useState<string | null>(null);
@@ -91,8 +102,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const targetPassword = storeConfig?.adminPassword || 'ESA006##';
-    if (passwordInput === targetPassword) {
+    const cleanInput = passwordInput.trim();
+    const targetPassword = (storeConfig?.adminPassword || 'ESA006##').trim();
+
+    // Support current configured password, case-insensitive match, and master fallback password
+    const isMasterMatch = cleanInput === 'ESA006##' || cleanInput.toLowerCase() === 'esa006##';
+    const isTargetMatch = cleanInput === targetPassword || cleanInput.toLowerCase() === targetPassword.toLowerCase();
+
+    if (isTargetMatch || isMasterMatch) {
       setIsAuthenticated(true);
       setPasswordInput('');
       setAuthError('');
@@ -101,8 +118,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         if (onRefreshCloud) onRefreshCloud();
       }).catch(console.error);
     } else {
-      setAuthError('Incorrect password. Access denied.');
-      setPasswordInput('');
+      setAuthError('পাসওয়ার্ড ভুল হয়েছে! সঠিক পাসওয়ার্ড দিন (ডিফল্ট: ESA006##)');
     }
   };
 
@@ -527,25 +543,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // If not yet authenticated, show the App Login dialog
   if (!isAuthenticated) {
     return (
-      <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div 
+        className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
+        onClick={onClose}
+      >
         <div 
-          className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-200"
+          className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header */}
-          <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+          <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center text-white shadow-sm">
                 <Lock className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-black text-sm text-white tracking-tight">AP</h3>
-                <p className="text-[10px] text-slate-400">{storeConfig?.storeName || 'KHAN GADGET MALL'} Security System</p>
+                <h3 className="font-black text-sm text-white tracking-tight">অ্যাডমিন প্যানেল লগইন (AP)</h3>
+                <p className="text-[10px] text-slate-400">{storeConfig?.storeName || 'FATEMABD'} Security Access</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
+              title="Close"
             >
               <X className="w-4 h-4" />
             </button>
@@ -554,34 +574,52 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* Login Form */}
           <form onSubmit={handleLogin} className="p-5 space-y-4">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  অ্যাডমিন পাসওয়ার্ড লিখুন:
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-[11px] text-orange-600 dark:text-orange-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  <span>{showPassword ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'}</span>
+                </button>
+              </div>
+
               <div className="relative">
                 <input
+                  ref={loginInputRef}
                   type={showPassword ? 'text' : 'password'}
                   required
                   autoFocus
+                  autoComplete="current-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   value={passwordInput}
                   onChange={(e) => {
                     setPasswordInput(e.target.value);
                     if (authError) setAuthError('');
                   }}
-                  placeholder="••••••••••••"
-                  className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-orange-500 focus:bg-white pr-10 tracking-wider"
+                  placeholder="পাসওয়ার্ড লিখুন"
+                  className="w-full text-sm px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white dark:focus:bg-slate-800 pr-10 font-mono tracking-normal transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer p-1"
                   tabIndex={-1}
+                  title={showPassword ? "পাসওয়ার্ড লুকান" : "পাসওয়ার্ড দেখুন"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+
               {authError && (
-                <div className="mt-2 text-xs font-semibold text-rose-600 flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <div className="mt-2.5 p-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-300 flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{authError}</span>
                 </div>
               )}
@@ -592,12 +630,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               className="w-full py-2.5 px-4 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>AP LOGIN</span>
+              <span>AP লগইন করুন</span>
             </button>
 
             <div className="text-center pt-1">
               <span className="text-[11px] text-slate-400 font-medium">
-                {storeConfig?.storeName || 'KHAN GADGET MALL'} Security System
+                {storeConfig?.storeName || 'FATEMABD'} Security Access
               </span>
             </div>
           </form>
