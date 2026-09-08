@@ -42,19 +42,19 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
   if (viewedProducts.length === 0) return null;
 
   return (
-    <div className="bg-white rounded border border-slate-200 p-3 sm:p-4 shadow-xs my-3">
+    <div className="bg-white rounded-xl border border-emerald-100 p-3 sm:p-4 shadow-xs my-3">
       <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-orange-100 text-orange-600 flex items-center justify-center">
-            <History className="w-3.5 h-3.5" />
+          <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+            <History className="w-4 h-4" />
           </div>
           <div>
             <h3 className="font-bold text-xs sm:text-sm text-slate-900 flex items-center gap-1.5">
               <span>Recently Viewed Accessories</span>
-              <span className="text-[11px] font-normal text-slate-500 hidden sm:inline">(আপনি সম্প্রতি দেখেছেন)</span>
+              <span className="text-[11px] font-normal text-emerald-800 hidden sm:inline">(আপনি সম্প্রতি দেখেছেন)</span>
             </h3>
           </div>
-          <span className="text-[10px] bg-slate-100 text-slate-600 font-bold px-1.5 py-0.5 rounded">
+          <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-1.5 py-0.5 rounded border border-emerald-200">
             {viewedProducts.length} items
           </span>
         </div>
@@ -79,10 +79,10 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
             <div
               key={product.id}
               onClick={() => onSelectProduct(product)}
-              className="group bg-slate-50/70 hover:bg-white rounded border border-slate-200 hover:border-orange-400 p-2 transition flex flex-col justify-between cursor-pointer relative"
+              className="group bg-slate-50/70 hover:bg-white rounded-xl border border-slate-200 hover:border-emerald-500 p-2 transition flex flex-col justify-between cursor-pointer relative"
             >
               <div>
-                <div className="relative aspect-square w-full rounded bg-white p-1 mb-1.5 flex items-center justify-center overflow-hidden border border-slate-100">
+                <div className="relative aspect-square w-full rounded-lg bg-white p-1 mb-1.5 flex items-center justify-center overflow-hidden border border-slate-100">
                   <img
                     src={product.image}
                     alt={product.title}
@@ -102,13 +102,13 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                   </button>
                 </div>
 
-                <h4 className="text-[11px] font-semibold text-slate-800 line-clamp-2 leading-tight group-hover:text-orange-600 transition">
+                <h4 className="text-[11px] font-semibold text-slate-800 line-clamp-2 leading-tight group-hover:text-emerald-700 transition">
                   {product.title}
                 </h4>
               </div>
 
               <div className="mt-2 pt-1 border-t border-slate-200/60 flex items-center justify-between gap-1">
-                <span className="font-bold text-xs text-orange-600 font-mono truncate">
+                <span className="font-bold text-xs text-emerald-700 font-mono truncate">
                   {formatPrice(product.price)}
                 </span>
                 <div className="flex items-center gap-1 shrink-0">
@@ -119,7 +119,7 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                         e.stopPropagation();
                         onQuickBuy(product);
                       }}
-                      className="p-1 rounded bg-orange-600 hover:bg-orange-700 text-white transition cursor-pointer"
+                      className="p-1 rounded bg-emerald-700 hover:bg-emerald-800 text-white transition cursor-pointer"
                       title="১-ক্লিক অর্ডার"
                     >
                       <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
@@ -128,7 +128,7 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
                   <button
                     disabled={isOutOfStock}
                     onClick={(e) => onAddToCart(product, e)}
-                    className="p-1 rounded bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 transition disabled:opacity-40 cursor-pointer"
+                    className="p-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition disabled:opacity-40 cursor-pointer"
                     title="Add to cart"
                   >
                     <ShoppingCart className="w-3 h-3" />

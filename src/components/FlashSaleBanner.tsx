@@ -43,113 +43,61 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({ onSelectVouche
   return (
     <div className="space-y-2.5 mb-3">
       {/* High-Density Hero Flash Sale Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 rounded-lg shadow-inner p-4 sm:p-5 text-white flex flex-wrap items-center justify-between gap-4 relative overflow-hidden border border-slate-800">
+      <div className="bg-gradient-to-r from-[#0a4625] via-[#0f5132] to-[#14532d] rounded-xl shadow-inner p-4 sm:p-5 text-white flex flex-wrap items-center justify-between gap-4 relative overflow-hidden border border-emerald-900/60">
         {/* Angular decorative skew background from design */}
         <div className="absolute -right-10 top-0 h-full w-1/2 bg-white/5 skew-x-12 pointer-events-none" />
 
         <div className="z-10 max-w-lg">
           <div className="flex items-center gap-2">
-            <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-              Flash Sale Now
+            <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+              স্পেশাল ফ্ল্যাশ সেল
             </span>
-            <span className="text-[11px] font-mono text-orange-300 font-semibold">
+            <span className="text-[11px] font-mono text-emerald-200 font-bold bg-emerald-900/70 px-2 py-0.5 rounded border border-emerald-600/40">
               CODE: KHAN10 (-10%)
             </span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-black text-white mt-1 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-white mt-1.5 tracking-tight">
             UP TO 60% OFF
           </h2>
-          <p className="text-slate-300 text-xs sm:text-sm mt-0.5 uppercase tracking-widest font-medium">
-            Premium Mobile Accessories & High-Speed GaN Gear
+          <p className="text-emerald-100 text-xs sm:text-sm mt-0.5 uppercase tracking-widest font-medium">
+            প্রিমিয়াম মোবাইল এক্সেসরিজ ও হাই-স্পিড চার্জিং গিয়ার
           </p>
 
           <div className="flex items-center gap-2 mt-3">
             <button 
               onClick={() => copyVoucher('KHAN10')}
-              className="bg-white hover:bg-orange-50 text-slate-900 font-bold px-4 py-1.5 text-xs rounded transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+              className="bg-white hover:bg-emerald-50 text-emerald-900 font-bold px-4 py-1.5 text-xs rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-sm"
             >
               {copiedCode === 'KHAN10' ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>VOUCHER APPLIED</span>
+                  <Check className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>কুপন যোগ হয়েছে!</span>
                 </>
               ) : (
                 <>
-                  <Tag className="w-3.5 h-3.5 text-orange-600" />
-                  <span>APPLY 10% VOUCHER</span>
+                  <Tag className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>১০% কুপন ব্যবহার করুন</span>
                 </>
               )}
             </button>
-            <span className="text-[11px] text-slate-400">Valid on orders over ৳ 1,000</span>
+            <span className="text-[11px] text-emerald-200/90">৳ ১,০০০+ অর্ডারে প্রযোজ্য</span>
           </div>
         </div>
 
         {/* Live Countdown Clock */}
-        <div className="z-10 flex flex-col items-start sm:items-end gap-1.5 bg-slate-900/80 p-2.5 rounded border border-slate-700/80 backdrop-blur-xs">
-          <div className="flex items-center gap-1.5 text-xs text-slate-300 font-semibold">
-            <Clock className="w-3.5 h-3.5 text-orange-400" />
-            <span>Deals Expire In:</span>
+        <div className="z-10 flex flex-col items-start sm:items-end gap-1.5 bg-[#08381c]/80 p-3 rounded-xl border border-emerald-800/80 backdrop-blur-xs shadow-sm">
+          <div className="flex items-center gap-1.5 text-xs text-emerald-200 font-semibold">
+            <Clock className="w-3.5 h-3.5 text-amber-300" />
+            <span>অফারের সময় বাকি:</span>
           </div>
           <div className="flex items-center gap-1 font-mono font-bold text-sm sm:text-base text-white">
-            <span className="bg-slate-800 text-white px-2 py-0.5 rounded border border-slate-700">{format2(timeLeft.hours)}</span>
-            <span className="text-slate-500">:</span>
-            <span className="bg-slate-800 text-white px-2 py-0.5 rounded border border-slate-700">{format2(timeLeft.minutes)}</span>
-            <span className="text-slate-500">:</span>
-            <span className="bg-slate-800 text-amber-400 px-2 py-0.5 rounded border border-slate-700">{format2(timeLeft.seconds)}</span>
+            <span className="bg-emerald-950/80 text-white px-2.5 py-1 rounded-lg border border-emerald-800">{format2(timeLeft.hours)}</span>
+            <span className="text-emerald-400">:</span>
+            <span className="bg-emerald-950/80 text-white px-2.5 py-1 rounded-lg border border-emerald-800">{format2(timeLeft.minutes)}</span>
+            <span className="text-emerald-400">:</span>
+            <span className="bg-emerald-950/80 text-amber-300 px-2.5 py-1 rounded-lg border border-emerald-800">{format2(timeLeft.seconds)}</span>
           </div>
-        </div>
-      </div>
-
-      {/* Trust Guarantee Row - High Density Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <div className="bg-white p-2 rounded border border-slate-200 shadow-sm flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-xs font-bold text-slate-800 truncate">100% Genuine</div>
-            <div className="text-[10px] text-slate-400 truncate">Official Warranty</div>
-          </div>
-        </div>
-
-        <div className="bg-white p-2 rounded border border-slate-200 shadow-sm flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <RefreshCw className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-xs font-bold text-slate-800 truncate">7-Day Easy Return</div>
-            <div className="text-[10px] text-slate-400 truncate">Fast Replacements</div>
-          </div>
-        </div>
-
-        <div className="bg-white p-2 rounded border border-slate-200 shadow-sm flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <Truck className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-xs font-bold text-slate-800 truncate">Express Courier</div>
-            <div className="text-[10px] text-slate-400 truncate">TCS & Daraz DEX</div>
-          </div>
-        </div>
-
-        {/* Voucher Fast Apply Card */}
-        <div 
-          onClick={() => copyVoucher('KHAN10')}
-          className="bg-white hover:bg-orange-50/50 p-2 rounded border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer transition"
-        >
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded bg-amber-500 text-white flex items-center justify-center shrink-0">
-              <Tag className="w-3.5 h-3.5" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-slate-800 truncate">Voucher: KHAN10</div>
-              <div className="text-[10px] text-orange-600 font-semibold truncate">10% OFF Any Item</div>
-            </div>
-          </div>
-          <span className="text-[11px] font-bold text-orange-600 px-2 py-0.5 rounded bg-orange-50 border border-orange-200 shrink-0 ml-1">
-            {copiedCode === 'KHAN10' ? 'APPLIED' : 'APPLY'}
-          </span>
         </div>
       </div>
     </div>

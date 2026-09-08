@@ -730,9 +730,9 @@ export default function App() {
         {/* Left Column: Categories, Filters, and Admin Shortcut */}
         <aside className="w-52 shrink-0 hidden lg:flex flex-col gap-3">
           {/* Categories Card */}
-          <div className="bg-white p-3 shadow-sm rounded border border-slate-200">
-            <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">
-              Categories
+          <div className="bg-white p-3.5 shadow-xs rounded-xl border border-slate-200/80">
+            <h3 className="text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">
+              ক্যাটাগরি সমূহ
             </h3>
             <ul className="text-xs space-y-1">
               {Array.from(new Set(['All', ...categories.filter(c => c !== 'All')])).map((cat) => {
@@ -744,14 +744,14 @@ export default function App() {
                       setSelectedCategory(cat);
                       setSearchQuery('');
                     }}
-                    className={`flex items-center gap-2 p-1.5 rounded cursor-pointer transition ${
+                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition ${
                       isSelected
-                        ? 'text-orange-600 font-bold bg-orange-50'
+                        ? 'text-emerald-800 font-bold bg-emerald-50 border border-emerald-200/60'
                         : 'text-slate-700 hover:bg-slate-50'
                     }`}
                   >
-                    {isSelected && <div className="w-1 h-3.5 bg-orange-500 rounded-full" />}
-                    <span className="truncate">{cat}</span>
+                    {isSelected && <div className="w-1.5 h-3.5 bg-emerald-700 rounded-full" />}
+                    <span className="truncate">{cat === 'All' ? 'সব পণ্য' : cat}</span>
                   </li>
                 );
               })}
@@ -759,51 +759,51 @@ export default function App() {
           </div>
 
           {/* Quick Filters Card */}
-          <div className="bg-white p-3 shadow-sm rounded border border-slate-200 text-xs">
-            <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">
-              Filters
+          <div className="bg-white p-3.5 shadow-xs rounded-xl border border-slate-200/80 text-xs">
+            <h3 className="text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">
+              ফিল্টার
             </h3>
             <div className="space-y-2">
               <div>
-                <label className="text-[10px] text-slate-400 font-semibold block mb-1">Brand</label>
+                <label className="text-[10px] text-slate-500 font-semibold block mb-1">ব্র্যান্ড</label>
                 <select
                   value={selectedBrand}
                   onChange={(e) => setSelectedBrand(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded p-1.5 text-xs text-slate-700 focus:outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs text-slate-700 focus:outline-none focus:border-emerald-600"
                 >
                   {brands.map(b => (
-                    <option key={b} value={b}>{b === 'All' ? 'All Brands' : b}</option>
+                    <option key={b} value={b}>{b === 'All' ? 'সব ব্র্যান্ড' : b}</option>
                   ))}
                 </select>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 space-y-1.5">
+              <div className="pt-2 border-t border-slate-100 space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={onlyDarazMall}
                     onChange={(e) => setOnlyDarazMall(e.target.checked)}
-                    className="accent-orange-600 rounded"
+                    className="accent-emerald-700 rounded"
                   />
-                  <span className="text-slate-700">Mall Only</span>
+                  <span className="text-slate-700 font-medium">অরিজিনাল মল পণ্য</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={onlyFreeDelivery}
                     onChange={(e) => setOnlyFreeDelivery(e.target.checked)}
-                    className="accent-orange-600 rounded"
+                    className="accent-emerald-700 rounded"
                   />
-                  <span className="text-slate-700">Free Delivery</span>
+                  <span className="text-slate-700 font-medium">ফ্রি ডেলিভারি</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={onlyFlashSale}
                     onChange={(e) => setOnlyFlashSale(e.target.checked)}
-                    className="accent-orange-600 rounded"
+                    className="accent-emerald-700 rounded"
                   />
-                  <span className="text-slate-700">Flash Sale Deals</span>
+                  <span className="text-slate-700 font-medium">হট অফার / ফ্ল্যাশ সেল</span>
                 </label>
               </div>
 
@@ -815,9 +815,9 @@ export default function App() {
                     setOnlyFreeDelivery(false);
                     setOnlyFlashSale(false);
                   }}
-                  className="w-full mt-2 py-1 text-[11px] font-semibold text-orange-600 hover:bg-orange-50 rounded text-center transition cursor-pointer"
+                  className="w-full mt-2 py-1.5 text-[11px] font-semibold text-emerald-800 hover:bg-emerald-50 rounded-lg text-center transition cursor-pointer border border-emerald-200"
                 >
-                  Reset Filters
+                  ফিল্টার মুছুন
                 </button>
               )}
             </div>
@@ -831,7 +831,7 @@ export default function App() {
           <FlashSaleBanner 
             onSelectVoucher={(code) => {
               handleApplyVoucher(code);
-              showToast(`Coupon ${code} applied to your cart!`);
+              showToast(`কুপন ${code} সফলভাবে যোগ করা হয়েছে!`);
             }} 
           />
 
@@ -849,34 +849,34 @@ export default function App() {
           />
 
           {/* Catalog Controls / Header Bar */}
-          <div className="bg-white p-2.5 rounded border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
               <h1 className="font-bold text-slate-900">
                 {searchQuery ? (
-                  <span>Results for &ldquo;<span className="text-orange-600">{searchQuery}</span>&rdquo;</span>
+                  <span>অনুসন্ধান ফলাফল &ldquo;<span className="text-emerald-800">{searchQuery}</span>&rdquo;</span>
                 ) : selectedCategory === 'All' ? (
-                  <span>All Mobile Accessories</span>
+                  <span>সকল প্রিমিয়াম গ্যাজেট ও অ্যাক্সেসরিজ</span>
                 ) : (
                   <span>{selectedCategory}</span>
                 )}
               </h1>
-              <span className="text-[11px] text-slate-400 font-medium">
-                ({filteredProducts.length} items)
+              <span className="text-[11px] text-slate-500 font-medium">
+                ({filteredProducts.length} টি পণ্য)
               </span>
             </div>
 
             <div className="flex items-center gap-2 ml-auto">
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 text-[11px]">Sort:</span>
+                <span className="text-slate-500 text-[11px]">সাজান:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs text-slate-700 focus:outline-none"
+                  className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 focus:outline-none focus:border-emerald-600"
                 >
-                  <option value="featured">Featured</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="rating">Top Rated</option>
+                  <option value="featured">জনপ্রিয় (Featured)</option>
+                  <option value="price-asc">দাম: কম থেকে বেশি</option>
+                  <option value="price-desc">দাম: বেশি থেকে কম</option>
+                  <option value="rating">সেরা রেটিং</option>
                 </select>
               </div>
             </div>
@@ -884,11 +884,11 @@ export default function App() {
 
           {/* Product Grid */}
           {filteredProducts.length === 0 ? (
-            <div className="bg-white rounded border border-slate-200 p-10 text-center my-4 shadow-sm">
+            <div className="bg-white rounded-xl border border-slate-200 p-10 text-center my-4 shadow-xs">
               <Smartphone className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-              <h3 className="text-sm font-bold text-slate-800">No matching accessories found</h3>
+              <h3 className="text-sm font-bold text-slate-800">কোনো পণ্য পাওয়া যায়নি</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                Try searching for &ldquo;Charger&rdquo;, &ldquo;Case&rdquo;, or &ldquo;Earbuds&rdquo; or clearing filters.
+                অন্য কোনো নামে সার্চ করুন অথবা ফিল্টার পরিবর্তন করুন।
               </p>
               <button
                 onClick={() => {
@@ -899,9 +899,9 @@ export default function App() {
                   setOnlyFlashSale(false);
                   setSearchQuery('');
                 }}
-                className="mt-3 px-4 py-1.5 rounded bg-orange-600 text-white text-xs font-bold hover:bg-orange-500 transition cursor-pointer"
+                className="mt-3 px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition cursor-pointer"
               >
-                Clear All Filters
+                সব ফিল্টার মুছুন
               </button>
             </div>
           ) : (
@@ -910,20 +910,20 @@ export default function App() {
                 <React.Fragment key={product.id}>
                   {/* High Density Promotion Card after 2nd product */}
                   {idx === 2 && (
-                    <div className="col-span-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded p-4 text-white flex flex-col justify-center shadow-sm">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">Special Offer</span>
-                      <h3 className="text-lg font-black mt-1">Join KHAN Club</h3>
-                      <p className="text-xs opacity-90 mt-0.5 leading-relaxed">
-                        Get 15% off your next order with coupon KHAN15 and free express delivery on all orders.
+                    <div className="col-span-2 bg-gradient-to-br from-[#063b1d] to-[#0b542a] rounded-xl p-4 text-white flex flex-col justify-center shadow-xs border border-emerald-700/40">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">স্পেশাল মেগা অফার</span>
+                      <h3 className="text-base sm:text-lg font-black mt-1">প্রিমিয়াম গ্রাহক ক্লাব</h3>
+                      <p className="text-xs text-emerald-100/90 mt-0.5 leading-relaxed">
+                        কুপন কোড ব্যবহার করে অতিরিক্ত ছাড় ও সারাদেশে দ্রুত হোম ডেলিভারি নিশ্চিত করুন।
                       </p>
                       <button 
                         onClick={() => {
                           handleApplyVoucher('KHAN10');
-                          showToast('KHAN Club 10% discount applied to your order!');
+                          showToast('১০% স্পেশাল ভাউচার যোগ হয়েছে!');
                         }}
-                        className="mt-3 bg-white hover:bg-indigo-50 text-indigo-900 text-xs font-bold py-1.5 px-3 rounded w-max transition cursor-pointer"
+                        className="mt-3 bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black py-1.5 px-3.5 rounded-lg w-max transition cursor-pointer shadow-sm"
                       >
-                        CLAIM 10% VOUCHER NOW
+                        ১০% ছাড় কুপন নিন
                       </button>
                     </div>
                   )}
@@ -942,97 +942,95 @@ export default function App() {
           )}
         </section>
 
-        {/* Right Aside: Order Tracking & Secure Payment (from Design HTML) */}
+        {/* Right Aside: Order Tracking & Secure Payment */}
         <aside className="w-64 shrink-0 hidden xl:flex flex-col gap-3">
           {/* Live Order Tracker Card */}
-          <div className="bg-white p-3.5 shadow-sm rounded border border-slate-200">
+          <div className="bg-white p-3.5 shadow-xs rounded-xl border border-slate-200/80">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Track Order</h3>
-              <span className="text-[10px] text-orange-600 font-bold bg-orange-50 px-1.5 py-0.5 rounded">LIVE DEX</span>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">লাইভ কুরিয়ার ট্র্যাকিং</h3>
+              <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">সরাসরি ট্র্যাক</span>
             </div>
             
-            <div className="flex gap-1 mb-3">
+            <div className="flex gap-1.5 mb-3">
               <input 
                 type="text" 
-                placeholder="KHN-... (Order ID)" 
+                placeholder="অর্ডার আইডি / ফোন নং" 
                 value={quickTrackInput}
                 onChange={(e) => setQuickTrackInput(e.target.value)}
-                className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none"
+                className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-emerald-600"
               />
               <button 
                 onClick={() => {
                   if (quickTrackInput.trim()) {
                     setActiveTrackingOrderId(quickTrackInput.trim());
-                  } else if (orders.length > 0) {
-                    setActiveTrackingOrderId(orders[0].id);
                   }
                   setIsTrackingOpen(true);
                 }}
-                className="bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold px-2.5 py-1 rounded cursor-pointer"
+                className="bg-emerald-800 hover:bg-emerald-900 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer transition"
               >
-                CHECK
+                খুঁজুন
               </button>
             </div>
 
             {/* Quick status timeline */}
-            <div className="space-y-3 border-l-2 border-slate-200 pl-3.5 ml-1.5 text-xs my-3">
+            <div className="space-y-3 border-l-2 border-emerald-200 pl-3.5 ml-1.5 text-xs my-3">
               <div className="relative">
-                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-white" />
-                <div className="font-semibold text-slate-800 text-[11px]">Warehouse Dispatch</div>
-                <div className="text-[10px] text-slate-400">Inventory Verified</div>
+                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-600 ring-4 ring-emerald-100" />
+                <div className="font-semibold text-slate-800 text-[11px]">অর্ডার কনফার্মড</div>
+                <div className="text-[10px] text-slate-400">পণ্য প্যাকেজিং সম্পন্ন</div>
               </div>
               <div className="relative">
-                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-orange-500 ring-4 ring-white" />
-                <div className="font-semibold text-slate-800 text-[11px]">In Transit</div>
-                <div className="text-[10px] text-slate-400">TCS / Dex Rider Assigned</div>
+                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-700 ring-4 ring-emerald-100" />
+                <div className="font-semibold text-slate-800 text-[11px]">কুরিয়ারে হস্তান্তর</div>
+                <div className="text-[10px] text-slate-400">Steadfast / RedX কুরিয়ারে রওয়ানা</div>
               </div>
               <div className="relative">
                 <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-slate-300 ring-4 ring-white" />
-                <div className="font-semibold text-slate-500 text-[11px]">Delivered</div>
-                <div className="text-[10px] text-slate-400">Cash Collected</div>
+                <div className="font-semibold text-slate-500 text-[11px]">হোম ডেলিভারি</div>
+                <div className="text-[10px] text-slate-400">ক্যাশ অন ডেলিভারিতে পণ্য গ্রহণ</div>
               </div>
             </div>
 
             <button
               onClick={() => {
-                setActiveTrackingOrderId(orders[0]?.id);
+                setActiveTrackingOrderId(quickTrackInput.trim() || undefined);
                 setIsTrackingOpen(true);
               }}
-              className="w-full mt-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded transition cursor-pointer"
+              className="w-full mt-2 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg transition cursor-pointer border border-emerald-200 text-center"
             >
-              OPEN FULL TRACKER
+              সম্পূর্ণ ট্র্যাকিং পেজ খুলুন
             </button>
           </div>
 
           {/* Secure Payment Card */}
-          <div className="bg-white p-3.5 shadow-sm rounded border border-slate-200 flex-1 flex flex-col justify-between text-xs">
+          <div className="bg-white p-3.5 shadow-xs rounded-xl border border-slate-200/80 flex-1 flex flex-col justify-between text-xs">
             <div>
               <div className="flex items-center gap-1.5 mb-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Secure Payment</h3>
+                <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">নিরাপদ কেনাকাটা</h3>
               </div>
               <p className="text-slate-500 text-[11px] leading-relaxed mb-3">
-                100% purchase protection. Every order is verified with real-time tracking and instant confirmation.
+                পণ্য হাতে পেয়ে চেক করে সম্পূর্ণ মূল্য পরিশোধ করুন। কোনো অগ্রিম পেমেন্টের ঝুঁকি নেই।
               </p>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between p-1.5 bg-slate-50 rounded border border-slate-100">
-                  <span className="font-medium text-slate-700 text-[11px]">Cash on Delivery</span>
-                  <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">VERIFIED</span>
+                <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
+                  <span className="font-medium text-slate-700 text-[11px]">ক্যাশ অন ডেলিভারি (COD)</span>
+                  <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">ভেরিফাইড</span>
                 </div>
-                <div className="flex items-center justify-between p-1.5 bg-slate-50 rounded border border-slate-100">
-                  <span className="font-medium text-slate-700 text-[11px]">bKash / Nagad / Rocket</span>
-                  <span className="text-[9px] bg-pink-100 text-pink-800 font-bold px-1.5 py-0.5 rounded">INSTANT MFS</span>
+                <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
+                  <span className="font-medium text-slate-700 text-[11px]">বিকাশ / নগদ / রকেট</span>
+                  <span className="text-[9px] bg-pink-100 text-pink-800 font-bold px-1.5 py-0.5 rounded">পেমেন্ট</span>
                 </div>
-                <div className="flex items-center justify-between p-1.5 bg-slate-50 rounded border border-slate-100">
-                  <span className="font-medium text-slate-700 text-[11px]">Visa / Mastercard</span>
-                  <span className="text-[9px] bg-purple-100 text-purple-800 font-bold px-1.5 py-0.5 rounded">3D SECURE</span>
+                <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
+                  <span className="font-medium text-slate-700 text-[11px]">ভিসা ও মাস্টারকার্ড</span>
+                  <span className="text-[9px] bg-purple-100 text-purple-800 font-bold px-1.5 py-0.5 rounded">সিকিউরড</span>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-100 text-center">
-              <div className="text-[10px] text-slate-400 font-medium">© {new Date().getFullYear()} {storeConfig.storeName || 'KHAN GADGET MALL'}.</div>
-              <div className="text-[10px] text-slate-400">Certified Mobile Accessories Mall</div>
+              <div className="text-[10px] text-slate-500 font-medium">© {new Date().getFullYear()} {storeConfig.storeName || 'KHAN GADGET MALL'}</div>
+              <div className="text-[10px] text-emerald-700 font-medium">ঘরের বাজার স্টাইলে ফ্রেশ ও অথেনটিক</div>
             </div>
           </div>
         </aside>
@@ -1170,22 +1168,22 @@ export default function App() {
                       />
                       <div className="flex-1 min-w-0 flex flex-col justify-between text-xs">
                         <div className="font-medium text-gray-900 truncate">{prod.title}</div>
-                        <div className="font-bold text-[#f85606]">{formatPrice(prod.price)}</div>
+                        <div className="font-bold text-emerald-800">{formatPrice(prod.price)}</div>
                         <div className="flex items-center gap-2 pt-1">
                           <button
                             onClick={() => {
                               handleAddToCart(prod, 1);
                               setIsWishlistOpen(false);
                             }}
-                            className="bg-[#f85606] text-white text-[11px] font-bold px-3 py-1 rounded-md hover:bg-[#e04a00]"
+                            className="bg-emerald-700 text-white text-[11px] font-bold px-3 py-1 rounded-md hover:bg-emerald-800 cursor-pointer"
                           >
-                            Add to Cart
+                            কার্টে যোগ করুন
                           </button>
                           <button
                             onClick={() => handleToggleWishlist(prod.id)}
-                            className="text-gray-400 hover:text-rose-600 text-[11px]"
+                            className="text-gray-400 hover:text-rose-600 text-[11px] cursor-pointer"
                           >
-                            Remove
+                            মুছে ফেলুন
                           </button>
                         </div>
                       </div>

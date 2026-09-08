@@ -78,10 +78,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         {/* Header */}
         <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/70">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-[#f85606]" />
-            <h2 className="font-black text-gray-900 text-base sm:text-lg">Shopping Cart</h2>
-            <span className="bg-orange-100 text-[#f85606] text-xs font-bold px-2 py-0.5 rounded-full">
-              {cart.reduce((acc, item) => acc + item.quantity, 0)} items
+            <ShoppingBag className="w-5 h-5 text-emerald-800" />
+            <h2 className="font-black text-gray-900 text-base sm:text-lg">শপিং কার্ট</h2>
+            <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
+              {cart.reduce((acc, item) => acc + item.quantity, 0)} টি পণ্য
             </span>
           </div>
           <button 
@@ -93,17 +93,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         </div>
 
         {/* Free Shipping Progress Indicator */}
-        <div className="px-5 py-2.5 bg-orange-50 border-b border-orange-100 text-xs">
+        <div className="px-5 py-2.5 bg-emerald-50/60 border-b border-emerald-100 text-xs">
           <div className="flex items-center justify-between font-semibold mb-1 text-gray-800">
-            <span className="flex items-center gap-1">
-              <Truck className="w-3.5 h-3.5 text-[#f85606]" />
-              {isFreeShipping ? '🎉 You have unlocked Free Courier Delivery!' : `Add ${formatPrice(amountNeededForFreeShip)} more for FREE Delivery`}
+            <span className="flex items-center gap-1 text-emerald-900">
+              <Truck className="w-3.5 h-3.5 text-emerald-700" />
+              {isFreeShipping ? '🎉 অভিনন্দন! আপনি ফ্রি হোম ডেলিভারি পেয়েছেন!' : `আরও ${formatPrice(amountNeededForFreeShip)} টাকার পণ্য কিনলে ফ্রি ডেলিভারি!`}
             </span>
-            <span className="text-[#f85606]">{progressToFreeShip}%</span>
+            <span className="text-emerald-800 font-bold">{progressToFreeShip}%</span>
           </div>
-          <div className="w-full bg-orange-200/60 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-emerald-200/50 rounded-full h-1.5 overflow-hidden">
             <div 
-              className="bg-[#f85606] h-full rounded-full transition-all duration-300"
+              className="bg-emerald-700 h-full rounded-full transition-all duration-300"
               style={{ width: `${progressToFreeShip}%` }}
             />
           </div>
@@ -113,18 +113,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 py-12">
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                <ShoppingBag className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-3">
+                <ShoppingBag className="w-8 h-8 text-emerald-600" />
               </div>
-              <p className="font-bold text-gray-800 text-base">Your cart is empty</p>
+              <p className="font-bold text-gray-800 text-base">আপনার কার্টটি বর্তমানে খালি</p>
               <p className="text-xs text-gray-500 mt-1 max-w-xs">
-                Explore our authentic mobile chargers, MagSafe cases, and wireless earbuds to fill it up!
+                আমাদের খাঁটি ও প্রিমিয়াম মোবাইল গ্যাজেট ও অ্যাক্সেসরিজ পছন্দ করে কার্টে যোগ করুন।
               </p>
               <button
                 onClick={onClose}
-                className="mt-4 px-5 py-2 rounded-xl bg-[#f85606] text-white text-xs font-bold hover:bg-[#e04a00] transition cursor-pointer"
+                className="mt-4 px-5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 transition cursor-pointer"
               >
-                Start Shopping
+                কেনাকাটা শুরু করুন
               </button>
             </div>
           ) : (
@@ -171,7 +171,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                   {/* Price & Quantity Adjuster */}
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs font-bold text-[#f85606]">
+                    <span className="text-xs font-bold text-emerald-800">
                       {formatPrice(item.product.price * item.quantity)}
                     </span>
 
@@ -207,36 +207,36 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2 text-emerald-800 font-semibold">
                     <Tag className="w-4 h-4 text-emerald-600" />
-                    <span>Coupon: <strong>{appliedVoucher.code}</strong> applied ({formatPrice(discount)} OFF)</span>
+                    <span>কুপন: <strong>{appliedVoucher.code}</strong> কার্যকর ({formatPrice(discount)} ছাড়)</span>
                   </div>
                   <button
                     onClick={onRemoveVoucher}
-                    className="text-xs text-rose-600 hover:underline font-bold"
+                    className="text-xs text-rose-600 hover:underline font-bold cursor-pointer"
                   >
-                    Remove
+                    মুছে ফেলুন
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleApplyVoucher} className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Enter coupon (e.g. KHAN10)"
+                    placeholder="ডিসকাউন্ট কুপন লিখুন (যেমন: KHAN10)"
                     value={voucherInput}
                     onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
-                    className="flex-1 text-xs px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 uppercase font-mono"
+                    className="flex-1 text-xs px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-600 uppercase font-mono"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-gray-800 transition cursor-pointer"
+                    className="px-4 py-2 bg-emerald-800 text-white rounded-lg text-xs font-bold hover:bg-emerald-900 transition cursor-pointer"
                   >
-                    Apply
+                    প্রয়োগ করুন
                   </button>
                 </form>
               )}
 
               {voucherFeedback && (
                 <div className={`mt-1 text-[11px] font-medium flex items-center gap-1 ${
-                  voucherFeedback.type === 'success' ? 'text-emerald-600' : 'text-rose-600'
+                  voucherFeedback.type === 'success' ? 'text-emerald-700' : 'text-rose-600'
                 }`}>
                   {voucherFeedback.type === 'success' ? <Check className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
                   {voucherFeedback.message}
@@ -247,28 +247,28 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             {/* Bill Summary */}
             <div className="space-y-1.5 text-xs text-gray-600">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span>পণ্যের মোট মূল্য:</span>
                 <span className="font-semibold text-gray-900">{formatPrice(subtotal)}</span>
               </div>
               {discount > 0 && (
-                <div className="flex justify-between text-emerald-600">
-                  <span>Voucher Discount</span>
-                  <span className="font-semibold">-{formatPrice(discount)}</span>
+                <div className="flex justify-between text-emerald-700 font-semibold">
+                  <span>ভাউচার ডিসকাউন্ট:</span>
+                  <span>-{formatPrice(discount)}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span>Courier Delivery</span>
+                <span>হোম ডেলিভারি চার্জ:</span>
                 <span>
                   {shippingFee === 0 ? (
-                    <strong className="text-emerald-600 uppercase font-bold">Free</strong>
+                    <strong className="text-emerald-700 uppercase font-bold">ফ্রি</strong>
                   ) : (
                     formatPrice(shippingFee)
                   )}
                 </span>
               </div>
               <div className="border-t border-gray-200 pt-2 flex justify-between text-sm font-black text-gray-900">
-                <span>Total Amount</span>
-                <span className="text-base text-[#f85606]">{formatPrice(grandTotal)}</span>
+                <span>সর্বমোট প্রদেয় টাকা:</span>
+                <span className="text-base text-emerald-800">{formatPrice(grandTotal)}</span>
               </div>
             </div>
 
@@ -276,15 +276,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             <button
               id="checkout-proceed-btn"
               onClick={onProceedToCheckout}
-              className="w-full py-3 px-4 rounded-xl bg-[#f85606] hover:bg-[#e04a00] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-900/20 transition cursor-pointer"
             >
-              <span>Proceed to Checkout</span>
+              <span>অর্ডার সম্পন্ন করতে এগিয়ে যান</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center justify-center gap-1 text-[11px] text-gray-400">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>PCI-DSS Compliant & 3D Secure Encrypted</span>
+            <div className="flex items-center justify-center gap-1 text-[11px] text-gray-500">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              <span>১০০% নিরাপদ চেকআউট ও ক্যাশ অন ডেলিভারি</span>
             </div>
           </div>
         )}

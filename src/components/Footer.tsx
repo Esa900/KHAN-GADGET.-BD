@@ -19,50 +19,50 @@ export const Footer: React.FC<FooterProps> = ({ storeConfig, onOpenTracking, onO
   const whatsappNumber = rawDigits.startsWith('88') ? rawDigits : (rawDigits.startsWith('0') ? '88' + rawDigits : '880' + rawDigits);
 
   return (
-    <footer className="bg-slate-900 text-slate-300 py-8 border-t border-slate-800 text-xs">
+    <footer className="bg-[#052212] text-emerald-100/70 py-8 border-t border-[#093d20] text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         {/* Value Props Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-6 border-b border-slate-800">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-6 border-b border-[#0d4a27]">
           <div className="flex items-start gap-2.5">
-            <div className="w-8 h-8 rounded bg-orange-500/10 text-orange-500 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-white text-xs">100% Genuine</h4>
-              <p className="text-slate-400 text-[11px] mt-0.5">Official brand warranty on all products.</p>
+              <h4 className="font-bold text-white text-xs">১০০% অরিজিনাল</h4>
+              <p className="text-emerald-300/70 text-[11px] mt-0.5">সব পণ্যে অফিশিয়াল ব্র‍্যান্ড ওয়ারেন্টি।</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5">
-            <div className="w-8 h-8 rounded bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
               <RefreshCw className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-white text-xs">7-Day Return</h4>
-              <p className="text-slate-400 text-[11px] mt-0.5">Quick exchanges if defective.</p>
+              <h4 className="font-bold text-white text-xs">৭ দিনের রিপ্লেসমেন্ট</h4>
+              <p className="text-emerald-300/70 text-[11px] mt-0.5">সমস্যা হলে দ্রুত এক্সচেঞ্জ বা রিটার্ন।</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5">
-            <div className="w-8 h-8 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
               <Truck className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-white text-xs">Express Courier</h4>
-              <p className="text-slate-400 text-[11px] mt-0.5">Nationwide via TCS and DEX.</p>
+              <h4 className="font-bold text-white text-xs">সারা দেশে ডেলিভারি</h4>
+              <p className="text-emerald-300/70 text-[11px] mt-0.5">Steadfast ও RedX এর মাধ্যমে দ্রুত ডেলিভারি।</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5">
-            <div className="w-8 h-8 rounded bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-300 flex items-center justify-center shrink-0">
               <Headphones className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-white text-xs">24/7 Helpline</h4>
-              <p className="text-slate-400 text-[11px] mt-0.5">
-                <a href={`tel:${currentPhone}`} className="hover:text-orange-400 transition">
-                  Call: {currentPhone}
+              <h4 className="font-bold text-white text-xs">কাস্টমার সাপোর্ট</h4>
+              <p className="text-emerald-300/70 text-[11px] mt-0.5">
+                <a href={`tel:${currentPhone}`} className="hover:text-emerald-300 transition">
+                  কল করুন: {currentPhone}
                 </a>
               </p>
             </div>
@@ -75,19 +75,19 @@ export const Footer: React.FC<FooterProps> = ({ storeConfig, onOpenTracking, onO
           {/* Brand Col */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-orange-600 flex items-center justify-center text-white">
+              <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
                 <Smartphone className="w-4 h-4" />
               </div>
               <span className="text-base font-black tracking-tight text-white uppercase">
                 {currentStoreName}
               </span>
             </div>
-            <p className="text-slate-400 leading-relaxed text-[11px]">
+            <p className="text-emerald-200/70 leading-relaxed text-[11px]">
               {currentAbout}
             </p>
-            <div className="flex items-center gap-1 text-[11px] text-orange-400 font-medium">
+            <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
               <MapPin className="w-3 h-3" />
-              <span>Dhaka • Chittagong • Sylhet • Nationwide Delivery</span>
+              <span>ঢাকা • চট্টগ্রাম • সিলেট • সারাদেশে ক্যাশ অন ডেলিভারি</span>
             </div>
             <div className="pt-1">
               <a 
@@ -104,11 +104,11 @@ export const Footer: React.FC<FooterProps> = ({ storeConfig, onOpenTracking, onO
 
           {/* Customer Care */}
           <div>
-            <h4 className="font-bold text-white uppercase text-[11px] tracking-wider mb-2">Customer Care</h4>
-            <ul className="space-y-1.5 text-slate-400 text-[11px]">
+            <h4 className="font-bold text-white uppercase text-[11px] tracking-wider mb-2">কাস্টমার কেয়ার</h4>
+            <ul className="space-y-1.5 text-emerald-200/70 text-[11px]">
               <li>
-                <button onClick={onOpenTracking} className="hover:text-orange-400 transition text-left cursor-pointer">
-                  Track Your Parcel
+                <button onClick={onOpenTracking} className="hover:text-white transition text-left cursor-pointer">
+                  অর্ডার ট্র্যাক করুন (Track Order)
                 </button>
               </li>
               <li>
@@ -116,8 +116,8 @@ export const Footer: React.FC<FooterProps> = ({ storeConfig, onOpenTracking, onO
                   href={`tel:${currentPhone}`} 
                   className="hover:text-white transition flex items-center gap-1"
                 >
-                  <PhoneCall className="w-3 h-3 text-orange-400" />
-                  <span>Call: {currentPhone}</span>
+                  <PhoneCall className="w-3 h-3 text-emerald-400" />
+                  <span>হটলাইন: {currentPhone}</span>
                 </a>
               </li>
               <li>
@@ -128,36 +128,36 @@ export const Footer: React.FC<FooterProps> = ({ storeConfig, onOpenTracking, onO
                   className="hover:text-white text-emerald-400 transition flex items-center gap-1"
                 >
                   <MessageCircle className="w-3 h-3 fill-emerald-400 text-emerald-400" />
-                  <span>WhatsApp Support ({currentPhone})</span>
+                  <span>হোয়াটসঅ্যাপ সাপোর্ট ({currentPhone})</span>
                 </a>
               </li>
-              <li><span className="hover:text-white transition cursor-pointer">Payment & COD Guide</span></li>
-              <li><span className="hover:text-white transition cursor-pointer">Returns & Replacement Policy</span></li>
+              <li><span className="hover:text-white transition cursor-pointer">ক্যাশ অন ডেলিভারি নিয়মাবলি</span></li>
+              <li><span className="hover:text-white transition cursor-pointer">রিটার্ন ও ওয়ারেন্টি পলিসি</span></li>
             </ul>
           </div>
 
           {/* Categories */}
           <div>
-            <h4 className="font-bold text-white uppercase text-[11px] tracking-wider mb-2">Top Categories</h4>
-            <ul className="space-y-1.5 text-slate-400 text-[11px]">
-              <li><span>65W & 100W GaN Fast Chargers</span></li>
-              <li><span>ANC Wireless Earbuds & Audio</span></li>
-              <li><span>MagSafe Kickstand Shockproof Cases</span></li>
-              <li><span>Ultra-Slim High Capacity Power Banks</span></li>
+            <h4 className="font-bold text-white uppercase text-[11px] tracking-wider mb-2">জনপ্রিয় ক্যাটাগরি</h4>
+            <ul className="space-y-1.5 text-emerald-200/70 text-[11px]">
+              <li><span>GaN ফাস্ট চার্জার ও কেবলস</span></li>
+              <li><span>ANC ওয়্যারলেস ইয়ারবাডস ও অডিও</span></li>
+              <li><span>ম্যাগসেফ ও শকপ্রুফ কেস</span></li>
+              <li><span>হাই-ক্যাপাসিটি পাওয়ার ব্যাংক</span></li>
             </ul>
           </div>
 
           {/* Verified Payments & Merchant Access */}
           <div className="space-y-2">
             <h4 className="font-bold text-white uppercase text-[11px] tracking-wider mb-1">
-              Secure Payments
+              পেমেন্ট সুবিধা
             </h4>
-            <p className="text-slate-400 text-[11px]">
-              Cash on Delivery (COD), JazzCash, EasyPaisa, Visa, and Mastercard.
+            <p className="text-emerald-200/70 text-[11px]">
+              ক্যাশ অন ডেলিভারি (পণ্য দেখে মূল্য পরিশোধ), বিকাশ, নগদ ও কার্ড।
             </p>
             <div className="flex flex-wrap gap-1 pt-1">
-              {['VISA', 'Mastercard', 'EasyPaisa', 'JazzCash', 'COD', '3D Secure'].map((badge) => (
-                <span key={badge} className="bg-slate-800 text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded border border-slate-700">
+              {['ক্যাশ অন ডেলিভারি', 'bKash', 'Nagad', 'VISA', 'Mastercard'].map((badge) => (
+                <span key={badge} className="bg-[#0b3d1f] text-emerald-200 text-[10px] font-medium px-2 py-0.5 rounded border border-[#145a30]">
                   {badge}
                 </span>
               ))}
@@ -166,23 +166,23 @@ export const Footer: React.FC<FooterProps> = ({ storeConfig, onOpenTracking, onO
             <div className="pt-2">
               <button
                 onClick={onOpenAdmin}
-                className="text-[11px] font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5 cursor-pointer bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded border border-slate-700"
-                title="AP"
+                className="text-[11px] font-bold text-emerald-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer bg-[#0b3d1f] hover:bg-[#104e28] px-2.5 py-1.5 rounded-lg border border-[#145a30]"
+                title="Admin Panel"
               >
                 <Lock className="w-3.5 h-3.5 text-amber-400" />
-                <span>AP</span>
+                <span>Admin Dashboard</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Bottom copyright */}
-        <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-500 text-[10px]">
+        <div className="pt-4 border-t border-[#0d4a27] flex flex-col sm:flex-row items-center justify-between gap-2 text-emerald-300/50 text-[10px]">
           <div>
-            © {new Date().getFullYear()} {currentStoreName}. All rights reserved. High Density E-Commerce Mall.
+            © {new Date().getFullYear()} {currentStoreName}. All rights reserved.
           </div>
           <div className="flex items-center gap-1">
-            <span>Built with precision for mobile accessory shoppers</span>
+            <span>অরিজিনাল মোবাইল গ্যাজেট ও অ্যাক্সেসরিজের বিশ্বস্ত শপ</span>
           </div>
         </div>
 

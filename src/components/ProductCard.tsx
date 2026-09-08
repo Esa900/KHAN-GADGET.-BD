@@ -27,13 +27,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <div 
       id={`product-card-${product.id}`}
       onClick={() => onSelectProduct(product)}
-      className={`group bg-white p-2 rounded border border-slate-200 shadow-sm hover:border-orange-400 hover:shadow transition flex flex-col justify-between relative cursor-pointer ${
+      className={`group bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-500 hover:shadow-md transition flex flex-col justify-between relative cursor-pointer ${
         isOutOfStock ? 'opacity-65' : ''
       }`}
     >
       {/* Product Image Area */}
       <div>
-        <div className="relative aspect-square w-full rounded bg-slate-100 mb-2 flex items-center justify-center p-2 overflow-hidden">
+        <div className="relative aspect-square w-full rounded-lg bg-slate-50 mb-2 flex items-center justify-center p-2 overflow-hidden border border-slate-100">
           <img
             src={product.image}
             alt={product.title}
@@ -45,8 +45,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Top Badges */}
           <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10">
             {product.isDarazMall && (
-              <span className="bg-orange-600 text-white text-[9px] font-black uppercase px-1.5 py-0.5 rounded shadow-xs tracking-wider">
-                MALL
+              <span className="bg-emerald-800 text-white text-[9px] font-black uppercase px-1.5 py-0.5 rounded shadow-xs tracking-wider">
+                ORIGINAL
               </span>
             )}
             {product.isFlashSale && (
@@ -66,7 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Quick Action Heart */}
           <button
             onClick={(e) => onToggleWishlist(product.id, e)}
-            className={`absolute bottom-1.5 right-1.5 p-1.5 rounded-full shadow-sm transition z-10 ${
+            className={`absolute bottom-1.5 right-1.5 p-1.5 rounded-full shadow-xs transition z-10 ${
               isWishlisted 
                 ? 'bg-rose-50 text-rose-600' 
                 : 'bg-white/90 text-slate-600 hover:text-rose-600 hover:bg-rose-50 opacity-0 group-hover:opacity-100'
@@ -78,7 +78,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Title */}
-        <h4 className="text-xs font-semibold leading-tight h-8 line-clamp-2 text-slate-800 group-hover:text-orange-600 transition-colors">
+        <h4 className="text-xs font-semibold leading-tight h-8 line-clamp-2 text-slate-800 group-hover:text-emerald-700 transition-colors">
           {product.title}
         </h4>
 
@@ -95,8 +95,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Pricing & Add to Cart */}
       <div className="mt-auto pt-1.5 border-t border-slate-100">
-        <div className="flex items-baseline justify-between mb-1">
-          <span className="text-orange-600 font-bold text-sm">
+        <div className="flex items-baseline justify-between mb-1.5">
+          <span className="text-emerald-700 font-black text-sm sm:text-base">
             {formatPrice(product.price)}
           </span>
           {product.originalPrice > product.price ? (
@@ -104,7 +104,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {formatPrice(product.originalPrice)}
             </span>
           ) : product.freeDelivery ? (
-            <span className="text-[10px] text-emerald-600 font-medium">Free Ship</span>
+            <span className="text-[10px] text-emerald-700 font-semibold">Free Delivery</span>
           ) : null}
         </div>
 
@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <button
             id={`add-to-cart-btn-${product.id}`}
             disabled
-            className="w-full py-1.5 px-2 rounded text-[11px] font-bold bg-slate-200 text-slate-500 cursor-not-allowed flex items-center justify-center gap-1"
+            className="w-full py-1.5 px-2 rounded-lg text-[11px] font-bold bg-slate-200 text-slate-500 cursor-not-allowed flex items-center justify-center gap-1"
           >
             স্টক শেষ (OUT OF STOCK)
           </button>
@@ -125,7 +125,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 if (onQuickBuy) onQuickBuy(product, e);
                 else onSelectProduct(product);
               }}
-              className="flex-1 py-1.5 px-2 rounded text-xs font-black bg-gradient-to-r from-orange-500 to-[#f85606] hover:from-orange-600 hover:to-[#e04a00] text-white shadow-xs flex items-center justify-center gap-1 transition cursor-pointer"
+              className="flex-1 py-2 px-2 rounded-lg text-xs font-black bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs flex items-center justify-center gap-1 transition cursor-pointer"
               title="১-ক্লিক ফাস্ট অর্ডার"
             >
               <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300 shrink-0" />
@@ -134,7 +134,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <button
               id={`add-to-cart-btn-${product.id}`}
               onClick={(e) => onAddToCart(product, e)}
-              className="py-1.5 px-2.5 rounded text-xs font-bold bg-orange-50 hover:bg-orange-100 text-[#f85606] border border-orange-200 flex items-center justify-center transition cursor-pointer"
+              className="py-2 px-2.5 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center justify-center transition cursor-pointer"
               title="কার্টে যোগ করুন"
             >
               <ShoppingCart className="w-3.5 h-3.5" />

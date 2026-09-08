@@ -38,11 +38,10 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
         if (found) {
           setSelectedOrder(found);
           setSearchQuery(found.id);
-        } else if (stored.length > 0) {
-          setSelectedOrder(stored[0]);
         }
-      } else if (stored.length > 0 && !selectedOrder) {
-        setSelectedOrder(stored[0]);
+      } else {
+        setSelectedOrder(null);
+        setSearchQuery('');
       }
 
       // Fetch fresh orders from cloud database so newly placed orders from any device are tracked immediately
@@ -69,13 +68,15 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setSearchError('');
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return;
+    const rawQ = searchQuery.trim();
+    if (!rawQ) return;
+    const q = rawQ.toLowerCase();
+    const cleanDigits = rawQ.replace(/[^0-9]/g, '');
 
     let found = orders.find(
       o => o.id.toLowerCase() === q || 
            o.trackingNumber.toLowerCase() === q ||
-           o.shippingAddress.phone.replace(/[^0-9]/g, '').includes(q.replace(/[^0-9]/g, ''))
+           (cleanDigits.length >= 7 && o.shippingAddress.phone.replace(/[^0-9]/g, '').includes(cleanDigits))
     );
 
     if (found) {
@@ -92,7 +93,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
         found = remoteList.find(
           o => o.id.toLowerCase() === q || 
                o.trackingNumber.toLowerCase() === q ||
-               o.shippingAddress.phone.replace(/[^0-9]/g, '').includes(q.replace(/[^0-9]/g, ''))
+               (cleanDigits.length >= 7 && o.shippingAddress.phone.replace(/[^0-9]/g, '').includes(cleanDigits))
         );
       }
     } catch (err) {
@@ -104,7 +105,8 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
     if (found) {
       setSelectedOrder(found);
     } else {
-      setSearchError('No order found with that Order ID, Tracking Number, or Phone. Please check and try again.');
+      setSelectedOrder(null);
+      setSearchError('দুঃখিত! এই অর্ডার আইডি (Order ID) বা মোবাইল নম্বরে কোনো অর্ডার খুঁজে পাওয়া যায়নি। দয়া করে সঠিক অর্ডার আইডি বা ফোন নম্বর দিয়ে আবার চেষ্টা করুন।');
     }
   };
 
@@ -116,7 +118,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
         return 'bg-blue-100 text-blue-800 border-blue-300';
       case 'Shipped':
       case 'Processing':
-        return 'bg-orange-100 text-orange-800 border-orange-300';
+        return 'bg-amber-100 text-amber-800 border-amber-300';
       case 'Cancelled':
         return 'bg-rose-100 text-rose-800 border-rose-300';
       default:
@@ -131,78 +133,73 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#f85606] flex items-center justify-center">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-emerald-800 via-emerald-900 to-green-950 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-700/60 border border-emerald-500/40 text-emerald-200 flex items-center justify-center">
               <Truck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-black text-gray-900 text-base sm:text-lg">{storeConfig.storeName || 'KHAN GADGET MALL'} Order Tracking</h2>
-              <p className="text-xs text-gray-500">Live parcel tracking powered by Daraz Express & TCS</p>
+              <h2 className="font-black text-white text-base sm:text-lg">{storeConfig.storeName || 'KHAN GADGET MALL'} অর্ডার ট্র্যাকিং</h2>
+              <p className="text-xs text-emerald-200/90">অর্ডার আইডি বা মোবাইল নম্বর দিয়ে লাইভ পার্সেল ট্র্যাক করুন</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-200 transition"
+            className="p-1.5 text-emerald-200 hover:text-white rounded-full hover:bg-emerald-800/60 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="overflow-y-auto p-4 sm:p-6 space-y-6">
+        <div className="overflow-y-auto p-4 sm:p-6 space-y-5">
           
           {/* Tracking Search Input */}
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="Enter Order ID (e.g. KG-849201-BD) or Tracking Number (STD-BD-...)"
+                placeholder="অর্ডার আইডি (যেমন: KG-849201-BD) বা ফোন নম্বর লিখুন..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-xs sm:text-sm pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-orange-500 font-mono"
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (searchError) setSearchError('');
+                }}
+                className="w-full text-xs sm:text-sm pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-600 focus:bg-white font-mono"
               />
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
             <button
               type="submit"
-              className="bg-[#f85606] hover:bg-[#e04a00] text-white px-5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer"
+              disabled={isSearchingRemote}
+              className="bg-emerald-700 hover:bg-emerald-800 text-white px-5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-60"
             >
-              Track
+              {isSearchingRemote ? 'খোঁজা হচ্ছে...' : 'Track'}
             </button>
           </form>
 
           {searchError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
               <span>{searchError}</span>
             </div>
           )}
 
-          {/* Quick Select from recent orders */}
-          {orders.length > 0 && (
-            <div>
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
-                Recent Orders in this browser:
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {orders.map(order => (
-                  <button
-                    key={order.id}
-                    onClick={() => {
-                      setSelectedOrder(order);
-                      setSearchQuery(order.id);
-                      setSearchError('');
-                    }}
-                    className={`text-xs px-3 py-1.5 rounded-lg border transition font-mono ${
-                      selectedOrder?.id === order.id
-                        ? 'border-[#f85606] bg-orange-50 text-[#f85606] font-bold shadow-xs'
-                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {order.id} ({order.status})
-                  </button>
-                ))}
+          {/* Privacy Placeholder when no order has been searched yet */}
+          {!selectedOrder && !searchError && (
+            <div className="py-10 px-4 text-center bg-slate-50/70 rounded-2xl border border-dashed border-slate-300">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 mx-auto flex items-center justify-center mb-3 shadow-xs">
+                <Truck className="w-7 h-7" />
+              </div>
+              <h3 className="font-bold text-slate-800 text-base mb-1">
+                আপনার অর্ডারের বর্তমান অবস্থা জানুন
+              </h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                অর্ডার করার পর আপনাকে দেওয়া <span className="font-semibold text-slate-700">অর্ডার আইডি (যেমন: KG-849201-BD)</span> অথবা যে <span className="font-semibold text-slate-700">মোবাইল নম্বর</span> দিয়ে অর্ডার করেছিলেন, তা উপরের বক্সে লিখে <span className="text-emerald-700 font-bold">Track</span> বাটনে ক্লিক করুন।
+              </p>
+              <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>আপনার অর্ডার ও ব্যক্তিগত তথ্য ১০০% সুরক্ষিত ও গোপনীয়</span>
               </div>
             </div>
           )}
@@ -255,7 +252,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                     href={getCourierTrackingUrl(selectedOrder.carrierName, selectedOrder.trackingNumber)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs shadow-md transition"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-sm transition"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>Track on Official Courier Website ({selectedOrder.carrierName.split(' ')[0]})</span>
@@ -266,7 +263,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
               {/* Live Tracking Checkpoint Timeline */}
               <div className="bg-gray-50/70 border border-gray-200 rounded-2xl p-5 space-y-4">
                 <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-[#f85606]" />
+                  <Clock className="w-4 h-4 text-emerald-700" />
                   <span>Shipment Journey & Status Logs</span>
                 </h4>
 
@@ -278,7 +275,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                         <div className={`absolute -left-6 sm:-left-8 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-xs transition ${
                           cp.completed
                             ? cp.current 
-                              ? 'bg-[#f85606] text-white ring-4 ring-orange-100 shadow'
+                              ? 'bg-emerald-700 text-white ring-4 ring-emerald-100 shadow'
                               : 'bg-emerald-500 text-white'
                             : 'bg-gray-200 text-gray-400'
                         }`}>
@@ -293,11 +290,11 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                         <div className="bg-white p-3.5 rounded-xl border border-gray-200/80 shadow-xs">
                           <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
                             <h5 className={`text-xs sm:text-sm font-bold ${
-                              cp.current ? 'text-[#f85606]' : 'text-gray-900'
+                              cp.current ? 'text-emerald-700' : 'text-gray-900'
                             }`}>
                               {cp.title}
                               {cp.current && (
-                                <span className="ml-2 text-[10px] bg-orange-100 text-[#f85606] px-2 py-0.5 rounded-full font-extrabold uppercase">
+                                <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-extrabold uppercase">
                                   Current Status
                                 </span>
                               )}
@@ -325,7 +322,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 {/* Items */}
                 <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-2">
                   <h5 className="font-bold text-gray-800 flex items-center gap-1.5 pb-2 border-b border-gray-100">
-                    <Package className="w-4 h-4 text-[#f85606]" />
+                    <Package className="w-4 h-4 text-emerald-700" />
                     <span>Ordered Mobile Accessories</span>
                   </h5>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -358,7 +355,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 {/* Recipient */}
                 <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-2">
                   <h5 className="font-bold text-gray-800 flex items-center gap-1.5 pb-2 border-b border-gray-100">
-                    <MapPin className="w-4 h-4 text-[#f85606]" />
+                    <MapPin className="w-4 h-4 text-emerald-700" />
                     <span>Delivery Details</span>
                   </h5>
                   <div className="space-y-1 text-gray-600">
@@ -371,12 +368,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
               </div>
 
             </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              <Package className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-              <p className="font-semibold text-gray-700">Enter an Order ID above to track your parcel.</p>
-            </div>
-          )}
+          ) : null}
 
         </div>
       </div>

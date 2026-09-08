@@ -246,7 +246,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Top Header */}
-        <div className="bg-gradient-to-r from-orange-600 to-[#f85606] px-5 py-3.5 text-white flex items-center justify-between shadow-sm shrink-0">
+        <div className="bg-gradient-to-r from-emerald-800 to-[#0a4625] px-5 py-3.5 text-white flex items-center justify-between shadow-sm shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
               <Zap className="w-5 h-5 fill-amber-300 text-amber-300" />
@@ -258,7 +258,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                   ফাস্ট চেকআউট
                 </span>
               </h3>
-              <p className="text-[11px] text-orange-100 font-medium">
+              <p className="text-[11px] text-emerald-100 font-medium">
                 কার্ট ছাড়াই মাত্র ৩০ সেকেন্ডে ক্যাশ অন ডেলিভারিতে অর্ডার করুন
               </p>
             </div>
@@ -314,7 +314,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
 
                 <div className="flex items-center justify-between border-b border-gray-200 pb-2">
                   <span className="text-gray-500 font-medium">কুরিয়ার ট্র্যাকিং নম্বর:</span>
-                  <span className="font-mono font-bold text-[#f85606]">{confirmedOrder.trackingNumber}</span>
+                  <span className="font-mono font-bold text-emerald-800">{confirmedOrder.trackingNumber}</span>
                 </div>
 
                 <div className="flex items-center justify-between border-b border-gray-200 pb-2">
@@ -333,7 +333,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
 
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-gray-700 font-bold">মোট প্রদেয় টাকা (ক্যাশ অন ডেলিভারি):</span>
-                  <span className="text-base font-black text-[#f85606]">
+                  <span className="text-base font-black text-emerald-800">
                     {formatPrice(confirmedOrder.total)}
                   </span>
                 </div>
@@ -348,7 +348,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                       onClose();
                       onOpenTracking(confirmedOrder.id);
                     }}
-                    className="w-full sm:flex-1 py-2.5 px-4 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-md"
+                    className="w-full sm:flex-1 py-2.5 px-4 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-sm"
                   >
                     <Eye className="w-4 h-4" />
                     <span>অর্ডার লাইভ ট্র্যাক করুন</span>
@@ -380,8 +380,8 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
             /* ORDER FORM STATE */
             <form onSubmit={handleConfirmOrder} className="space-y-4">
               {/* Product Brief Summary Card */}
-              <div className="bg-orange-50/50 border border-orange-200/80 rounded-xl p-3 flex items-center gap-3">
-                <div className="w-16 h-16 rounded-lg bg-white border border-orange-100 p-1 shrink-0 flex items-center justify-center overflow-hidden">
+              <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-xl p-3 flex items-center gap-3">
+                <div className="w-16 h-16 rounded-lg bg-white border border-emerald-100 p-1 shrink-0 flex items-center justify-center overflow-hidden">
                   <img
                     src={product.image}
                     alt={product.title}
@@ -395,7 +395,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                     {product.title}
                   </h4>
                   <div className="flex items-center gap-2 text-xs mt-0.5">
-                    <span className="text-orange-600 font-bold text-sm">
+                    <span className="text-emerald-800 font-bold text-sm">
                       {formatPrice(product.price)}
                     </span>
                     {product.originalPrice > product.price && (
@@ -410,7 +410,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                     )}
                   </div>
                   <p className="text-[11px] text-gray-500 mt-0.5">
-                    ব্র্যান্ড: <strong className="text-gray-700">{product.brand}</strong> | স্টক: <span className="text-emerald-600 font-semibold">{product.stock} টি উপলব্ধ</span>
+                    ব্র্যান্ড: <strong className="text-gray-700">{product.brand}</strong> | স্টক: <span className="text-emerald-700 font-semibold">{product.stock} টি উপলব্ধ</span>
                   </p>
                 </div>
               </div>
@@ -422,7 +422,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                     <div key={v.name} className="space-y-1">
                       <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
                         <span>{v.name} নির্বাচন করুন:</span>
-                        <span className="text-[#f85606] font-semibold">
+                        <span className="text-emerald-800 font-semibold">
                           {selectedVariants[v.name] || v.options[0]}
                         </span>
                       </label>
@@ -436,8 +436,8 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                               onClick={() => handleVariantChange(v.name, opt)}
                               className={`px-3 py-1 text-xs rounded-lg font-medium transition cursor-pointer border ${
                                 isSelected
-                                  ? 'border-[#f85606] bg-[#f85606] text-white shadow-xs'
-                                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                  ? 'border-emerald-700 bg-emerald-700 text-white shadow-xs'
+                                  : 'border-gray-300 bg-white text-gray-700 hover:border-emerald-300'
                               }`}
                             >
                               {opt}
@@ -495,10 +495,10 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                         name="quick_delivery_area"
                         checked={deliveryArea === 'inside_dhaka'}
                         onChange={() => setDeliveryArea('inside_dhaka')}
-                        className="text-orange-600 focus:ring-orange-500"
+                        className="text-emerald-700 focus:ring-emerald-600"
                       />
                       <span className="text-gray-800 font-medium">ঢাকার ভেতরে (৳৬০)</span>
-                      {isFreeDelivery && <span className="text-[10px] text-emerald-600 font-bold ml-auto">ফ্রি</span>}
+                      {isFreeDelivery && <span className="text-[10px] text-emerald-700 font-bold ml-auto">ফ্রি</span>}
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-white transition">
                       <input
@@ -506,10 +506,10 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                         name="quick_delivery_area"
                         checked={deliveryArea === 'outside_dhaka'}
                         onChange={() => setDeliveryArea('outside_dhaka')}
-                        className="text-orange-600 focus:ring-orange-500"
+                        className="text-emerald-700 focus:ring-emerald-600"
                       />
                       <span className="text-gray-800 font-medium">ঢাকার বাইরে (৳১২০)</span>
-                      {isFreeDelivery && <span className="text-[10px] text-emerald-600 font-bold ml-auto">ফ্রি</span>}
+                      {isFreeDelivery && <span className="text-[10px] text-emerald-700 font-bold ml-auto">ফ্রি</span>}
                     </label>
                   </div>
                 </div>
@@ -519,7 +519,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
               <div className="space-y-3 pt-1">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-[#f85606]" />
+                    <User className="w-3.5 h-3.5 text-emerald-800" />
                     <span>আপনার ডেলিভারি তথ্য (সরাসরি পূরণ করুন):</span>
                   </h4>
                   <span className="text-[10px] text-gray-400 font-medium">*৩টি ফিল্ড আবশ্যক</span>
@@ -536,7 +536,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                     placeholder="যেমন: মোহাম্মদ এসা খান"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full text-xs px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-orange-500 transition"
+                    className="w-full text-xs px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-emerald-600 transition"
                   />
                 </div>
 
@@ -552,7 +552,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                       placeholder="যেমন: 01854774406"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full text-xs px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-orange-500 transition"
+                      className="w-full text-xs px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-emerald-600 transition"
                     />
                     <Phone className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-3" />
                   </div>
@@ -569,7 +569,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                     placeholder="যেমন: বাসা নং ১২, রোড নং ৫, ধানমন্ডি, ঢাকা"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="w-full text-xs px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-orange-500 transition resize-none"
+                    className="w-full text-xs px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl focus:bg-white focus:outline-none focus:border-emerald-600 transition resize-none"
                   />
                 </div>
 
@@ -583,7 +583,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                     placeholder="যেমন: কল দিয়ে আসবেন / সকালে ডেলিভারি দেবেন"
                     value={customerNote}
                     onChange={(e) => setCustomerNote(e.target.value)}
-                    className="w-full text-xs px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-orange-500 transition text-gray-700"
+                    className="w-full text-xs px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-emerald-600 transition text-gray-700"
                   />
                 </div>
               </div>
@@ -597,7 +597,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                   <span className="font-bold text-emerald-900 block">
                     ক্যাশ অন ডেলিভারি (Cash on Delivery)
                   </span>
-                  <p className="text-emerald-700 text-[11px] leading-relaxed mt-0.5">
+                  <p className="text-emerald-800 text-[11px] leading-relaxed mt-0.5">
                     আগে কোনো অগ্রিম টাকা দিতে হবে না! পার্সেল হাতে পেয়ে চেক করে ডেলিভারি ম্যানের কাছে টাকা পরিশোধ করবেন।
                   </p>
                 </div>
@@ -612,12 +612,12 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                 <div className="flex items-center justify-between text-gray-600">
                   <span>ডেলিভারি চার্জ:</span>
                   <span className="font-semibold text-gray-800">
-                    {deliveryFee === 0 ? <span className="text-emerald-600 font-bold">ফ্রি ডেলিভারি</span> : formatPrice(deliveryFee)}
+                    {deliveryFee === 0 ? <span className="text-emerald-700 font-bold">ফ্রি ডেলিভারি</span> : formatPrice(deliveryFee)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm font-black text-gray-900 border-t border-gray-200 pt-2">
                   <span>সর্বমোট প্রদেয় টাকা:</span>
-                  <span className="text-[#f85606] text-base">{formatPrice(grandTotal)}</span>
+                  <span className="text-emerald-800 text-base">{formatPrice(grandTotal)}</span>
                 </div>
               </div>
 
@@ -634,7 +634,7 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting || product.stock <= 0}
-                  className="w-full py-3.5 px-4 bg-gradient-to-r from-orange-500 to-[#f85606] hover:from-orange-600 hover:to-[#e04a00] text-white font-black text-sm sm:text-base rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm sm:text-base rounded-xl shadow-md shadow-emerald-900/20 flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -652,11 +652,11 @@ export const QuickOrderModal: React.FC<QuickOrderModalProps> = ({
                 {/* Trust Badges */}
                 <div className="flex items-center justify-center gap-4 text-[10px] text-gray-500 pt-1">
                   <span className="flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> ১০০% সুরক্ষিত অর্ডার
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" /> ১০০% সুরক্ষিত অর্ডার
                   </span>
                   <span>•</span>
                   <span className="flex items-center gap-1">
-                    <Truck className="w-3.5 h-3.5 text-orange-600" /> দ্রুততম হোম ডেলিভারি
+                    <Truck className="w-3.5 h-3.5 text-emerald-800" /> দ্রুততম হোম ডেলিভারি
                   </span>
                 </div>
               </div>

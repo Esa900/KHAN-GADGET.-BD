@@ -68,43 +68,43 @@ export const Header: React.FC<HeaderProps> = ({
   const quickSearchTags = ['65W GaN', 'Power Bank', 'MagSafe', 'AirPods Case', 'Privacy Glass', 'Car Mount', 'DL05 Cooler'];
 
   return (
-    <header id="khan-gadget-header" className="sticky top-0 z-40 bg-orange-600 text-white shadow-md">
+    <header id="khan-gadget-header" className="sticky top-0 z-40 bg-gradient-to-r from-[#0d562f] via-[#0f5f35] to-[#126b3c] text-white shadow-md">
       {/* 1. Store Announcement Marquee Notice Bar */}
       {announcementEnabled && announcementText && (
         <div 
           id="store-announcement-marquee" 
-          className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-amber-300 py-1.5 px-3 sm:px-6 border-b border-amber-500/20 text-xs shadow-inner overflow-hidden relative"
+          className="bg-[#08381c] text-emerald-100 py-1.5 px-3 sm:px-6 border-b border-emerald-900/40 text-xs shadow-inner overflow-hidden relative"
         >
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 overflow-hidden flex-1">
-              <div className="shrink-0 flex items-center gap-1.5 bg-[#f85606] text-white px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase shadow-xs">
-                <Megaphone className="w-3 h-3 text-white animate-pulse" />
+              <div className="shrink-0 flex items-center gap-1.5 bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase shadow-xs">
+                <Megaphone className="w-3 h-3 text-slate-950 animate-pulse" />
                 <span className="hidden xs:inline">স্পেশাল অফার</span>
                 <span className="xs:hidden">HOT</span>
               </div>
 
               {/* Infinite Smooth Scrolling Marquee */}
               <div className="overflow-hidden relative whitespace-nowrap flex-1 select-none">
-                <div className="animate-marquee flex items-center text-slate-100 font-medium text-[11px] sm:text-xs">
+                <div className="animate-marquee flex items-center text-emerald-100 font-medium text-[11px] sm:text-xs">
                   <span className="flex items-center gap-4 pr-12">
-                    <span className="text-amber-200 font-semibold">{announcementText}</span>
-                    <span className="text-orange-400 font-bold">•</span>
-                    <span className="text-emerald-300 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                    <span className="text-amber-300 font-semibold">{announcementText}</span>
+                    <span className="text-emerald-400 font-bold">•</span>
+                    <span className="text-emerald-200 font-bold bg-emerald-900/80 px-2 py-0.5 rounded border border-emerald-600/40">
                       কুপন: KHAN10
                     </span>
-                    <span className="text-orange-400 font-bold">•</span>
-                    <span className="text-slate-300">{currentStoreName}</span>
-                    <span className="text-orange-400 font-bold">•</span>
+                    <span className="text-emerald-400 font-bold">•</span>
+                    <span className="text-emerald-100">{currentStoreName}</span>
+                    <span className="text-emerald-400 font-bold">•</span>
                   </span>
                   <span className="flex items-center gap-4 pr-12">
-                    <span className="text-amber-200 font-semibold">{announcementText}</span>
-                    <span className="text-orange-400 font-bold">•</span>
-                    <span className="text-emerald-300 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                    <span className="text-amber-300 font-semibold">{announcementText}</span>
+                    <span className="text-emerald-400 font-bold">•</span>
+                    <span className="text-emerald-200 font-bold bg-emerald-900/80 px-2 py-0.5 rounded border border-emerald-600/40">
                       কুপন: KHAN10
                     </span>
-                    <span className="text-orange-400 font-bold">•</span>
-                    <span className="text-slate-300">{currentStoreName}</span>
-                    <span className="text-orange-400 font-bold">•</span>
+                    <span className="text-emerald-400 font-bold">•</span>
+                    <span className="text-emerald-100">{currentStoreName}</span>
+                    <span className="text-emerald-400 font-bold">•</span>
                   </span>
                 </div>
               </div>
@@ -136,27 +136,27 @@ export const Header: React.FC<HeaderProps> = ({
       )}
 
       {/* Top High-Density Utility Strip */}
-      <div className="bg-orange-700/80 text-orange-100 text-[11px] font-medium py-1 px-4 sm:px-6 border-b border-orange-700">
+      <div className="bg-[#0a4625] text-emerald-100 text-[11px] font-medium py-1 px-4 sm:px-6 border-b border-emerald-800/80">
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-2">
           <div className="flex items-center space-x-3">
             <span className="flex items-center gap-1 font-semibold text-white">
               <Zap className="w-3 h-3 text-amber-300" />
-              <span>Flash Deals: Use code <strong className="bg-white/20 px-1 py-0.5 rounded font-mono text-white">KHAN10</strong> for 10% OFF</span>
+              <span>Flash Deals: Use code <strong className="bg-emerald-900/80 px-1 py-0.5 rounded font-mono text-amber-200 border border-emerald-600/40">KHAN10</strong> for 10% OFF</span>
             </span>
-            <span className="hidden md:inline text-orange-300">|</span>
-            <span className="hidden md:inline text-orange-100">Free delivery on orders over ৳ 2,000</span>
+            <span className="hidden md:inline text-emerald-500">|</span>
+            <span className="hidden md:inline text-emerald-100">সারা দেশে ক্যাশ অন ডেলিভারি (হাতে পেয়ে টাকা দিন)</span>
           </div>
 
           <div className="flex items-center space-x-3 text-[11px]">
             <a href={`tel:${currentPhone}`} className="hidden sm:flex items-center gap-1 hover:text-white transition">
-              <PhoneCall className="w-3 h-3 text-orange-200" />
-              <span>Contact: {currentPhone}</span>
+              <PhoneCall className="w-3 h-3 text-emerald-300" />
+              <span>হটলাইন: {currentPhone}</span>
             </a>
             <a 
               href={`https://wa.me/${whatsappNumber}`} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-emerald-200 hover:text-emerald-100 transition font-bold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/30"
+              className="flex items-center gap-1 text-emerald-100 hover:text-white transition font-bold bg-emerald-900/60 px-2 py-0.5 rounded border border-emerald-500/40"
               title="Chat on WhatsApp"
             >
               <MessageCircle className="w-3 h-3 fill-emerald-400 text-emerald-400" />
@@ -166,7 +166,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={onRefreshCloud}
                 disabled={isSyncing}
-                className="bg-emerald-950/60 hover:bg-emerald-900/80 px-2 py-0.5 rounded text-[10px] font-bold text-emerald-300 flex items-center gap-1 transition cursor-pointer border border-emerald-500/40 disabled:opacity-50"
+                className="bg-emerald-900/70 hover:bg-emerald-900 px-2 py-0.5 rounded text-[10px] font-bold text-emerald-200 flex items-center gap-1 transition cursor-pointer border border-emerald-500/40 disabled:opacity-50"
                 title="Live Cloud Database Sync (অন্যান্য ডিভাইসের ডেটা আপডেট করুন)"
               >
                 <RefreshCw className={`w-2.5 h-2.5 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -175,11 +175,11 @@ export const Header: React.FC<HeaderProps> = ({
             )}
             <button
               onClick={onOpenAdmin}
-              className="bg-slate-900/40 hover:bg-slate-900/60 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1 transition cursor-pointer border border-white/10"
+              className="bg-emerald-950/70 hover:bg-emerald-950 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1 transition cursor-pointer border border-emerald-700/50"
               title="AP"
             >
               <Lock className="w-3 h-3" />
-              <span>AP</span>
+              <span>Admin</span>
             </button>
           </div>
         </div>
@@ -193,7 +193,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="lg:hidden p-1 rounded text-white hover:bg-orange-700"
+              className="lg:hidden p-1 rounded text-white hover:bg-emerald-800"
               aria-label="Toggle Category Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -203,9 +203,17 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => { onSelectCategory('All'); onSearchChange(''); }} 
               className="text-left group cursor-pointer focus:outline-none flex items-center gap-2"
             >
-              <span className="text-xl sm:text-2xl font-black tracking-tighter text-white uppercase">
-                {currentStoreName}
-              </span>
+              <div className="w-9 h-9 rounded-xl bg-white text-emerald-800 flex items-center justify-center font-black shadow-sm">
+                <Smartphone className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase block leading-none">
+                  {currentStoreName}
+                </span>
+                <span className="text-[10px] text-emerald-200 uppercase tracking-widest font-semibold block mt-0.5">
+                  Ghorer Bazar Quality Gadgets
+                </span>
+              </div>
             </button>
           </div>
 
@@ -214,15 +222,15 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search mobile accessories..."
+                placeholder="প্রয়োজনীয় গ্যাজেট সার্চ করুন..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 onFocus={() => setShowSearchSuggestions(true)}
-                className="w-full py-1.5 pl-4 pr-10 rounded-sm text-slate-900 text-sm bg-white placeholder-slate-400 focus:outline-none shadow-sm"
+                className="w-full py-2 pl-4 pr-11 rounded-lg text-slate-900 text-sm bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 shadow-sm"
               />
               <button 
                 onClick={() => setShowSearchSuggestions(false)}
-                className="absolute right-2.5 top-1.5 text-orange-600 hover:text-orange-700 transition cursor-pointer"
+                className="absolute right-1.5 top-1.5 p-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md transition cursor-pointer"
               >
                 <Search className="w-4 h-4" />
               </button>
@@ -230,10 +238,10 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Quick Suggestions Dropdown */}
             {showSearchSuggestions && !searchQuery && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded shadow-xl p-3 z-50 text-slate-800">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl p-3 z-50 text-slate-800">
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-orange-500" />
-                  Popular Accessories:
+                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                  জনপ্রিয় আইটেমসমূহ:
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {quickSearchTags.map(tag => (
@@ -243,7 +251,7 @@ export const Header: React.FC<HeaderProps> = ({
                         onSearchChange(tag);
                         setShowSearchSuggestions(false);
                       }}
-                      className="text-xs bg-slate-100 hover:bg-orange-50 hover:text-orange-600 text-slate-700 px-2 py-0.5 rounded border border-slate-200 transition cursor-pointer"
+                      className="text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 px-2 py-0.5 rounded border border-slate-200 transition cursor-pointer"
                     >
                       {tag}
                     </button>
@@ -257,14 +265,15 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-4 sm:gap-6 text-sm font-medium">
             <button 
               onClick={onOpenTracking}
-              className="cursor-pointer hover:text-orange-100 transition whitespace-nowrap hidden sm:inline"
+              className="cursor-pointer hover:text-emerald-200 transition whitespace-nowrap hidden sm:flex items-center gap-1.5 font-semibold text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/20"
             >
-              Track My Order
+              <Truck className="w-4 h-4 text-emerald-200" />
+              <span>Track My Order</span>
             </button>
 
             <button
               onClick={onOpenWishlist}
-              className="relative cursor-pointer hover:text-orange-100 transition hidden sm:flex items-center gap-1"
+              className="relative cursor-pointer hover:text-emerald-200 transition hidden sm:flex items-center gap-1"
               title="View Wishlist"
             >
               <Heart className="w-4 h-4" />
@@ -280,12 +289,12 @@ export const Header: React.FC<HeaderProps> = ({
             <div 
               id="cart-drawer-trigger"
               onClick={onOpenCart}
-              className="flex items-center gap-2 bg-orange-700 hover:bg-orange-800 px-3 py-1.5 rounded cursor-pointer transition shadow-xs text-white"
+              className="flex items-center gap-2 bg-[#0a4625] hover:bg-[#08381c] border border-emerald-500/40 px-3.5 py-1.5 rounded-lg cursor-pointer transition shadow-xs text-white"
             >
-              <ShoppingCart className="w-4 h-4" />
-              <span className="font-bold text-sm">{cartCount}</span>
-              <span className="text-xs text-orange-200 hidden sm:inline font-mono">
-                ({cartTotal > 0 ? formatPrice(cartTotal) : '৳ 0'})
+              <ShoppingCart className="w-4 h-4 text-amber-300" />
+              <span className="font-bold text-sm bg-emerald-600 text-white px-1.5 py-0.2 rounded-full text-xs">{cartCount}</span>
+              <span className="text-xs text-emerald-100 hidden sm:inline font-mono font-semibold">
+                {cartTotal > 0 ? formatPrice(cartTotal) : '৳ 0'}
               </span>
             </div>
           </div>
@@ -296,12 +305,12 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="relative">
             <input
               type="text"
-              placeholder="Search mobile accessories..."
+              placeholder="প্রয়োজনীয় গ্যাজেট সার্চ করুন..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full py-1.5 pl-3 pr-8 rounded-sm text-slate-900 text-xs bg-white placeholder-slate-400 focus:outline-none"
+              className="w-full py-2 pl-3 pr-9 rounded-lg text-slate-900 text-xs bg-white placeholder-slate-400 focus:outline-none"
             />
-            <button className="absolute right-2 top-1.5 text-orange-600">
+            <button className="absolute right-2 top-2 text-emerald-700">
               <Search className="w-4 h-4" />
             </button>
           </div>
@@ -309,15 +318,15 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Mobile Category Quick Scroll (for smaller viewports) */}
-      <div className="lg:hidden bg-orange-700 border-t border-orange-800/80 px-4 py-1.5 overflow-x-auto no-scrollbar flex items-center gap-2 text-xs">
+      <div className="lg:hidden bg-[#0a4625] border-t border-emerald-800/80 px-4 py-1.5 overflow-x-auto no-scrollbar flex items-center gap-2 text-xs">
         {displayCategories.map((category) => (
           <button
             key={category}
             onClick={() => onSelectCategory(category)}
-            className={`whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-medium transition cursor-pointer ${
+            className={`whitespace-nowrap px-2.5 py-1 rounded-md text-[11px] font-medium transition cursor-pointer ${
               selectedCategory === category
-                ? 'bg-white text-orange-600 font-bold'
-                : 'text-orange-100 hover:text-white'
+                ? 'bg-white text-emerald-800 font-bold shadow-xs'
+                : 'text-emerald-100 hover:text-white'
             }`}
           >
             {category}
@@ -331,8 +340,10 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="w-4/5 max-w-xs bg-white h-full p-4 overflow-y-auto shadow-2xl flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-gray-200 mb-3">
-                <div className="font-bold text-gray-900 text-lg flex items-center gap-1.5 uppercase">
-                  <Smartphone className="w-5 h-5 text-[#f85606]" />
+                <div className="font-bold text-gray-900 text-lg flex items-center gap-2 uppercase">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                    <Smartphone className="w-4 h-4" />
+                  </div>
                   <span>{currentStoreName}</span>
                 </div>
                 <button 
@@ -343,7 +354,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
 
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Categories</p>
+              <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-2">Categories</p>
               <div className="flex flex-col space-y-1">
                 {displayCategories.map((category) => (
                   <button
@@ -354,8 +365,8 @@ export const Header: React.FC<HeaderProps> = ({
                     }}
                     className={`text-left px-3 py-2 rounded-lg text-sm transition ${
                       selectedCategory === category
-                        ? 'bg-orange-500 text-white font-semibold'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-emerald-700 text-white font-semibold shadow-xs'
+                        : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-800'
                     }`}
                   >
                     {category}
@@ -369,9 +380,9 @@ export const Header: React.FC<HeaderProps> = ({
                     onOpenTracking();
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-orange-50 rounded-lg"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 rounded-lg"
                 >
-                  <Truck className="w-4 h-4 text-[#f85606]" />
+                  <Truck className="w-4 h-4 text-emerald-700" />
                   <span>Order Tracking</span>
                 </button>
                 <button
@@ -379,10 +390,10 @@ export const Header: React.FC<HeaderProps> = ({
                     onOpenAdmin();
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-orange-50 rounded-lg"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-800 hover:bg-emerald-50 rounded-lg"
                 >
-                  <Lock className="w-4 h-4 text-amber-500" />
-                  <span>AP</span>
+                  <Lock className="w-4 h-4 text-amber-600" />
+                  <span>Admin</span>
                 </button>
               </div>
             </div>
