@@ -132,6 +132,32 @@ export default function App() {
   // Active Voucher in Cart
   const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
 
+  // Dark / Light Mode State (Persisted in localStorage)
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('khan_gadget_dark_mode');
+      if (saved !== null) return JSON.parse(saved);
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('khan_gadget_dark_mode', JSON.stringify(isDarkMode));
+    } catch {}
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => !prev);
+  };
+
   // Temporary Notification Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -690,7 +716,7 @@ export default function App() {
   const cartTotal = cart.reduce((sum, it) => sum + it.product.price * it.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans selection:bg-orange-200">
+    <div className={`min-h-screen ${isDarkMode ? 'bg-slate-950 text-slate-100 dark' : 'bg-slate-100 text-slate-800'} flex flex-col font-sans transition-colors duration-200 selection:bg-orange-200`}>
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -723,6 +749,8 @@ export default function App() {
         onOpenWishlist={() => setIsWishlistOpen(true)}
         onRefreshCloud={handleManualCloudSync}
         isSyncing={isSyncing}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={toggleDarkMode}
       />
 
       {/* High-Density Layout Container */}
@@ -731,8 +759,8 @@ export default function App() {
         {/* Left Column: Categories, Filters, and Admin Shortcut */}
         <aside className="w-52 shrink-0 hidden lg:flex flex-col gap-3">
           {/* Categories Card */}
-          <div className="bg-white p-3.5 shadow-xs rounded-xl border border-slate-200/80">
-            <h3 className="text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">
+          <div className="bg-white dark:bg-slate-900 p-3.5 shadow-xs rounded-xl border border-slate-200/80 dark:border-slate-800">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 tracking-wider">
               ক্যাটাগরি সমূহ
             </h3>
             <ul className="text-xs space-y-1">
@@ -747,8 +775,8 @@ export default function App() {
                     }}
                     className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition ${
                       isSelected
-                        ? 'text-emerald-800 font-bold bg-emerald-50 border border-emerald-200/60'
-                        : 'text-slate-700 hover:bg-slate-50'
+                        ? 'text-emerald-800 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/60'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     {isSelected && <div className="w-1.5 h-3.5 bg-emerald-700 rounded-full" />}
@@ -760,17 +788,17 @@ export default function App() {
           </div>
 
           {/* Quick Filters Card */}
-          <div className="bg-white p-3.5 shadow-xs rounded-xl border border-slate-200/80 text-xs">
-            <h3 className="text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">
+          <div className="bg-white dark:bg-slate-900 p-3.5 shadow-xs rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 tracking-wider">
               ফিল্টার
             </h3>
             <div className="space-y-2">
               <div>
-                <label className="text-[10px] text-slate-500 font-semibold block mb-1">ব্র্যান্ড</label>
+                <label className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mb-1">ব্র্যান্ড</label>
                 <select
                   value={selectedBrand}
                   onChange={(e) => setSelectedBrand(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs text-slate-700 focus:outline-none focus:border-emerald-600"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-600"
                 >
                   {brands.map(b => (
                     <option key={b} value={b}>{b === 'All' ? 'সব ব্র্যান্ড' : b}</option>
@@ -778,7 +806,7 @@ export default function App() {
                 </select>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 space-y-2">
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -786,7 +814,7 @@ export default function App() {
                     onChange={(e) => setOnlyDarazMall(e.target.checked)}
                     className="accent-emerald-700 rounded"
                   />
-                  <span className="text-slate-700 font-medium">অরিজিনাল মল পণ্য</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">অরিজিনাল মল পণ্য</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -795,7 +823,7 @@ export default function App() {
                     onChange={(e) => setOnlyFreeDelivery(e.target.checked)}
                     className="accent-emerald-700 rounded"
                   />
-                  <span className="text-slate-700 font-medium">ফ্রি ডেলিভারি</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">ফ্রি ডেলিভারি</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -804,7 +832,7 @@ export default function App() {
                     onChange={(e) => setOnlyFlashSale(e.target.checked)}
                     className="accent-emerald-700 rounded"
                   />
-                  <span className="text-slate-700 font-medium">হট অফার / ফ্ল্যাশ সেল</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">হট অফার / ফ্ল্যাশ সেল</span>
                 </label>
               </div>
 
@@ -816,7 +844,7 @@ export default function App() {
                     setOnlyFreeDelivery(false);
                     setOnlyFlashSale(false);
                   }}
-                  className="w-full mt-2 py-1.5 text-[11px] font-semibold text-emerald-800 hover:bg-emerald-50 rounded-lg text-center transition cursor-pointer border border-emerald-200"
+                  className="w-full mt-2 py-1.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-slate-800 rounded-lg text-center transition cursor-pointer border border-emerald-200 dark:border-emerald-800"
                 >
                   ফিল্টার মুছুন
                 </button>
@@ -839,29 +867,29 @@ export default function App() {
           <TrustBadges />
 
           {/* Catalog Controls / Header Bar */}
-          <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2">
-              <h1 className="font-bold text-slate-900">
+              <h1 className="font-bold text-slate-900 dark:text-white">
                 {searchQuery ? (
-                  <span>অনুসন্ধান ফলাফল &ldquo;<span className="text-emerald-800">{searchQuery}</span>&rdquo;</span>
+                  <span>অনুসন্ধান ফলাফল &ldquo;<span className="text-emerald-800 dark:text-emerald-400">{searchQuery}</span>&rdquo;</span>
                 ) : selectedCategory === 'All' ? (
                   <span>সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ</span>
                 ) : (
                   <span>{selectedCategory}</span>
                 )}
               </h1>
-              <span className="text-[11px] text-slate-500 font-medium">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                 ({filteredProducts.length} টি পণ্য)
               </span>
             </div>
 
             <div className="flex items-center gap-2 ml-auto">
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500 text-[11px]">সাজান:</span>
+                <span className="text-slate-500 dark:text-slate-400 text-[11px]">সাজান:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 focus:outline-none focus:border-emerald-600"
+                  className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-600"
                 >
                   <option value="featured">জনপ্রিয় (Featured)</option>
                   <option value="price-asc">দাম: কম থেকে বেশি</option>
@@ -874,10 +902,10 @@ export default function App() {
 
           {/* Product Grid */}
           {filteredProducts.length === 0 ? (
-            <div className="bg-white rounded-xl border border-slate-200 p-10 text-center my-4 shadow-xs">
-              <Smartphone className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-              <h3 className="text-sm font-bold text-slate-800">কোনো পণ্য পাওয়া যায়নি</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-10 text-center my-4 shadow-xs">
+              <Smartphone className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">কোনো পণ্য পাওয়া যায়নি</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
                 অন্য কোনো নামে সার্চ করুন অথবা ফিল্টার পরিবর্তন করুন।
               </p>
               <button
@@ -945,10 +973,10 @@ export default function App() {
         {/* Right Aside: Order Tracking & Secure Payment */}
         <aside className="w-64 shrink-0 hidden xl:flex flex-col gap-3">
           {/* Live Order Tracker Card */}
-          <div className="bg-white p-3.5 shadow-xs rounded-xl border border-slate-200/80">
+          <div className="bg-white dark:bg-slate-900 p-3.5 shadow-xs rounded-xl border border-slate-200/80 dark:border-slate-800">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">লাইভ কুরিয়ার ট্র্যাকিং</h3>
-              <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">সরাসরি ট্র্যাক</span>
+              <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">লাইভ কুরিয়ার ট্র্যাকিং</h3>
+              <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded">সরাসরি ট্র্যাক</span>
             </div>
             
             <div className="flex gap-1.5 mb-3">
@@ -957,7 +985,7 @@ export default function App() {
                 placeholder="অর্ডার আইডি / ফোন নং" 
                 value={quickTrackInput}
                 onChange={(e) => setQuickTrackInput(e.target.value)}
-                className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-emerald-600"
+                className="flex-1 min-w-0 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-600"
               />
               <button 
                 onClick={() => {
@@ -973,20 +1001,20 @@ export default function App() {
             </div>
 
             {/* Quick status timeline */}
-            <div className="space-y-3 border-l-2 border-emerald-200 pl-3.5 ml-1.5 text-xs my-3">
+            <div className="space-y-3 border-l-2 border-emerald-200 dark:border-emerald-800 pl-3.5 ml-1.5 text-xs my-3">
               <div className="relative">
-                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-600 ring-4 ring-emerald-100" />
-                <div className="font-semibold text-slate-800 text-[11px]">অর্ডার কনফার্মড</div>
+                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-600 ring-4 ring-emerald-100 dark:ring-emerald-950" />
+                <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">অর্ডার কনফার্মড</div>
                 <div className="text-[10px] text-slate-400">পণ্য প্যাকেজিং সম্পন্ন</div>
               </div>
               <div className="relative">
-                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-700 ring-4 ring-emerald-100" />
-                <div className="font-semibold text-slate-800 text-[11px]">কুরিয়ারে হস্তান্তর</div>
+                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-700 ring-4 ring-emerald-100 dark:ring-emerald-950" />
+                <div className="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">কুরিয়ারে হস্তান্তর</div>
                 <div className="text-[10px] text-slate-400">Steadfast / RedX কুরিয়ারে রওয়ানা</div>
               </div>
               <div className="relative">
-                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-slate-300 ring-4 ring-white" />
-                <div className="font-semibold text-slate-500 text-[11px]">হোম ডেলিভারি</div>
+                <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700 ring-4 ring-white dark:ring-slate-900" />
+                <div className="font-semibold text-slate-500 dark:text-slate-400 text-[11px]">হোম ডেলিভারি</div>
                 <div className="text-[10px] text-slate-400">ক্যাশ অন ডেলিভারিতে পণ্য গ্রহণ</div>
               </div>
             </div>
@@ -996,41 +1024,41 @@ export default function App() {
                 setActiveTrackingOrderId(quickTrackInput.trim() || undefined);
                 setIsTrackingOpen(true);
               }}
-              className="w-full mt-2 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg transition cursor-pointer border border-emerald-200 text-center"
+              className="w-full mt-2 py-2 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold rounded-lg transition cursor-pointer border border-emerald-200 dark:border-emerald-800 text-center"
             >
               সম্পূর্ণ ট্র্যাকিং পেজ খুলুন
             </button>
           </div>
 
           {/* Secure Payment Card */}
-          <div className="bg-white p-3.5 shadow-xs rounded-xl border border-slate-200/80 flex-1 flex flex-col justify-between text-xs">
+          <div className="bg-white dark:bg-slate-900 p-3.5 shadow-xs rounded-xl border border-slate-200/80 dark:border-slate-800 flex-1 flex flex-col justify-between text-xs">
             <div>
               <div className="flex items-center gap-1.5 mb-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">নিরাপদ কেনাকাটা</h3>
+                <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">নিরাপদ কেনাকাটা</h3>
               </div>
-              <p className="text-slate-500 text-[11px] leading-relaxed mb-3">
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed mb-3">
                 পণ্য হাতে পেয়ে চেক করে সম্পূর্ণ মূল্য পরিশোধ করুন। কোনো অগ্রিম পেমেন্টের ঝুঁকি নেই।
               </p>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
-                  <span className="font-medium text-slate-700 text-[11px]">ক্যাশ অন ডেলিভারি (COD)</span>
-                  <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">ভেরিফাইড</span>
+                <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700/60">
+                  <span className="font-medium text-slate-700 dark:text-slate-200 text-[11px]">ক্যাশ অন ডেলিভারি (COD)</span>
+                  <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded">ভেরিফাইড</span>
                 </div>
-                <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
-                  <span className="font-medium text-slate-700 text-[11px]">বিকাশ / নগদ / রকেট</span>
-                  <span className="text-[9px] bg-pink-100 text-pink-800 font-bold px-1.5 py-0.5 rounded">পেমেন্ট</span>
+                <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700/60">
+                  <span className="font-medium text-slate-700 dark:text-slate-200 text-[11px]">বিকাশ / নগদ / রকেট</span>
+                  <span className="text-[9px] bg-pink-100 dark:bg-pink-950 text-pink-800 dark:text-pink-300 font-bold px-1.5 py-0.5 rounded">পেমেন্ট</span>
                 </div>
-                <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-100">
-                  <span className="font-medium text-slate-700 text-[11px]">ভিসা ও মাস্টারকার্ড</span>
-                  <span className="text-[9px] bg-purple-100 text-purple-800 font-bold px-1.5 py-0.5 rounded">সিকিউরড</span>
+                <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700/60">
+                  <span className="font-medium text-slate-700 dark:text-slate-200 text-[11px]">ভিসা ও মাস্টারকার্ড</span>
+                  <span className="text-[9px] bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold px-1.5 py-0.5 rounded">সিকিউরড</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 text-center">
-              <div className="text-[10px] text-slate-500 font-medium">© {new Date().getFullYear()} {storeConfig.storeName || 'KHAN GADGET MALL'}</div>
-              <div className="text-[10px] text-emerald-700 font-medium">ঘরের বাজার স্টাইলে ফ্রেশ ও অথেনটিক</div>
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">© {new Date().getFullYear()} {storeConfig.storeName || 'KHAN GADGET MALL'}</div>
+              <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">ঘরের বাজার স্টাইলে ফ্রেশ ও অথেনটিক</div>
             </div>
           </div>
         </aside>
