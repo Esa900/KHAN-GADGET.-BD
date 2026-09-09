@@ -118,7 +118,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         onRefreshCloud();
       }
     } else {
-      setAuthError('পাসওয়ার্ড ভুল হয়েছে! সঠিক পাসওয়ার্ড দিন (ডিফল্ট: ESA006##)');
+      setAuthError('পাসওয়ার্ড ভুল হয়েছে! সঠিক পাসওয়ার্ড দিন');
     }
   };
 
