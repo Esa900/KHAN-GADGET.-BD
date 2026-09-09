@@ -113,10 +113,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       setIsAuthenticated(true);
       setPasswordInput('');
       setAuthError('');
-      // Auto-sync any local products & categories to cloud on admin login
-      syncAllLocalToCloud().then(res => {
-        if (onRefreshCloud) onRefreshCloud();
-      }).catch(console.error);
+      // Refresh latest fresh state from cloud on admin login
+      if (onRefreshCloud) {
+        onRefreshCloud();
+      }
     } else {
       setAuthError('পাসওয়ার্ড ভুল হয়েছে! সঠিক পাসওয়ার্ড দিন (ডিফল্ট: ESA006##)');
     }
@@ -958,7 +958,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       placeholder="Search by title, brand, category..."
                       value={productSearch}
                       onChange={(e) => setProductSearch(e.target.value)}
-                      className="w-full text-xs pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full text-xs pl-8 pr-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 text-gray-900 placeholder:text-gray-400"
                     />
                     <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                   </div>
@@ -1341,7 +1342,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       value={storeNameInput}
                       onChange={(e) => setStoreNameInput(e.target.value)}
                       placeholder="e.g. KHAN GADGET MALL"
-                      className="w-full text-sm font-semibold px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-[#f85606] focus:bg-white text-gray-900 transition"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full text-sm font-semibold px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-[#f85606] text-gray-900 placeholder:text-gray-400 transition shadow-xs"
                     />
                     <p className="text-[11px] text-gray-500 leading-relaxed">
                       💡 এই নাম পরিবর্তন করলে ওয়েবসাইটের হেডার, ফুটার, কার্ট, চালান (Invoice), ট্র্যাকিং ও ব্রাউজার টাইটেলে এই নতুন নাম রিয়েল-টাইমে পরিবর্তিত হয়ে যাবে।
@@ -1365,7 +1367,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       value={storePhoneInput}
                       onChange={(e) => setStorePhoneInput(e.target.value)}
                       placeholder="e.g. 01854774406"
-                      className="w-full text-sm font-mono font-semibold px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 focus:bg-white text-gray-900 transition"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full text-sm font-mono font-semibold px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-emerald-600 text-gray-900 placeholder:text-gray-400 transition shadow-xs"
                     />
                     <p className="text-[11px] text-gray-500 leading-relaxed">
                       💡 এই নম্বর এডিট করলে ওয়েবসাইটের কল বাটন, ফুটার হেল্পলাইন এবং সরাসরি হোয়াটসঅ্যাপ অর্ডার ও চ্যাট লিংকে এই নতুন নম্বর আপডেট হয়ে যাবে।
@@ -1391,7 +1394,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     value={storeAboutInput}
                     onChange={(e) => setStoreAboutInput(e.target.value)}
                     placeholder="Bangladesh's premium mobile accessories mall for fast chargers, MagSafe cases, earbuds, and gaming gear."
-                    className="w-full text-xs leading-relaxed px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-600 focus:bg-white text-gray-900 transition"
+                    style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                    className="w-full text-xs leading-relaxed px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-600 text-gray-900 placeholder:text-gray-400 transition shadow-xs"
                   />
                   <p className="text-[11px] text-gray-500 leading-relaxed">
                     💡 ওয়েবসাইটের ফুটারে ব্র্যান্ডের পরিচিতি হিসেবে এই বিবরণটি রিয়েল-টাইমে প্রদর্শিত হবে।
@@ -1426,7 +1430,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           value={newAdminPassword}
                           onChange={(e) => setNewAdminPassword(e.target.value)}
                           placeholder="নতুন পাসওয়ার্ড লিখুন (কমপক্ষে ৪ অক্ষর)"
-                          className="w-full text-xs px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-600 focus:bg-white text-gray-900 placeholder:text-gray-400 font-medium pr-10"
+                          style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                          className="w-full text-xs px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900 placeholder:text-gray-400 font-medium pr-10 shadow-xs"
                         />
                         <button
                           type="button"
@@ -1450,7 +1455,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           value={confirmAdminPassword}
                           onChange={(e) => setConfirmAdminPassword(e.target.value)}
                           placeholder="নতুন পাসওয়ার্ডটি পুনরায় লিখুন"
-                          className="w-full text-xs px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-600 focus:bg-white text-gray-900 placeholder:text-gray-400 font-medium pr-10"
+                          style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                          className="w-full text-xs px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-purple-600 text-gray-900 placeholder:text-gray-400 font-medium pr-10 shadow-xs"
                         />
                         <button
                           type="button"
@@ -1713,7 +1719,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     required
                     value={productForm.title}
                     onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                    style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900 placeholder:text-gray-400"
                     placeholder="e.g. Ugreen 65W GaN Fast Charger"
                   />
                 </div>
@@ -1742,7 +1749,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           value={inlineCategoryInput}
                           onChange={(e) => setInlineCategoryInput(e.target.value)}
                           placeholder="New category..."
-                          className="w-full px-2 py-1.5 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 text-xs"
+                          style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                          className="w-full px-2 py-1.5 border border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 text-xs bg-white text-gray-900 placeholder:text-gray-400"
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
@@ -1763,7 +1771,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <select
                         value={productForm.category}
                         onChange={(e) => setProductForm({ ...productForm, category: e.target.value as ProductCategory })}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                        style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900"
                       >
                         {availableCategories.map(c => (
                           <option key={c} value={c}>{c}</option>
@@ -1781,7 +1790,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       required
                       value={productForm.brand}
                       onChange={(e) => setProductForm({ ...productForm, brand: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900 placeholder:text-gray-400"
                       placeholder="e.g. Anker / Baseus / Khan Prime"
                     />
                   </div>
@@ -1795,7 +1805,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       required
                       value={productForm.price}
                       onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900"
                     />
                   </div>
                   <div>
@@ -1804,7 +1815,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       type="number"
                       value={productForm.originalPrice}
                       onChange={(e) => setProductForm({ ...productForm, originalPrice: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900"
                     />
                   </div>
                   <div>
@@ -1814,7 +1826,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       required
                       value={productForm.stock}
                       onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900"
                     />
                   </div>
                 </div>
@@ -2022,7 +2035,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               handleAddUrl();
                             }
                           }}
-                          className="flex-1 px-3 py-1.5 border rounded-lg focus:outline-none focus:border-orange-500 text-xs"
+                          style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                          className="flex-1 px-3 py-1.5 border rounded-lg focus:outline-none focus:border-orange-500 text-xs bg-white text-gray-900 placeholder:text-gray-400"
                         />
                         <button
                           type="button"
@@ -2387,7 +2401,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       value={statusNote}
                       onChange={(e) => setStatusNote(e.target.value)}
                       placeholder="e.g. Dispatched from main fulfillment hub via express courier..."
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
 
@@ -2422,7 +2437,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         {/* MODAL: Create Voucher */}
         {isVoucherModalOpen && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 text-gray-900">
               <div className="flex items-center justify-between border-b pb-3">
                 <h3 className="font-bold text-gray-900 text-base">Create Discount Voucher</h3>
                 <button onClick={() => setIsVoucherModalOpen(false)}>
@@ -2439,7 +2454,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder="e.g. FLASH30"
                     value={voucherForm.code}
                     onChange={(e) => setVoucherForm({ ...voucherForm, code: e.target.value.toUpperCase() })}
-                    className="w-full px-3 py-2 border rounded-lg uppercase font-mono font-bold focus:outline-none focus:border-orange-500"
+                    style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                    className="w-full px-3 py-2 border rounded-lg uppercase font-mono font-bold focus:outline-none focus:border-orange-500 bg-white text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
 
@@ -2449,7 +2465,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <select
                       value={voucherForm.discountType}
                       onChange={(e) => setVoucherForm({ ...voucherForm, discountType: e.target.value as any })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900"
                     >
                       <option value="percentage">Percentage (%)</option>
                       <option value="fixed">Fixed Amount (৳)</option>
@@ -2462,7 +2479,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       required
                       value={voucherForm.discountValue}
                       onChange={(e) => setVoucherForm({ ...voucherForm, discountValue: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900"
                     />
                   </div>
                 </div>
@@ -2473,7 +2491,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     type="number"
                     value={voucherForm.minSpend}
                     onChange={(e) => setVoucherForm({ ...voucherForm, minSpend: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                    style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900"
                   />
                 </div>
 
@@ -2484,7 +2503,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder="e.g. 15% OFF for new gadget lovers"
                     value={voucherForm.description}
                     onChange={(e) => setVoucherForm({ ...voucherForm, description: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+                    style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 bg-white text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
 

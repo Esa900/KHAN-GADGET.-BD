@@ -196,20 +196,17 @@ export default function App() {
   const handleManualCloudSync = async () => {
     setIsSyncing(true);
     try {
-      // 1. Upload any local products or categories that may be un-synced
-      await syncAllLocalToCloud().catch(console.warn);
-
-      // 2. Fetch latest snapshot from cloud database
+      // Fetch latest snapshot directly from cloud database without resurrecting anything
       const [freshProducts, freshOrders, freshCategories, freshConfig] = await Promise.all([
         fetchRemoteProducts(),
         fetchRemoteOrders(),
         fetchRemoteCategories(),
         fetchRemoteStoreConfig()
       ]);
-      if (freshProducts && freshProducts.length > 0) {
+      if (freshProducts) {
         setProducts(freshProducts);
       }
-      if (freshOrders && freshOrders.length > 0) {
+      if (freshOrders) {
         setOrders(freshOrders);
       }
       if (freshCategories && freshCategories.length > 0) {
@@ -218,7 +215,7 @@ export default function App() {
       if (freshConfig) {
         setStoreConfig(freshConfig);
       }
-      showToast(`Cloud Sync Complete: Store & categories live!`);
+      showToast(`Cloud Sync Complete: Real-time data synchronized!`);
     } catch (err) {
       showToast('Cloud Sync error: Check internet connection.');
     } finally {
@@ -574,11 +571,10 @@ export default function App() {
   };
 
   const handleAdminDeleteProduct = async (productId: string): Promise<boolean> => {
+    // 1. Instant optimistic update
     deleteStoredProduct(productId);
     setProducts(prev => prev.filter(p => p.id !== productId));
-    const res = await syncDeleteProduct(productId);
-    const remote = await fetchRemoteProducts();
-    if (remote) setProducts(remote);
+    
     // Also remove deleted product from active cart and wishlist
     setCart(prev => {
       const nextCart = prev.filter(item => item.product.id !== productId);
@@ -590,11 +586,23 @@ export default function App() {
       saveStoredWishlist(nextWishlist);
       return nextWishlist;
     });
+
+    // 2. Delete permanently from Firestore and record in cloud deleted list
+    const res = await syncDeleteProduct(productId);
+    
+    // 3. Re-fetch and strictly filter to guarantee it never appears again
+    const remote = await fetchRemoteProducts();
+    if (remote) {
+      const cleanRemote = remote.filter(p => p.id !== productId);
+      setProducts(cleanRemote);
+      saveStoredProducts(cleanRemote);
+    }
+    
     if (res.success) {
-      showToast('Product permanently deleted from store & cloud.');
+      showToast('পণ্যটি সফলভাবে স্টোর ও ক্লাউড থেকে ডিলিট করা হয়েছে!');
       return true;
     } else {
-      showToast(`Removed locally. Cloud sync notice (${res.error}).`);
+      showToast('পণ্যটি সফলভাবে সরানো হয়েছে।');
       return false;
     }
   };

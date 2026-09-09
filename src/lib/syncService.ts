@@ -18,8 +18,9 @@ import {
   getStoredOrders, 
   saveStoredOrders, 
   getStoredVouchers, 
-  saveStoredVouchers,
+  saveStoredVouchers, 
   getDeletedProductIds,
+  mergeDeletedProductIds,
   getStoredCategories,
   saveStoredCategories,
   getDeletedCategoryNames,
@@ -38,6 +39,7 @@ const ORDERS_COLLECTION = 'orders';
 const VOUCHERS_COLLECTION = 'vouchers';
 const SETTINGS_COLLECTION = 'settings';
 const CATEGORIES_DOC = 'categories';
+const DELETED_PRODUCTS_DOC = 'deleted_products';
 const ANALYTICS_DOC = 'analytics';
 const STORE_CONFIG_DOC = 'store_config';
 
@@ -60,19 +62,48 @@ export const cleanFirestoreData = (obj: any): any => {
   return result;
 };
 
-// Check if products collection is empty and seed initial data to Firestore
+// Fetch remote deleted products list from Firestore to prevent deleted products from ever resurrecting
+export const fetchRemoteDeletedProductIds = async (): Promise<string[]> => {
+  try {
+    const delRef = doc(db, SETTINGS_COLLECTION, DELETED_PRODUCTS_DOC);
+    const delSnap = await getDoc(delRef);
+    if (delSnap.exists() && Array.isArray(delSnap.data()?.ids)) {
+      const remoteIds: string[] = delSnap.data().ids;
+      mergeDeletedProductIds(remoteIds);
+      return remoteIds;
+    }
+    return getDeletedProductIds();
+  } catch (err) {
+    console.warn('Could not fetch remote deleted products list:', err);
+    return getDeletedProductIds();
+  }
+};
+
+// Check if products collection is empty and seed initial data to Firestore (skipping any deleted products)
 export const seedInitialFirestoreData = async () => {
   try {
+    const delRef = doc(db, SETTINGS_COLLECTION, DELETED_PRODUCTS_DOC);
+    const delSnap = await getDoc(delRef);
+    const remoteDeleted: string[] = delSnap.exists() && Array.isArray(delSnap.data()?.ids) ? delSnap.data().ids : [];
+    const localDeleted = getDeletedProductIds();
+    const allDeleted = new Set([...remoteDeleted, ...localDeleted]);
+
     const productsSnap = await getDocs(collection(db, PRODUCTS_COLLECTION));
     if (productsSnap.empty) {
-      console.log('Seeding initial products to Firestore...');
+      console.log('Seeding initial non-deleted products to Firestore...');
       const batch = writeBatch(db);
+      let count = 0;
       INITIAL_PRODUCTS.forEach(prod => {
-        const ref = doc(db, PRODUCTS_COLLECTION, prod.id);
-        batch.set(ref, cleanFirestoreData(prod));
+        if (!allDeleted.has(prod.id)) {
+          const ref = doc(db, PRODUCTS_COLLECTION, prod.id);
+          batch.set(ref, cleanFirestoreData(prod));
+          count++;
+        }
       });
-      await batch.commit();
-      console.log('Seeded initial products successfully');
+      if (count > 0) {
+        await batch.commit();
+        console.log(`Seeded ${count} initial products successfully`);
+      }
     }
 
     const ordersSnap = await getDocs(collection(db, ORDERS_COLLECTION));
@@ -151,36 +182,53 @@ export const broadcastSync = (type: 'PRODUCTS_UPDATED' | 'ORDERS_UPDATED' | 'VOU
 // Direct one-time fetch of all products from Firestore (works reliably across mobile & desktop)
 export const fetchRemoteProducts = async (): Promise<Product[]> => {
   try {
+    const remoteDeleted = await fetchRemoteDeletedProductIds().catch(() => []);
+    const localDeleted = getDeletedProductIds();
+    const allDeleted = new Set([...remoteDeleted, ...localDeleted]);
+
     const snapshot = await getDocs(collection(db, PRODUCTS_COLLECTION));
     if (snapshot.empty) {
       await seedInitialFirestoreData();
       const retrySnap = await getDocs(collection(db, PRODUCTS_COLLECTION));
       const prods: Product[] = [];
-      retrySnap.forEach(d => prods.push(d.data() as Product));
+      retrySnap.forEach(d => {
+        const prod = d.data() as Product;
+        if (!allDeleted.has(prod.id)) {
+          prods.push(prod);
+        }
+      });
       if (prods.length > 0) {
         const sorted = sortProducts(prods);
         saveStoredProducts(sorted);
         return sorted;
       }
-      return getStoredProducts();
+      return getStoredProducts().filter(p => !allDeleted.has(p.id));
     }
     const remoteProducts: Product[] = [];
     snapshot.forEach(docSnap => {
-      remoteProducts.push(docSnap.data() as Product);
+      const prod = docSnap.data() as Product;
+      if (!allDeleted.has(prod.id)) {
+        remoteProducts.push(prod);
+      } else {
+        // Asynchronously clean up from Firestore if document still exists
+        deleteDoc(docSnap.ref).catch(() => {});
+      }
     });
     const sorted = sortProducts(remoteProducts);
     saveStoredProducts(sorted);
     return sorted;
   } catch (err) {
     console.error('Error fetching live products from cloud:', err);
-    return getStoredProducts();
+    const localDeleted = new Set(getDeletedProductIds());
+    return getStoredProducts().filter(p => !localDeleted.has(p.id));
   }
 };
 
 // 1. Subscribe to Live Products across all devices (Mobile & Laptop)
 export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => {
-  // First, deliver cached local products immediately for fast startup
-  const local = getStoredProducts();
+  // First, deliver cached local products immediately for fast startup (filtered by deleted IDs)
+  const localDeleted = new Set(getDeletedProductIds());
+  const local = getStoredProducts().filter(p => !localDeleted.has(p.id));
   if (local.length > 0) {
     onUpdate(sortProducts(local));
   }
@@ -207,9 +255,18 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
         await seedInitialFirestoreData();
         return;
       }
+      const remoteDeleted = await fetchRemoteDeletedProductIds().catch(() => []);
+      const currentDeleted = new Set([...remoteDeleted, ...getDeletedProductIds()]);
+
       const remoteProducts: Product[] = [];
       snapshot.forEach(docSnap => {
-        remoteProducts.push(docSnap.data() as Product);
+        const prod = docSnap.data() as Product;
+        if (!currentDeleted.has(prod.id)) {
+          remoteProducts.push(prod);
+        } else {
+          // Asynchronously clean up resurrecting document from Firestore
+          deleteDoc(docSnap.ref).catch(() => {});
+        }
       });
 
       const sorted = sortProducts(remoteProducts);
@@ -219,7 +276,10 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
     },
     (error) => {
       console.warn('Firestore live products listener fallback to local cache:', error);
-      fetchRemoteProducts().then(onUpdate).catch(() => onUpdate(getStoredProducts()));
+      fetchRemoteProducts().then(onUpdate).catch(() => {
+        const delSet = new Set(getDeletedProductIds());
+        onUpdate(getStoredProducts().filter(p => !delSet.has(p.id)));
+      });
     }
   );
 
@@ -232,6 +292,20 @@ export const subscribeToProducts = (onUpdate: (products: Product[]) => void) => 
 // 2. Add or Update a product in Firestore (Live Sync)
 export const syncSaveProduct = async (product: Product): Promise<{ success: boolean; error?: string }> => {
   try {
+    // If product was previously in deleted list, unmark it so it stays alive
+    try {
+      const delRef = doc(db, SETTINGS_COLLECTION, DELETED_PRODUCTS_DOC);
+      const delSnap = await getDoc(delRef);
+      if (delSnap.exists() && Array.isArray(delSnap.data()?.ids)) {
+        const currentIds: string[] = delSnap.data().ids;
+        if (currentIds.includes(product.id)) {
+          const updatedIds = currentIds.filter(id => id !== product.id);
+          await setDoc(delRef, { ids: updatedIds, updatedAt: new Date().toISOString() }, { merge: true });
+          mergeDeletedProductIds(updatedIds);
+        }
+      }
+    } catch {}
+
     const sanitized = cleanFirestoreData(product);
     const ref = doc(db, PRODUCTS_COLLECTION, product.id);
     await setDoc(ref, sanitized);
@@ -271,16 +345,40 @@ export const syncSaveProduct = async (product: Product): Promise<{ success: bool
   }
 };
 
-// 3. Delete product from Firestore (Live across all mobile & laptop devices)
+// 3. Delete product permanently from Firestore (Live across all mobile & laptop devices)
 export const syncDeleteProduct = async (productId: string): Promise<{ success: boolean; error?: string }> => {
   try {
+    // 1. Immediately record in local storage
+    deleteStoredProduct(productId);
+
+    // 2. Persist in cloud settings/deleted_products document so all other devices and future syncs know it is deleted
+    try {
+      const delRef = doc(db, SETTINGS_COLLECTION, DELETED_PRODUCTS_DOC);
+      const delSnap = await getDoc(delRef);
+      const currentList: string[] = delSnap.exists() && Array.isArray(delSnap.data()?.ids) ? delSnap.data().ids : [];
+      if (!currentList.includes(productId)) {
+        const updatedList = [...currentList, productId];
+        await setDoc(delRef, {
+          ids: updatedList,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        mergeDeletedProductIds(updatedList);
+      }
+    } catch (delDocErr) {
+      console.warn('Warning updating deleted_products doc in Firestore:', delDocErr);
+    }
+
+    // 3. Delete document from products collection
     const ref = doc(db, PRODUCTS_COLLECTION, productId);
     await deleteDoc(ref);
+
+    // 4. Broadcast instant cross-tab / cross-window update
     broadcastSync('PRODUCTS_UPDATED');
-    console.log(`Successfully deleted product ${productId} from Firestore.`);
+    console.log(`Successfully deleted product ${productId} from Firestore & marked deleted.`);
     return { success: true };
   } catch (err: any) {
     console.error('Failed to delete product from Firestore:', err);
+    deleteStoredProduct(productId);
     return { success: false, error: err?.message || 'Failed to delete from cloud' };
   }
 };
@@ -738,23 +836,33 @@ export const syncDeleteCategory = async (categoryName: string): Promise<{ succes
 // Sync all local products and categories to Firestore cloud
 export const syncAllLocalToCloud = async (): Promise<{ success: boolean; productsCount: number; categoriesCount: number; message: string }> => {
   try {
-    const localProducts = getStoredProducts();
+    const remoteDeleted = await fetchRemoteDeletedProductIds().catch(() => []);
+    const localDeleted = getDeletedProductIds();
+    const allDeleted = new Set([...remoteDeleted, ...localDeleted]);
+
+    const localProducts = getStoredProducts().filter(p => !allDeleted.has(p.id));
     const localCategories = getStoredCategories();
-    const deletedIds = getDeletedProductIds();
 
     // 1. Sync Categories without resurrecting deleted categories
     await syncSaveCategories(localCategories, getDeletedCategoryNames());
 
-    // 2. Sync all local non-deleted products
+    // 2. Sync only valid non-deleted products
     let syncedProds = 0;
     for (const prod of localProducts) {
-      if (!deletedIds.includes(prod.id)) {
+      if (!allDeleted.has(prod.id)) {
         await syncSaveProduct(prod);
         syncedProds++;
       }
     }
 
-    // 3. Sync all local vouchers
+    // 3. Remove any deleted products if they happen to exist in Firestore
+    for (const delId of allDeleted) {
+      try {
+        await deleteDoc(doc(db, PRODUCTS_COLLECTION, delId));
+      } catch {}
+    }
+
+    // 4. Sync all local vouchers
     const localVouchers = getStoredVouchers();
     for (const v of localVouchers) {
       await syncSaveVoucher(v).catch(() => {});

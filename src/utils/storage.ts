@@ -127,6 +127,17 @@ export const getDeletedProductIds = (): string[] => {
   }
 };
 
+export const mergeDeletedProductIds = (remoteIds: string[]): string[] => {
+  try {
+    const local = getDeletedProductIds();
+    const merged = Array.from(new Set([...local, ...remoteIds]));
+    localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(merged));
+    return merged;
+  } catch {
+    return [];
+  }
+};
+
 export const deleteStoredProduct = (productId: string): Product[] => {
   try {
     const deletedIds = getDeletedProductIds();
@@ -154,15 +165,10 @@ export const getStoredProducts = (): Product[] => {
       return initial;
     }
     const parsed: Product[] = JSON.parse(data);
-    if (!Array.isArray(parsed)) return INITIAL_PRODUCTS;
-    // Ensure any newly added default products in updates are merged in
-    const existingIds = new Set(parsed.map(p => p.id));
-    const missingNew = INITIAL_PRODUCTS.filter(p => !existingIds.has(p.id) && !deletedIds.includes(p.id));
-    const merged = [...parsed, ...missingNew].filter(p => !deletedIds.includes(p.id));
-    if (missingNew.length > 0) {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(merged));
-    }
-    return merged;
+    if (!Array.isArray(parsed)) return INITIAL_PRODUCTS.filter(p => !deletedIds.includes(p.id));
+    // Filter out any deleted products; DO NOT automatically re-inject deleted products
+    const filtered = parsed.filter(p => !deletedIds.includes(p.id));
+    return filtered;
   } catch (e) {
     console.error('Failed to get stored products', e);
     const deletedIds = getDeletedProductIds();
