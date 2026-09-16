@@ -18,6 +18,11 @@ import {
   deleteStoredProduct,
   getStoredOrders, 
   saveStoredOrders, 
+  deleteStoredOrder,
+  getDeletedOrderIds,
+  getHistoricalDeliveredSales,
+  setHistoricalDeliveredSalesExact,
+  saveHistoricalDeliveredSales,
   getStoredVouchers, 
   saveStoredVouchers, 
   getDeletedProductIds,
@@ -387,12 +392,18 @@ export const syncDeleteProduct = async (productId: string): Promise<{ success: b
 // Direct one-time fetch of all orders from Firestore (works reliably across mobile & desktop)
 export const fetchRemoteOrders = async (): Promise<Order[]> => {
   try {
+    const deletedIds = getDeletedOrderIds();
     const snapshot = await getDocs(collection(db, ORDERS_COLLECTION));
     if (snapshot.empty) {
       await seedInitialFirestoreData();
       const retrySnap = await getDocs(collection(db, ORDERS_COLLECTION));
       const orders: Order[] = [];
-      retrySnap.forEach(d => orders.push(d.data() as Order));
+      retrySnap.forEach(d => {
+        const ord = d.data() as Order;
+        if (!deletedIds.includes(ord.id)) {
+          orders.push(ord);
+        }
+      });
       if (orders.length > 0) {
         orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         saveStoredOrders(orders);
@@ -402,7 +413,10 @@ export const fetchRemoteOrders = async (): Promise<Order[]> => {
     }
     const remoteOrders: Order[] = [];
     snapshot.forEach(docSnap => {
-      remoteOrders.push(docSnap.data() as Order);
+      const ord = docSnap.data() as Order;
+      if (!deletedIds.includes(ord.id)) {
+        remoteOrders.push(ord);
+      }
     });
     remoteOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     saveStoredOrders(remoteOrders);
@@ -441,9 +455,13 @@ export const subscribeToOrders = (onUpdate: (orders: Order[]) => void) => {
         await seedInitialFirestoreData();
         return;
       }
+      const deletedIds = getDeletedOrderIds();
       const remoteOrders: Order[] = [];
       snapshot.forEach(docSnap => {
-        remoteOrders.push(docSnap.data() as Order);
+        const ord = docSnap.data() as Order;
+        if (!deletedIds.includes(ord.id)) {
+          remoteOrders.push(ord);
+        }
       });
       // Sort newest first
       remoteOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -545,6 +563,43 @@ export const syncUpdateOrderStatus = async (
   } catch (err: any) {
     console.error('Failed to update order status in Firestore:', err);
     return { success: false, error: err?.message || 'Failed to update order in cloud' };
+  }
+};
+
+// 6b. Delete Order permanently from Cloud & preserve delivered sales in analytics
+export const syncDeleteOrder = async (
+  orderId: string,
+  preservedSales: number = 0,
+  preservedCount: number = 0
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    deleteStoredOrder(orderId);
+
+    // 1. Delete document from Firestore
+    const ref = doc(db, ORDERS_COLLECTION, orderId);
+    await deleteDoc(ref);
+    console.log(`Order ${orderId} deleted from Firestore.`);
+
+    // 2. If delivered, record preserved lifetime sales so the store's total revenue never decreases
+    if (preservedSales > 0 || preservedCount > 0) {
+      try {
+        const analyticsRef = doc(db, SETTINGS_COLLECTION, ANALYTICS_DOC);
+        await setDoc(analyticsRef, {
+          historicalDeliveredSales: increment(preservedSales),
+          historicalDeliveredCount: increment(preservedCount),
+          lastVisitAt: new Date().toISOString()
+        }, { merge: true });
+        broadcastSync('ANALYTICS_UPDATED');
+      } catch (err) {
+        console.warn('Could not increment historical sales in cloud analytics:', err);
+      }
+    }
+
+    broadcastSync('ORDERS_UPDATED');
+    return { success: true };
+  } catch (err: any) {
+    console.error(`Failed to delete order ${orderId} from Firestore:`, err);
+    return { success: false, error: err?.message || 'Failed to delete order from cloud' };
   }
 };
 
@@ -936,14 +991,35 @@ export const recordWebsiteVisit = async (): Promise<AnalyticsData> => {
       const total = Math.max(BASE_VISITOR_COUNT, rawTotal);
       const unique = Math.max(BASE_VISITOR_COUNT, rawUnique >= BASE_VISITOR_COUNT ? rawUnique : (BASE_VISITOR_COUNT + rawUnique));
       saveStoredVisitorCount(total);
+
+      const rawHistSales = Number(data.historicalDeliveredSales) || 0;
+      const rawHistCount = Number(data.historicalDeliveredCount) || 0;
+      const localHist = getHistoricalDeliveredSales();
+      const finalHistSales = Math.max(localHist.historicalDeliveredSales || 0, rawHistSales);
+      const finalHistCount = Math.max(localHist.historicalDeliveredCount || 0, rawHistCount);
+      setHistoricalDeliveredSalesExact(finalHistSales, finalHistCount);
+
       broadcastSync('ANALYTICS_UPDATED');
-      return { totalVisits: total, uniqueVisitors: unique, lastVisitAt: data.lastVisitAt };
+      return {
+        totalVisits: total,
+        uniqueVisitors: unique,
+        lastVisitAt: data.lastVisitAt,
+        historicalDeliveredSales: finalHistSales,
+        historicalDeliveredCount: finalHistCount
+      };
     }
   } catch (err) {
     console.warn('Could not record visit to Firestore cloud:', err);
   }
 
-  return { totalVisits: newLocal, uniqueVisitors: BASE_VISITOR_COUNT, lastVisitAt: new Date().toISOString() };
+  const localHist = getHistoricalDeliveredSales();
+  return { 
+    totalVisits: newLocal, 
+    uniqueVisitors: BASE_VISITOR_COUNT, 
+    lastVisitAt: new Date().toISOString(),
+    historicalDeliveredSales: localHist.historicalDeliveredSales,
+    historicalDeliveredCount: localHist.historicalDeliveredCount
+  };
 };
 
 export const fetchRemoteAnalytics = async (): Promise<AnalyticsData> => {
@@ -957,12 +1033,32 @@ export const fetchRemoteAnalytics = async (): Promise<AnalyticsData> => {
       const total = Math.max(BASE_VISITOR_COUNT, rawTotal);
       const unique = Math.max(BASE_VISITOR_COUNT, rawUnique >= BASE_VISITOR_COUNT ? rawUnique : (BASE_VISITOR_COUNT + rawUnique));
       saveStoredVisitorCount(total);
-      return { totalVisits: total, uniqueVisitors: unique, lastVisitAt: data.lastVisitAt };
+
+      const rawHistSales = Number(data.historicalDeliveredSales) || 0;
+      const rawHistCount = Number(data.historicalDeliveredCount) || 0;
+      const localHist = getHistoricalDeliveredSales();
+      const finalHistSales = Math.max(localHist.historicalDeliveredSales || 0, rawHistSales);
+      const finalHistCount = Math.max(localHist.historicalDeliveredCount || 0, rawHistCount);
+      setHistoricalDeliveredSalesExact(finalHistSales, finalHistCount);
+
+      return {
+        totalVisits: total,
+        uniqueVisitors: unique,
+        lastVisitAt: data.lastVisitAt,
+        historicalDeliveredSales: finalHistSales,
+        historicalDeliveredCount: finalHistCount
+      };
     }
   } catch (err) {
     console.warn('Could not fetch analytics from Firestore:', err);
   }
-  return { totalVisits: getStoredVisitorCount(), uniqueVisitors: BASE_VISITOR_COUNT };
+  const localHist = getHistoricalDeliveredSales();
+  return { 
+    totalVisits: getStoredVisitorCount(), 
+    uniqueVisitors: BASE_VISITOR_COUNT,
+    historicalDeliveredSales: localHist.historicalDeliveredSales,
+    historicalDeliveredCount: localHist.historicalDeliveredCount
+  };
 };
 
 export const subscribeToAnalytics = (onUpdate: (data: AnalyticsData) => void): (() => void) => {
@@ -985,12 +1081,32 @@ export const subscribeToAnalytics = (onUpdate: (data: AnalyticsData) => void): (
         const total = Math.max(BASE_VISITOR_COUNT, rawTotal);
         const unique = Math.max(BASE_VISITOR_COUNT, rawUnique >= BASE_VISITOR_COUNT ? rawUnique : (BASE_VISITOR_COUNT + rawUnique));
         saveStoredVisitorCount(total);
-        onUpdate({ totalVisits: total, uniqueVisitors: unique, lastVisitAt: data.lastVisitAt });
+
+        const rawHistSales = Number(data.historicalDeliveredSales) || 0;
+        const rawHistCount = Number(data.historicalDeliveredCount) || 0;
+        const localHist = getHistoricalDeliveredSales();
+        const finalHistSales = Math.max(localHist.historicalDeliveredSales || 0, rawHistSales);
+        const finalHistCount = Math.max(localHist.historicalDeliveredCount || 0, rawHistCount);
+        setHistoricalDeliveredSalesExact(finalHistSales, finalHistCount);
+
+        onUpdate({
+          totalVisits: total,
+          uniqueVisitors: unique,
+          lastVisitAt: data.lastVisitAt,
+          historicalDeliveredSales: finalHistSales,
+          historicalDeliveredCount: finalHistCount
+        });
       }
     },
     (error) => {
       console.warn('Firestore analytics subscription error:', error);
-      onUpdate({ totalVisits: getStoredVisitorCount(), uniqueVisitors: BASE_VISITOR_COUNT });
+      const localHist = getHistoricalDeliveredSales();
+      onUpdate({
+        totalVisits: getStoredVisitorCount(),
+        uniqueVisitors: BASE_VISITOR_COUNT,
+        historicalDeliveredSales: localHist.historicalDeliveredSales,
+        historicalDeliveredCount: localHist.historicalDeliveredCount
+      });
     }
   );
 

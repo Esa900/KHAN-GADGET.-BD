@@ -41,7 +41,7 @@ import {
 } from './types';
 import { 
   getStoredProducts, saveStoredProducts, deleteStoredProduct,
-  getStoredOrders, saveStoredOrders, updateOrderStatus,
+  getStoredOrders, saveStoredOrders, deleteStoredOrder, updateOrderStatus,
   getStoredVouchers, saveStoredVouchers,
   getStoredCart, saveStoredCart,
   getStoredWishlist, saveStoredWishlist,
@@ -66,6 +66,7 @@ import {
   syncSaveProduct,
   syncDeleteProduct,
   syncUpdateOrderStatus,
+  syncDeleteOrder,
   syncSaveVoucher,
   syncDeleteVoucher,
   syncSaveCategories,
@@ -670,12 +671,38 @@ export default function App() {
   };
 
   const handleAdminUpdateOrderStatus = (orderId: string, status: OrderStatus, carrier?: string, note?: string) => {
+    const prevOrder = orders.find(o => o.id === orderId);
     const updated = updateOrderStatus(orderId, status, carrier, note);
     syncUpdateOrderStatus(orderId, status, carrier, note).catch(console.error);
     if (updated) {
       setOrders(getStoredOrders());
-      showToast(`Order ${orderId} updated to ${status}. Tracking updated!`);
+      if (status === 'Delivered' && prevOrder?.status !== 'Delivered') {
+        showToast(`🎉 অর্ডার #${orderId} ডেলিভার্ড চিহ্নিত হয়েছে! ${formatPrice(updated.total)} টাকা মোট বিক্রয়ে যুক্ত হয়েছে।`);
+      } else {
+        showToast(`Order ${orderId} updated to ${status}. Tracking updated!`);
+      }
     }
+  };
+
+  const handleAdminDeleteOrder = async (orderId: string): Promise<boolean> => {
+    const target = orders.find(o => o.id === orderId);
+    const wasDelivered = target?.status === 'Delivered';
+    const amountPreserved = wasDelivered ? (target?.total || 0) : 0;
+
+    const { orders: localUpdated, wasDelivered: wasDeliv } = deleteStoredOrder(orderId);
+    setOrders(localUpdated);
+
+    const res = await syncDeleteOrder(orderId, amountPreserved, wasDelivered ? 1 : 0);
+    
+    // Refresh analytics to reflect any preserved sales
+    fetchRemoteAnalytics().then(setVisitorStats).catch(console.error);
+
+    if (wasDeliv || wasDelivered) {
+      showToast(`অর্ডার #${orderId} সফলভাবে মুছে ফেলা হয়েছে! ডেলিভার্ড সেলস (${formatPrice(amountPreserved)}) মোট বিক্রয়ে অক্ষুণ্ণ আছে।`);
+    } else {
+      showToast(`অর্ডার #${orderId} সফলভাবে ডিলিট করা হয়েছে।`);
+    }
+    return res.success;
   };
 
   const handleAdminAddVoucher = (newVoucher: Voucher) => {
@@ -1222,6 +1249,7 @@ export default function App() {
         onUpdateProduct={handleAdminUpdateProduct}
         onDeleteProduct={handleAdminDeleteProduct}
         onUpdateOrderStatus={handleAdminUpdateOrderStatus}
+        onDeleteOrder={handleAdminDeleteOrder}
         onAddVoucher={handleAdminAddVoucher}
         onDeleteVoucher={handleAdminDeleteVoucher}
         onAddCategory={handleAdminAddCategory}

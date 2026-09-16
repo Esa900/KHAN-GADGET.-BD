@@ -144,6 +144,8 @@ export interface AnalyticsData {
   totalVisits: number;
   uniqueVisitors: number;
   lastVisitAt?: string;
+  historicalDeliveredSales?: number;
+  historicalDeliveredCount?: number;
 }
 
 export interface StoreConfig {

@@ -4,6 +4,8 @@ import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_VOUCHERS } from '../data/mock
 const PRODUCTS_KEY = 'khan_gadget_products_v2';
 const DELETED_PRODUCT_IDS_KEY = 'khan_gadget_deleted_products_v2';
 const ORDERS_KEY = 'khan_gadget_orders_v2';
+const DELETED_ORDER_IDS_KEY = 'khan_gadget_deleted_orders_v2';
+const HISTORICAL_SALES_KEY = 'khan_gadget_historical_sales_v1';
 const VOUCHERS_KEY = 'khan_gadget_vouchers_v2';
 const CART_KEY = 'khan_gadget_cart_v2';
 const WISHLIST_KEY = 'khan_gadget_wishlist_v2';
@@ -184,14 +186,78 @@ export const saveStoredProducts = (products: Product[]): void => {
   }
 };
 
+export interface HistoricalSalesData {
+  historicalDeliveredSales: number;
+  historicalDeliveredCount: number;
+}
+
+export const getHistoricalDeliveredSales = (): HistoricalSalesData => {
+  try {
+    const data = localStorage.getItem(HISTORICAL_SALES_KEY);
+    if (!data) return { historicalDeliveredSales: 0, historicalDeliveredCount: 0 };
+    return JSON.parse(data);
+  } catch {
+    return { historicalDeliveredSales: 0, historicalDeliveredCount: 0 };
+  }
+};
+
+export const saveHistoricalDeliveredSales = (amount: number, count: number = 1): HistoricalSalesData => {
+  try {
+    const current = getHistoricalDeliveredSales();
+    const updated: HistoricalSalesData = {
+      historicalDeliveredSales: Math.max(0, (current.historicalDeliveredSales || 0) + amount),
+      historicalDeliveredCount: Math.max(0, (current.historicalDeliveredCount || 0) + count)
+    };
+    localStorage.setItem(HISTORICAL_SALES_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (e) {
+    console.error('Failed to save historical sales', e);
+    return { historicalDeliveredSales: 0, historicalDeliveredCount: 0 };
+  }
+};
+
+export const setHistoricalDeliveredSalesExact = (sales: number, count: number): void => {
+  try {
+    localStorage.setItem(HISTORICAL_SALES_KEY, JSON.stringify({
+      historicalDeliveredSales: Math.max(0, sales),
+      historicalDeliveredCount: Math.max(0, count)
+    }));
+  } catch (e) {
+    console.error('Failed to set historical sales', e);
+  }
+};
+
+export const getDeletedOrderIds = (): string[] => {
+  try {
+    const data = localStorage.getItem(DELETED_ORDER_IDS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const mergeDeletedOrderIds = (remoteIds: string[]): string[] => {
+  try {
+    const local = getDeletedOrderIds();
+    const merged = Array.from(new Set([...local, ...remoteIds]));
+    localStorage.setItem(DELETED_ORDER_IDS_KEY, JSON.stringify(merged));
+    return merged;
+  } catch {
+    return [];
+  }
+};
+
 export const getStoredOrders = (): Order[] => {
   try {
     const data = localStorage.getItem(ORDERS_KEY);
+    const deletedIds = getDeletedOrderIds();
     if (!data) {
-      localStorage.setItem(ORDERS_KEY, JSON.stringify(INITIAL_ORDERS));
-      return INITIAL_ORDERS;
+      const filteredInitial = INITIAL_ORDERS.filter(o => !deletedIds.includes(o.id));
+      localStorage.setItem(ORDERS_KEY, JSON.stringify(filteredInitial));
+      return filteredInitial;
     }
-    return JSON.parse(data);
+    const parsed: Order[] = JSON.parse(data);
+    return parsed.filter(o => !deletedIds.includes(o.id));
   } catch (e) {
     console.error('Failed to get stored orders', e);
     return INITIAL_ORDERS;
@@ -200,10 +266,59 @@ export const getStoredOrders = (): Order[] => {
 
 export const saveStoredOrders = (orders: Order[]): void => {
   try {
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+    const deletedIds = getDeletedOrderIds();
+    const filtered = orders.filter(o => !deletedIds.includes(o.id));
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(filtered));
   } catch (e) {
     console.error('Failed to save orders', e);
   }
+};
+
+export const deleteStoredOrder = (orderId: string): { orders: Order[]; preservedAmount: number; wasDelivered: boolean } => {
+  try {
+    const deletedIds = getDeletedOrderIds();
+    if (!deletedIds.includes(orderId)) {
+      deletedIds.push(orderId);
+      localStorage.setItem(DELETED_ORDER_IDS_KEY, JSON.stringify(deletedIds));
+    }
+
+    const currentOrders = getStoredOrders();
+    const targetOrder = currentOrders.find(o => o.id === orderId);
+    let preservedAmount = 0;
+    let wasDelivered = false;
+
+    if (targetOrder && targetOrder.status === 'Delivered') {
+      preservedAmount = targetOrder.total;
+      wasDelivered = true;
+      // Permanently archive this delivered sales amount so total sales never drops!
+      saveHistoricalDeliveredSales(targetOrder.total, 1);
+    }
+
+    const filtered = currentOrders.filter(o => o.id !== orderId);
+    saveStoredOrders(filtered);
+    return { orders: filtered, preservedAmount, wasDelivered };
+  } catch (e) {
+    console.error('Failed to delete stored order', e);
+    return { orders: getStoredOrders(), preservedAmount: 0, wasDelivered: false };
+  }
+};
+
+export const calculateTotalDeliveredSales = (orders: Order[], analytics?: { historicalDeliveredSales?: number; historicalDeliveredCount?: number }): { totalSales: number; totalCount: number } => {
+  const deliveredInOrders = orders.filter(o => o.status === 'Delivered');
+  const activeDeliveredSales = deliveredInOrders.reduce((sum, o) => sum + o.total, 0);
+  const activeDeliveredCount = deliveredInOrders.length;
+
+  const localHistorical = getHistoricalDeliveredSales();
+  const remoteHistoricalSales = Number(analytics?.historicalDeliveredSales) || 0;
+  const remoteHistoricalCount = Number(analytics?.historicalDeliveredCount) || 0;
+
+  const historicalSales = Math.max(localHistorical.historicalDeliveredSales || 0, remoteHistoricalSales);
+  const historicalCount = Math.max(localHistorical.historicalDeliveredCount || 0, remoteHistoricalCount);
+
+  return {
+    totalSales: activeDeliveredSales + historicalSales,
+    totalCount: activeDeliveredCount + historicalCount
+  };
 };
 
 export const addStoredOrder = (newOrder: Order): void => {
@@ -489,6 +604,8 @@ export const resetToDemoDefaults = () => {
   localStorage.setItem(PRODUCTS_KEY, JSON.stringify(INITIAL_PRODUCTS));
   localStorage.removeItem(DELETED_PRODUCT_IDS_KEY);
   localStorage.setItem(ORDERS_KEY, JSON.stringify(INITIAL_ORDERS));
+  localStorage.removeItem(DELETED_ORDER_IDS_KEY);
+  localStorage.removeItem(HISTORICAL_SALES_KEY);
   localStorage.setItem(VOUCHERS_KEY, JSON.stringify(INITIAL_VOUCHERS));
   localStorage.removeItem(CART_KEY);
   localStorage.removeItem(WISHLIST_KEY);

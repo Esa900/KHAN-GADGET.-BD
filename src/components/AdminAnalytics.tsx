@@ -17,7 +17,7 @@ import {
   Info
 } from 'lucide-react';
 import { Order, Product, AnalyticsData, OrderStatus } from '../types';
-import { formatPrice, BASE_VISITOR_COUNT } from '../utils/storage';
+import { formatPrice, BASE_VISITOR_COUNT, calculateTotalDeliveredSales } from '../utils/storage';
 
 interface AdminAnalyticsProps {
   orders: Order[];
@@ -40,10 +40,9 @@ export const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
 }) => {
   const [quickDeliveringId, setQuickDeliveringId] = useState<string | null>(null);
 
-  // 1. Delivered Sales: ONLY counted when status is 'Delivered'
+  // 1. Delivered Sales: Counted when status is 'Delivered' and permanently preserved if deleted from history
   const deliveredOrders = orders.filter(o => o.status === 'Delivered');
-  const deliveredSales = deliveredOrders.reduce((sum, o) => sum + o.total, 0);
-  const deliveredCount = deliveredOrders.length;
+  const { totalSales: deliveredSales, totalCount: deliveredCount } = calculateTotalDeliveredSales(orders, visitorStats);
 
   // 2. In-Transit / Pipeline Orders (Confirmed, Processing, Shipped, Out for Delivery)
   const inTransitOrders = orders.filter(o => 
@@ -175,12 +174,12 @@ export const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
             📌 বিক্রয় ও ভিজিটর গণনা পদ্ধতি (Sales & Visitor Counting Rule):
           </p>
           <p className="text-gray-700 leading-relaxed">
-            ১. গ্রাহক অর্ডার কনফার্ম করার পর অর্ডারটি ট্রানজিটে থাকে। অ্যাডমিন প্যানেল থেকে যখন কোনো অর্ডারের স্ট্যাটাস 
+            ১. গ্রাহক অর্ডার কনফার্ম করার পর অ্যাডমিন প্যানেল থেকে যখন কোনো অর্ডারের স্ট্যাটাস 
             <strong className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-black mx-1 border border-emerald-200">
               "Delivered"
             </strong> 
-            করা হবে, তখনই সাথে সাথে সেই অর্ডারের মোট টাকা <strong>"আদায়কৃত মোট বিক্রয় (Delivered Sales Amount)"</strong>-এ যোগ হবে।<br />
-            ২. যেকেউ ওয়েবসাইটে যেকোনো ডিভাইস বা ব্রাউজার থেকে ভিজিট করলে তা <strong>"মোট ব্যবহারকারী / ভিজিটর (Total Users)"</strong>-এ স্বয়ংক্রিয়ভাবে ১ করে যোগ হয়।
+            করা হবে, তখনই সাথে সাথে সেই অর্ডারের টাকা <strong>"আদায়কৃত মোট বিক্রয় (Delivered Sales Amount)"</strong>-এ যোগ হবে। পরবর্তীতে অর্ডার হিস্ট্রি থেকে পুরনো ডেলিভার্ড অর্ডার মুছে ফেললেও বিক্রয়ের মোট হিসাব সম্পূর্ণ সংরক্ষিত ও অপরিবর্তিত থাকবে।<br />
+            ২. যেকেউ ওয়েবসাইটে যেকোনো ডিভাইস বা ব্রাউজার থেকে ভিজিট করলে তা <strong>"মোট ব্যবহারকারী / ভিজিটর (Total Users)"</strong>-এ স্বয়ংক্রিয়ভাবে যোগ হয়।
           </p>
         </div>
       </div>

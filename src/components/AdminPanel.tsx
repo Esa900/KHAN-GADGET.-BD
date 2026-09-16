@@ -9,7 +9,7 @@ import {
   Printer, ExternalLink, FolderTree, BarChart3, Users, Sparkles, ShieldCheck, Megaphone, Globe
 } from 'lucide-react';
 import { Product, Order, Voucher, OrderStatus, ProductCategory, DEFAULT_CATEGORIES, AnalyticsData, StoreConfig, DEFAULT_STORE_CONFIG } from '../types';
-import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl, getStoredVisitorCount, BASE_VISITOR_COUNT } from '../utils/storage';
+import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl, getStoredVisitorCount, BASE_VISITOR_COUNT, calculateTotalDeliveredSales } from '../utils/storage';
 import { compressImage } from '../utils/image';
 import { InvoiceModal } from './InvoiceModal';
 import { CategoryManager } from './CategoryManager';
@@ -29,6 +29,7 @@ interface AdminPanelProps {
   onUpdateProduct: (product: Product) => Promise<boolean> | void;
   onDeleteProduct: (productId: string) => Promise<boolean> | void;
   onUpdateOrderStatus: (orderId: string, status: OrderStatus, carrier?: string, note?: string) => void;
+  onDeleteOrder?: (orderId: string) => Promise<boolean> | void;
   onAddVoucher: (voucher: Voucher) => void;
   onDeleteVoucher: (code: string) => void;
   onAddCategory?: (categoryName: string) => Promise<boolean> | void;
@@ -52,6 +53,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onUpdateProduct,
   onDeleteProduct,
   onUpdateOrderStatus,
+  onDeleteOrder,
   onAddVoucher,
   onDeleteVoucher,
   onAddCategory,
@@ -381,11 +383,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Order Management States
   const [orderFilter, setOrderFilter] = useState<string>('All');
+  const [orderSearch, setOrderSearch] = useState<string>('');
   const [selectedOrderForEdit, setSelectedOrderForEdit] = useState<Order | null>(null);
   const [orderForInvoice, setOrderForInvoice] = useState<Order | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus>('Shipped');
   const [statusNote, setStatusNote] = useState('');
   const [courierName, setCourierName] = useState('Daraz Express (DEX)');
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [isDeletingOrder, setIsDeletingOrder] = useState<boolean>(false);
 
   // Voucher Form State
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
@@ -406,10 +411,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   if (!isOpen) return null;
 
   // KPI calculations
-  // User mandate: Confirmed Sales Amount ONLY adds up orders when marked as 'Delivered'!
+  // User mandate: Confirmed Sales Amount ONLY adds up orders when marked as 'Delivered' (and preserved even if deleted from history)!
   const deliveredOrders = orders.filter(o => o.status === 'Delivered');
-  const deliveredRevenue = deliveredOrders.reduce((sum, o) => sum + o.total, 0);
-  const deliveredCount = deliveredOrders.length;
+  const { totalSales: deliveredRevenue, totalCount: deliveredCount } = calculateTotalDeliveredSales(orders, visitorStats);
   const inTransitOrders = orders.filter(o => ['Confirmed', 'Processing', 'Shipped', 'Out for Delivery'].includes(o.status));
   const inTransitRevenue = inTransitOrders.reduce((sum, o) => sum + o.total, 0);
   const inTransitCount = inTransitOrders.length;
@@ -519,6 +523,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setStatusNote('');
   };
 
+  const handleConfirmDeleteOrder = async (order: Order) => {
+    if (!onDeleteOrder) return;
+    setIsDeletingOrder(true);
+    try {
+      await onDeleteOrder(order.id);
+      setOrderToDelete(null);
+      if (selectedOrderForEdit?.id === order.id) {
+        setSelectedOrderForEdit(null);
+      }
+    } catch (err) {
+      console.error('Failed to delete order:', err);
+    } finally {
+      setIsDeletingOrder(false);
+    }
+  };
+
   const handleSaveVoucher = (e: React.FormEvent) => {
     e.preventDefault();
     if (!voucherForm.code) return;
@@ -542,8 +562,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   });
 
   const filteredOrders = orders.filter(o => {
-    if (orderFilter === 'All') return true;
-    return o.status === orderFilter;
+    const matchesStatus = orderFilter === 'All' || o.status === orderFilter;
+    if (!matchesStatus) return false;
+    if (!orderSearch.trim()) return true;
+    const query = orderSearch.toLowerCase().trim();
+    return (
+      o.id.toLowerCase().includes(query) ||
+      (o.shippingAddress?.fullName || '').toLowerCase().includes(query) ||
+      (o.shippingAddress?.phone || '').includes(query) ||
+      (o.shippingAddress?.city || '').toLowerCase().includes(query) ||
+      (o.carrierName || '').toLowerCase().includes(query) ||
+      (o.trackingNumber || '').toLowerCase().includes(query)
+    );
   });
 
   // If not yet authenticated, show the App Login dialog
@@ -1111,21 +1141,76 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* TAB 3: Orders Management */}
           {activeTab === 'orders' && (
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-1 overflow-x-auto text-xs">
+              {/* Sales Preservation & Quick Stats Banner */}
+              <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Banknote className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900">মোট আদায়কৃত বিক্রয়:</span>
+                      <span className="font-black text-emerald-700 text-sm">{formatPrice(deliveredRevenue)}</span>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                        {deliveredCount} টি ডেলিভার্ড
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-600 mt-0.5">
+                      💡 <strong>বিক্রয় হিসাব অক্ষুণ্ণ:</strong> যেকোনো ডেলিভার্ড অর্ডার হিস্ট্রি থেকে ডিলিট করলেও মোট সেলস অ্যামাউন্টে (Sell Amount) কোনো প্রভাব পড়বে না।
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-gray-500 font-medium">হিস্ট্রিতে মোট অর্ডার:</span>
+                  <span className="font-bold text-gray-900 bg-white border border-gray-200 px-2.5 py-1 rounded-lg">
+                    {orders.length} টি
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Filter Tabs & Search Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-1 overflow-x-auto text-xs py-0.5">
                   {['All', 'Confirmed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'].map((status) => (
                     <button
                       key={status}
                       onClick={() => setOrderFilter(status)}
-                      className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer whitespace-nowrap ${
                         orderFilter === status
                           ? 'bg-gray-900 text-white'
                           : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                       }`}
                     >
                       {status}
+                      {status === 'Delivered' && (
+                        <span className="ml-1.5 text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-full font-black">
+                          {orders.filter(o => o.status === 'Delivered').length}
+                        </span>
+                      )}
                     </button>
                   ))}
+                </div>
+
+                {/* Search orders */}
+                <div className="relative min-w-[240px]">
+                  <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    placeholder="Search by ID, name, phone, tracking..."
+                    style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                    className="w-full pl-9 pr-8 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 text-gray-900 placeholder:text-gray-400"
+                  />
+                  {orderSearch && (
+                    <button 
+                      onClick={() => setOrderSearch('')} 
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1145,7 +1230,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {filteredOrders.map((order) => (
+                      {filteredOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-gray-400">
+                            কোনো অর্ডার পাওয়া যায়নি।
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredOrders.map((order) => (
                         <tr key={order.id} className="hover:bg-gray-50/80">
                           <td className="p-3 font-mono">
                             <span className="font-bold text-gray-900 block">{order.id}</span>
@@ -1184,7 +1276,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </td>
                           <td className="p-3 font-black text-[#f85606]">{formatPrice(order.total)}</td>
                           <td className="p-3">
-                            <span className="bg-orange-100 text-[#f85606] font-bold px-2.5 py-1 rounded-full text-[10px]">
+                            <span className={`font-bold px-2.5 py-1 rounded-full text-[10px] ${
+                              order.status === 'Delivered' 
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                : order.status === 'Cancelled'
+                                ? 'bg-rose-100 text-rose-700'
+                                : 'bg-orange-100 text-[#f85606]'
+                            }`}>
                               {order.status}
                             </span>
                           </td>
@@ -1193,7 +1291,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               <button
                                 type="button"
                                 onClick={() => setOrderForInvoice(order)}
-                                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                                className="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1 transition cursor-pointer"
                                 title="Print Invoice / Cash Memo"
                               >
                                 <Printer className="w-3.5 h-3.5 text-slate-600" />
@@ -1205,14 +1303,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                   setNewStatus(order.status);
                                   setCourierName(order.carrierName || 'Daraz Express (DEX)');
                                 }}
-                                className="px-3 py-1.5 bg-[#f85606] hover:bg-[#e04a00] text-white rounded-lg font-bold text-xs transition cursor-pointer shadow-xs"
+                                className="px-2.5 py-1.5 bg-[#f85606] hover:bg-[#e04a00] text-white rounded-lg font-bold text-xs transition cursor-pointer shadow-xs"
                               >
                                 View Details
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setOrderToDelete(order)}
+                                className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer border border-transparent hover:border-rose-200"
+                                title="হিস্ট্রি থেকে অর্ডার ডিলিট করুন (Delete Order)"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      )))}
                     </tbody>
                   </table>
                 </div>
@@ -2572,11 +2678,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     />
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-orange-200/70">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-orange-200/70">
                     <p className="text-[10px] text-gray-500 italic">
                       Updating will instantly log this checkpoint to customer live tracking.
                     </p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOrderToDelete(selectedOrderForEdit);
+                        }}
+                        className="px-3.5 py-2 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-lg font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+                        title="Delete this order from history"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete Order</span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => setSelectedOrderForEdit(null)}
@@ -2776,7 +2893,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 >
                   Cancel
                 </button>
-                  <button
+                <button
                   type="button"
                   onClick={() => {
                     onDeleteVoucher(voucherToDelete);
@@ -2785,6 +2902,67 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition shadow-sm cursor-pointer"
                 >
                   Yes, Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: Confirmation for Deleting Order from History */}
+        {orderToDelete && (
+          <div 
+            className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setOrderToDelete(null)}
+          >
+            <div 
+              className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 border border-gray-100 text-center animate-in zoom-in-95 duration-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-base mb-1">অর্ডার ডিলিট করবেন?</h3>
+              <p className="text-xs text-gray-600 mb-2">
+                আপনি কি অর্ডার <strong className="font-mono text-gray-900">#{orderToDelete.id}</strong> ({orderToDelete.shippingAddress?.fullName}) হিস্ট্রি থেকে মুছে ফেলতে চান?
+              </p>
+              {orderToDelete.status === 'Delivered' ? (
+                <div className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl mb-4 text-left">
+                  <div className="font-bold flex items-center gap-1.5 text-emerald-900">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>মোট বিক্রয় সম্পূর্ণ সুরক্ষিত থাকবে!</span>
+                  </div>
+                  <p className="mt-1 text-emerald-700 leading-relaxed">
+                    যেহেতু অর্ডারটি <strong>Delivered</strong> হয়েছে, এর মূল্য ({formatPrice(orderToDelete.total)}) আপনার সর্বমোট বিক্রয় এমাউন্টে (Sell Amount) আজীবনের জন্য জমা থাকবে।
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded-lg mb-4 font-medium">
+                  ⚠️ এই অর্ডারটি সম্পূর্ণভাবে হিস্ট্রি ও ক্লাউড ডাটাবেজ থেকে মুছে ফেলা হবে।
+                </p>
+              )}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isDeletingOrder}
+                  onClick={() => setOrderToDelete(null)}
+                  className="flex-1 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer disabled:opacity-50"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeletingOrder}
+                  onClick={() => handleConfirmDeleteOrder(orderToDelete)}
+                  className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition shadow-sm cursor-pointer disabled:opacity-60 flex items-center justify-center gap-1.5"
+                >
+                  {isDeletingOrder ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      মুছে ফেলা হচ্ছে...
+                    </>
+                  ) : (
+                    'হ্যাঁ, ডিলিট করুন'
+                  )}
                 </button>
               </div>
             </div>
