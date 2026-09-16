@@ -1,6 +1,6 @@
 {
-  "name": "KHAN GADGET BD - Premium Gadgets & Lifestyle Mall",
-  "description": "KHAN GADGET BD: অরিজিনাল গ্যাজেট, প্রিমিয়াম লাইফস্টাইল এবং খাঁটি খাদ্যপণ্যের বিশ্বস্ত অনলাইন মার্কেটপ্লেস।",
+  "name": "KHAN GADGET MALL | Bangladesh's Mobile Accessories Mall",
+  "description": "সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -15,6 +15,7 @@ import { INITIAL_PRODUCTS, INITIAL_ORDERS, INITIAL_VOUCHERS } from '../data/mock
 import { 
   getStoredProducts, 
   saveStoredProducts, 
+  deleteStoredProduct,
   getStoredOrders, 
   saveStoredOrders, 
   getStoredVouchers, 
@@ -1013,6 +1014,8 @@ export const fetchRemoteStoreConfig = async (): Promise<StoreConfig> => {
         adminPassword: data.adminPassword || DEFAULT_STORE_CONFIG.adminPassword,
         announcementText: data.announcementText !== undefined ? data.announcementText : DEFAULT_STORE_CONFIG.announcementText,
         announcementEnabled: data.announcementEnabled !== undefined ? data.announcementEnabled : DEFAULT_STORE_CONFIG.announcementEnabled,
+        seoTitle: data.seoTitle || DEFAULT_STORE_CONFIG.seoTitle,
+        seoDescription: data.seoDescription || DEFAULT_STORE_CONFIG.seoDescription,
         updatedAt: data.updatedAt || new Date().toISOString()
       };
       saveStoredStoreConfig(merged);
@@ -1066,6 +1069,8 @@ export const subscribeToStoreConfig = (onUpdate: (config: StoreConfig) => void):
           adminPassword: data.adminPassword || DEFAULT_STORE_CONFIG.adminPassword,
           announcementText: data.announcementText !== undefined ? data.announcementText : DEFAULT_STORE_CONFIG.announcementText,
           announcementEnabled: data.announcementEnabled !== undefined ? data.announcementEnabled : DEFAULT_STORE_CONFIG.announcementEnabled,
+          seoTitle: data.seoTitle || DEFAULT_STORE_CONFIG.seoTitle,
+          seoDescription: data.seoDescription || DEFAULT_STORE_CONFIG.seoDescription,
           updatedAt: data.updatedAt || new Date().toISOString()
         };
         saveStoredStoreConfig(merged);

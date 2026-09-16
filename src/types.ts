@@ -153,6 +153,8 @@ export interface StoreConfig {
   adminPassword?: string;
   announcementText?: string;
   announcementEnabled?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
   updatedAt?: string;
 }
 
@@ -162,5 +164,7 @@ export const DEFAULT_STORE_CONFIG: StoreConfig = {
   about: "Bangladesh's premium mobile accessories mall for fast chargers, MagSafe cases, earbuds, and gaming gear.",
   adminPassword: 'ESA006##',
   announcementText: '🔥 আজকের স্পেশাল অফার: যেকোনো গ্যাজেট অর্ডারে ১০% ইনস্ট্যান্ট ছাড়! প্রোমোকোড: KHAN10 | সারাদেশে ক্যাশ অন ডেলিভারি (COD) | ১০০% অরিজিনাল প্রোডাক্টের গ্যারান্টি',
-  announcementEnabled: true
+  announcementEnabled: true,
+  seoTitle: "KHAN GADGET MALL | Bangladesh's Mobile Accessories Mall",
+  seoDescription: "সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং."
 };

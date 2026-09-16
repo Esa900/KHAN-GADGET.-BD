@@ -96,12 +96,81 @@ export default function App() {
     lastVisitAt: new Date().toISOString()
   }));
 
-  // Synchronize document title with configured Store Name
+  // Synchronize document title, meta tags, and structured data with configured Store Name & SEO Settings
   useEffect(() => {
-    if (storeConfig?.storeName) {
-      document.title = `${storeConfig.storeName} - Premium Mobile Accessories Mall`;
+    const pageTitle = storeConfig?.seoTitle?.trim() 
+      ? storeConfig.seoTitle.trim() 
+      : `${storeConfig?.storeName || 'KHAN GADGET MALL'} | Bangladesh's Mobile Accessories Mall`;
+    
+    const pageDescription = storeConfig?.seoDescription?.trim()
+      ? storeConfig.seoDescription.trim()
+      : "সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং.";
+
+    // 1. Browser Tab / Page Title
+    document.title = pageTitle;
+
+    // 2. Meta Description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
     }
-  }, [storeConfig?.storeName]);
+    metaDesc.setAttribute('content', pageDescription);
+
+    // 3. OpenGraph Title & Description
+    let ogTitle = document.querySelector('meta[property="og:title"]');
+    if (!ogTitle) {
+      ogTitle = document.createElement('meta');
+      ogTitle.setAttribute('property', 'og:title');
+      document.head.appendChild(ogTitle);
+    }
+    ogTitle.setAttribute('content', pageTitle);
+
+    let ogDesc = document.querySelector('meta[property="og:description"]');
+    if (!ogDesc) {
+      ogDesc = document.createElement('meta');
+      ogDesc.setAttribute('property', 'og:description');
+      document.head.appendChild(ogDesc);
+    }
+    ogDesc.setAttribute('content', pageDescription);
+
+    // 4. Twitter Cards
+    let twitterTitle = document.querySelector('meta[name="twitter:title"]');
+    if (!twitterTitle) {
+      twitterTitle = document.createElement('meta');
+      twitterTitle.setAttribute('name', 'twitter:title');
+      document.head.appendChild(twitterTitle);
+    }
+    twitterTitle.setAttribute('content', pageTitle);
+
+    let twitterDesc = document.querySelector('meta[name="twitter:description"]');
+    if (!twitterDesc) {
+      twitterDesc = document.createElement('meta');
+      twitterDesc.setAttribute('name', 'twitter:description');
+      document.head.appendChild(twitterDesc);
+    }
+    twitterDesc.setAttribute('content', pageDescription);
+
+    // 5. Schema.org JSON-LD Structured Data for search engines
+    let schemaScript = document.getElementById('store-schema-jsonld') as HTMLScriptElement | null;
+    if (!schemaScript) {
+      schemaScript = document.createElement('script');
+      schemaScript.id = 'store-schema-jsonld';
+      schemaScript.type = 'application/ld+json';
+      document.head.appendChild(schemaScript);
+    }
+    const schemaData = {
+      "@context": "https://schema.org",
+      "@type": "OnlineStore",
+      "name": storeConfig?.storeName || 'KHAN GADGET MALL',
+      "headline": pageTitle,
+      "description": pageDescription,
+      "telephone": storeConfig?.phone || '01854774406',
+      "url": typeof window !== 'undefined' ? window.location.origin : ''
+    };
+    schemaScript.textContent = JSON.stringify(schemaData);
+  }, [storeConfig?.storeName, storeConfig?.seoTitle, storeConfig?.seoDescription, storeConfig?.phone]);
 
   // Modals visibility
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -327,13 +396,6 @@ export default function App() {
   useEffect(() => {
     saveStoredWishlist(wishlist);
   }, [wishlist]);
-
-  // Sync document title with current store name
-  useEffect(() => {
-    if (storeConfig.storeName) {
-      document.title = `${storeConfig.storeName} | Bangladesh's Mobile Accessories Mall`;
-    }
-  }, [storeConfig.storeName]);
 
   // Available unique brands for filter
   const brands = useMemo(() => {

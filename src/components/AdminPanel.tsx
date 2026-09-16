@@ -6,7 +6,7 @@ import {
   Search, Eye, EyeOff, RefreshCw, KeyRound, Lock, Unlock,
   Phone, MessageCircle, FileText, User, MapPin, Banknote,
   Upload, Camera, Image as ImageIcon, Link as LinkIcon, Loader2,
-  Printer, ExternalLink, FolderTree, BarChart3, Users, Sparkles, ShieldCheck, Megaphone
+  Printer, ExternalLink, FolderTree, BarChart3, Users, Sparkles, ShieldCheck, Megaphone, Globe
 } from 'lucide-react';
 import { Product, Order, Voucher, OrderStatus, ProductCategory, DEFAULT_CATEGORIES, AnalyticsData, StoreConfig, DEFAULT_STORE_CONFIG } from '../types';
 import { formatPrice, resetToDemoDefaults, getCourierTrackingUrl, getStoredVisitorCount, BASE_VISITOR_COUNT } from '../utils/storage';
@@ -126,6 +126,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [storeNameInput, setStoreNameInput] = useState(storeConfig?.storeName || 'KHAN GADGET MALL');
   const [storePhoneInput, setStorePhoneInput] = useState(storeConfig?.phone || '01854774406');
   const [storeAboutInput, setStoreAboutInput] = useState(storeConfig?.about || DEFAULT_STORE_CONFIG.about);
+  const [seoTitleInput, setSeoTitleInput] = useState(storeConfig?.seoTitle || DEFAULT_STORE_CONFIG.seoTitle || "KHAN GADGET MALL | Bangladesh's Mobile Accessories Mall");
+  const [seoDescriptionInput, setSeoDescriptionInput] = useState(storeConfig?.seoDescription || DEFAULT_STORE_CONFIG.seoDescription || "সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং.");
   const [announcementTextInput, setAnnouncementTextInput] = useState(storeConfig?.announcementText ?? DEFAULT_STORE_CONFIG.announcementText ?? '');
   const [announcementEnabledInput, setAnnouncementEnabledInput] = useState(storeConfig?.announcementEnabled !== false);
   const [newAdminPassword, setNewAdminPassword] = useState('');
@@ -140,10 +142,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       setStoreNameInput(storeConfig.storeName || 'KHAN GADGET MALL');
       setStorePhoneInput(storeConfig.phone || '01854774406');
       setStoreAboutInput(storeConfig.about || DEFAULT_STORE_CONFIG.about);
+      setSeoTitleInput(storeConfig.seoTitle || DEFAULT_STORE_CONFIG.seoTitle || "KHAN GADGET MALL | Bangladesh's Mobile Accessories Mall");
+      setSeoDescriptionInput(storeConfig.seoDescription || DEFAULT_STORE_CONFIG.seoDescription || "সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং.");
       setAnnouncementTextInput(storeConfig.announcementText ?? DEFAULT_STORE_CONFIG.announcementText ?? '');
       setAnnouncementEnabledInput(storeConfig.announcementEnabled !== false);
     }
-  }, [storeConfig?.storeName, storeConfig?.phone, storeConfig?.about, storeConfig?.announcementText, storeConfig?.announcementEnabled]);
+  }, [storeConfig?.storeName, storeConfig?.phone, storeConfig?.about, storeConfig?.announcementText, storeConfig?.announcementEnabled, storeConfig?.seoTitle, storeConfig?.seoDescription]);
 
   const handleSaveStoreControls = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,7 +165,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       phone: storePhoneInput.trim(),
       about: storeAboutInput.trim(),
       announcementText: announcementTextInput.trim(),
-      announcementEnabled: announcementEnabledInput
+      announcementEnabled: announcementEnabledInput,
+      seoTitle: seoTitleInput.trim() || DEFAULT_STORE_CONFIG.seoTitle,
+      seoDescription: seoDescriptionInput.trim() || DEFAULT_STORE_CONFIG.seoDescription
     };
 
     if (newAdminPassword.trim()) {
@@ -185,7 +191,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
       setStoreControlsFeedback({
         type: 'success',
-        message: 'স্টোরের নাম, ফোন, বিবরণ ও পাসওয়ার্ড সফলভাবে আপডেট হয়েছে এবং সকল ডিভাইসে রিয়েল-টাইমে লাইভ হয়ে গেছে!'
+        message: 'স্টোরের নাম, ফোন, বিবরণ, গুগল সার্চ টাইটেল ও স্নিপেট সফলভাবে আপডেট হয়েছে এবং সকল ডিভাইসে লাইভ হয়ে গেছে!'
       });
       setNewAdminPassword('');
       setConfirmAdminPassword('');
@@ -1402,13 +1408,154 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </p>
                 </div>
 
-                {/* Option 4: Admin Password Change */}
+                {/* Option 4: Google Search & SEO Meta Settings */}
+                <div className="bg-white p-5 rounded-2xl border-2 border-indigo-100 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0">
+                        <Globe className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                          <span>৪. গুগল সার্চ ও এসইও মেটা সেটিংস (Google Search & SEO Meta Settings)</span>
+                        </h4>
+                        <p className="text-[11px] text-gray-500">
+                          গুগল সার্চ ও সোশ্যাল মিডিয়ায় শেয়ারের সময় প্রদর্শিত টাইটেল ও বিবরণ (Snippet) এখান থেকে পরিবর্তন করুন।
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded border border-indigo-100 self-start sm:self-auto">
+                      Google Search & SEO Controls
+                    </span>
+                  </div>
+
+                  {/* 1. SEO Title */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                        <span>গুগল সার্চ টাইটেল (Search Engine / Browser Title)</span>
+                      </label>
+                      <span className={`text-[10px] font-mono font-medium ${seoTitleInput.length > 60 ? 'text-amber-600 font-bold' : 'text-gray-400'}`}>
+                        {seoTitleInput.length}/60 অক্ষর (আদর্শ: ৪০–৬০)
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={seoTitleInput}
+                      onChange={(e) => setSeoTitleInput(e.target.value)}
+                      placeholder="যেমন: KHAN GADGET MALL | Bangladesh's Mobile Accessories Mall"
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full text-xs font-semibold px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-indigo-600 text-gray-900 placeholder:text-gray-400 transition shadow-xs"
+                    />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] text-gray-500">
+                      <span>💡 এটি গুগলে বড় নীল/বেগুনি টাইটেল এবং ব্রাউজার ট্যাবে প্রদর্শিত হয়।</span>
+                      <button
+                        type="button"
+                        onClick={() => setSeoTitleInput("KHAN GADGET MALL | Bangladesh's Mobile Accessories Mall")}
+                        className="text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer shrink-0 self-start sm:self-auto"
+                      >
+                        ডিফল্ট টাইটেল বসান
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 2. SEO Description */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                        <span>গুগল সার্চ বিবরণ ও স্নিপেট (Google Search Snippet & Meta Description)</span>
+                      </label>
+                      <span className={`text-[10px] font-mono font-medium ${seoDescriptionInput.length > 160 ? 'text-amber-600 font-bold' : 'text-gray-400'}`}>
+                        {seoDescriptionInput.length}/160 অক্ষর (আদর্শ: ১২০–১৬০)
+                      </span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      required
+                      value={seoDescriptionInput}
+                      onChange={(e) => setSeoDescriptionInput(e.target.value)}
+                      placeholder="যেমন: সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং."
+                      style={{ color: '#111827', backgroundColor: '#ffffff', colorScheme: 'light' }}
+                      className="w-full text-xs leading-relaxed px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-indigo-600 text-gray-900 placeholder:text-gray-400 transition shadow-xs"
+                    />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] text-gray-500">
+                      <span>💡 এটি গুগলের সার্চ রেজাল্টে টাইটেলের নিচে থাকা বিবরণ এবং লিঙ্ক শেয়ারের প্রিভিউতে আসে।</span>
+                      <button
+                        type="button"
+                        onClick={() => setSeoDescriptionInput("সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং.")}
+                        className="text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer shrink-0 self-start sm:self-auto"
+                      >
+                        ডিফল্ট স্নিপেট বসান
+                      </button>
+                    </div>
+
+                    {/* Quick suggestion tags */}
+                    <div className="pt-1 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">কুইক সাজেস্ট:</span>
+                      <button
+                        type="button"
+                        onClick={() => setSeoDescriptionInput("সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং.")}
+                        className="px-2 py-0.5 text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-md border border-indigo-200 transition cursor-pointer"
+                      >
+                        গ্যাজেট ও কুরিয়ার ট্র্যাকিং
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSeoDescriptionInput("বাংলাদেশের বিশ্বস্ত মোবাইল এক্সেসরিজ মল · ফাস্ট ডেলিভারি ও ১০০% অরিজিনাল গ্যাজেট · ক্যাশ অন ডেলিভারি.")}
+                        className="px-2 py-0.5 text-[10px] bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-md border border-slate-200 transition cursor-pointer"
+                      >
+                        ক্যাশ অন ডেলিভারি ও ১০০% অরিজিনাল
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSeoDescriptionInput("অরিজিনাল মোবাইল চার্জার, ম্যাগসেফ কভার, ইয়ারবাডস ও গেমিং গিয়ারের এক্সক্লুসিভ কালেকশন.")}
+                        className="px-2 py-0.5 text-[10px] bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-md border border-slate-200 transition cursor-pointer"
+                      >
+                        চার্জার, কভার ও ইয়ারবাডস
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Real Google Search Mockup */}
+                  <div className="pt-2 border-t border-gray-100 space-y-1.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      গুগল সার্চে যেভাবে আসবে (Google Search Live Mockup Preview):
+                    </span>
+                    <div className="bg-[#f8f9fa] border border-gray-200 p-4 rounded-xl space-y-1 font-sans text-left">
+                      <div className="flex items-center gap-2 text-xs text-[#202124]">
+                        <div className="w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[11px] font-bold shadow-xs">
+                          🛍️
+                        </div>
+                        <div className="leading-tight">
+                          <div className="text-[12px] font-medium text-[#202124]">
+                            {typeof window !== 'undefined' ? window.location.hostname : 'abuhayatbd.com'}
+                          </div>
+                          <div className="text-[11px] text-[#4d5156] truncate">
+                            https://{typeof window !== 'undefined' ? window.location.hostname : 'abuhayatbd.com'}
+                          </div>
+                        </div>
+                      </div>
+                      <h3 className="text-base sm:text-lg font-normal text-[#1a0dab] hover:underline cursor-pointer pt-0.5 leading-snug line-clamp-1">
+                        {seoTitleInput.trim() || "KHAN GADGET MALL | Bangladesh's Mobile Accessories Mall"}
+                      </h3>
+                      <p className="text-xs text-[#4d5156] leading-relaxed line-clamp-2">
+                        {seoDescriptionInput.trim() || "সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং."}
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-gray-400 italic">
+                      * আপনি পরিবর্তন সংরক্ষণ করলে তা ওয়েবসাইটে তাৎক্ষণিকভাবে আপডেট হয়ে যাবে। গুগল সার্চ ইঞ্জিন নতুন মেটাডাটা পুনঃস্ক্যান ও আপডেট করতে সাধারণত ১ থেকে ৭ দিন সময় নিয়ে থাকে।
+                    </p>
+                  </div>
+                </div>
+
+                {/* Option 5: Admin Password Change */}
                 <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-4">
                   <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                     <div>
                       <div className="flex items-center gap-2">
                         <Lock className="w-4 h-4 text-purple-600" />
-                        <h4 className="text-xs font-bold text-gray-900">৪. এডমিন প্যানেল পাসওয়ার্ড পরিবর্তন (Admin Password Change)</h4>
+                        <h4 className="text-xs font-bold text-gray-900">৫. এডমিন প্যানেল পাসওয়ার্ড পরিবর্তন (Admin Password Change)</h4>
                       </div>
                       <p className="text-[11px] text-gray-500 mt-0.5">
                         সকল ডিভাইসে এডমিন প্যানেলে লগইন করার জন্য কার্যকর হবে। পাসওয়ার্ড পরিবর্তন না করতে চাইলে খালি রাখুন।
@@ -1479,7 +1626,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   )}
                 </div>
 
-                {/* Option 5: Store Announcement Marquee */}
+                {/* Option 6: Store Announcement Marquee */}
                 <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                     <div className="flex items-center gap-2.5">
@@ -1488,7 +1635,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </div>
                       <div>
                         <h4 className="text-xs sm:text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                          <span>৫. অফার ও প্রমো নোটিশ বার (Store Announcement Marquee)</span>
+                          <span>৬. অফার ও প্রমো নোটিশ বার (Store Announcement Marquee)</span>
                         </h4>
                         <p className="text-[11px] text-gray-500">
                           ওয়েবসাইটের শীর্ষে চলমান অফার/নোটিশ টেক্সট প্রদর্শন ও পরিবর্তন করুন।
@@ -1621,6 +1768,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <div className="text-[11px] text-slate-300 line-clamp-2">
                         {storeAboutInput || DEFAULT_STORE_CONFIG.about}
                       </div>
+                    </div>
+                  </div>
+
+                  {/* SEO Live Preview in Dark Card */}
+                  <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-indigo-400 uppercase tracking-wide font-bold flex items-center gap-1">
+                        <Globe className="w-3 h-3" />
+                        Google Search & Share Preview
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {typeof window !== 'undefined' ? window.location.hostname : 'abuhayatbd.com'}
+                      </span>
+                    </div>
+                    <div className="text-sm font-bold text-indigo-300 truncate">
+                      {seoTitleInput.trim() || "KHAN GADGET MALL | Bangladesh's Mobile Accessories Mall"}
+                    </div>
+                    <div className="text-[11px] text-slate-300 line-clamp-2 leading-relaxed">
+                      {seoDescriptionInput.trim() || "সকল প্রিমিয়াম গ্যাজেট ও এক্সেসরিজ · প্রিমিয়াম গ্রাহক ক্লাব · লাইভ কুরিয়ার ট্র্যাকিং."}
                     </div>
                   </div>
                 </div>
